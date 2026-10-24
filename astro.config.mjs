@@ -30,6 +30,8 @@ export default defineConfig({
 			customCss: ['./src/styles/custom.css'],
 			expressiveCode: { shiki: { langs: [dazzle] } },
 			head: [
+				// Google Search Console's proof that the site is ours.
+				{ tag: 'meta', attrs: { name: 'google-site-verification', content: 'xpROJdr54LXtj4ZU42-KfJrLbymNsMIGi_1tUO_-Ml0' } },
 				{ tag: 'meta', attrs: { property: 'og:image', content: `${SITE}/og.png` } },
 				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
