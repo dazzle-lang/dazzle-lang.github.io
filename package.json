@@ -6,9 +6,10 @@
     "sync": "node scripts/sync.mjs",
     "dev": "npm run sync && astro dev",
     "build": "npm run sync && astro build",
-    "check": "node scripts/check-links.mjs",
+    "check": "node scripts/check-links.mjs && node --no-warnings scripts/check-captures.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "capture": "node scripts/capture.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.7",

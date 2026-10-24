@@ -1,0 +1,6 @@
+fn main() {
+    let mut names = List<String>()
+    names.push(String("ada"))
+    let kept = move(names)
+    println!("{} {}", kept.len(), names.len())
+}

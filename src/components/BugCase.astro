@@ -1,0 +1,143 @@
+---
+// One bug C++ lets through, side by side with what Dazzle does about it. Everything shown
+// comes from src/snippets/<name>/: the two programs, and capture.json, which recorded what
+// g++, clang++ and dz actually did with them. The sentence about warnings is worked out
+// from that record, so it cannot drift from what the compilers say.
+import { Code } from '@astrojs/starlight/components';
+import Terminal from './Terminal.astro';
+import { shortCompiler, snippet } from './snippets.js';
+
+interface Props {
+	name: string;
+	title: string;
+	/** What C++ makes of it: "Undefined behaviour", "Unspecified", … */
+	cpp: string;
+	/** What Dazzle makes of it: "Compile error", "Defined: it wraps", … */
+	dazzle: string;
+	/** The spec section or decision that says so. */
+	spec: { label: string; href: string };
+}
+
+const { name, title, cpp: cppBadge, dazzle: dzBadge, spec } = Astro.props;
+const { dz, cpp, capture } = snippet(name);
+const compilers = Object.keys(capture.cpp ?? {});
+const label = (cxx) => shortCompiler(cxx, capture.versions[cxx]);
+
+function warns(cxx) {
+	const c = capture.cpp[cxx];
+	if (c.plain.warnings.length) return 'warns by default';
+	if (c.wall.warnings.length) return 'warns only with <code>-Wall</code>';
+	return 'gives no warning, even with <code>-Wall -Wextra</code>';
+}
+const phrases = compilers.map((c) => ({ cxx: c, text: warns(c) }));
+const verdict = phrases.every((p) => p.text === phrases[0].text)
+	? `${compilers.map(label).join(' and ')} ${phrases[0].text.replace('warns', 'warn').replace('gives', 'give')}.`
+	: phrases.map((p) => `${label(p.cxx)} ${p.text}`).join('; ') + '.';
+
+// What the C++ program printed: once if both builds agree, otherwise each.
+const runs = compilers.map((c) => ({ cxx: c, ...capture.cpp[c].wall }));
+const same = runs.every((r) => r.output === runs[0].output && r.exit === runs[0].exit);
+const shown = same ? [{ ...runs[0], title: `built with ${compilers.map(label).join(' or ')}` }] : runs.map((r) => ({ ...r, title: `built with ${label(r.cxx)}` }));
+const id = `bug-${name}`;
+---
+
+<section class="bug-case" aria-labelledby={id}>
+	<h3 id={id}>{title}</h3>
+	<div class="sides">
+		<div class="side cpp">
+			<div class="head"><span class="lang">C++</span><span class="badge bad">{cppBadge}</span></div>
+			<Code code={cpp ?? ''} lang="cpp" />
+			<p class="verdict">It compiles: <Fragment set:html={verdict} /></p>
+			{shown.map((r) => <Terminal command="./a.out" output={r.output} exit={r.exit} title={r.title} compact />)}
+		</div>
+		<div class="side dz">
+			<div class="head"><span class="lang">Dazzle</span><span class="badge good">{dzBadge}</span></div>
+			<Code code={dz} lang="dz" />
+			<Terminal snippet={name} compact />
+		</div>
+	</div>
+	<div class="why">
+		<slot />
+		<a class="spec" href={spec.href}>{spec.label} →</a>
+	</div>
+</section>
+
+<style>
+	.bug-case {
+		margin-block: 2.5rem;
+	}
+	.bug-case h3 {
+		margin-bottom: 0.75rem;
+	}
+	.sides {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+		gap: 1rem;
+		align-items: start;
+	}
+	.side {
+		min-width: 0;
+		padding: 0.75rem;
+		border-radius: 0.75rem;
+		border: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+	}
+	.side.cpp {
+		border-top: 3px solid #e5484d;
+	}
+	.side.dz {
+		border-top: 3px solid var(--sl-color-accent);
+	}
+	.side > :global(*) {
+		margin-top: 0.6rem !important;
+	}
+	.side > .head {
+		margin-top: 0 !important;
+	}
+	.head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.lang {
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+	.badge {
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		padding: 0.15rem 0.55rem;
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+	.badge.bad {
+		color: #ffb4b4;
+		background: rgb(229 72 77 / 0.18);
+		border: 1px solid rgb(229 72 77 / 0.45);
+	}
+	.badge.good {
+		color: var(--sl-color-accent-high);
+		background: var(--sl-color-accent-low);
+		border: 1px solid var(--sl-color-accent);
+	}
+	:root[data-theme='light'] .badge.bad {
+		color: #a4161a;
+		background: #ffe5e5;
+	}
+	.verdict {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-2);
+	}
+	.why {
+		margin-top: 0.9rem;
+		color: var(--sl-color-gray-2);
+	}
+	.why :global(p) {
+		margin: 0 0 0.4rem;
+	}
+	.spec {
+		font-size: var(--sl-text-sm);
+		font-weight: 600;
+	}
+</style>

@@ -1,0 +1,53 @@
+---
+title: Bugs C++ lets through
+description: Eight mistakes that C++ compiles, often without a warning, beside what Dazzle does with the same mistake. Every output on the page was produced by g++, clang++ and dz.
+---
+
+import BugCase from '../../../components/BugCase.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+Each mistake below is written twice: in C++, as a reviewer might miss it, and in Dazzle. Every output on this page was produced by the real compilers: the C++ by g++ and clang++ at `-std=c++17 -O2`, the Dazzle by `dz`. A script (`scripts/capture.mjs` in the site's repository) records them, and the site's build fails if a Dazzle message shown here stops matching what `dz` prints.
+
+Some of these mistakes are **compile errors** in Dazzle. The others have **one defined meaning**, which every Dazzle compiler and build agrees on.
+
+<Aside type="note" title="What C++ has against these">
+Warnings catch some of these mistakes, and sanitizers (`-fsanitize=undefined,address`) catch more, when a test happens to run the bad path. In Dazzle they are rules of the language, so they hold in every build and on every compiler.
+</Aside>
+
+<BugCase name="moved" title="Using a value after moving it" cpp="Valid but unspecified" dazzle="Compile error" spec={{ label: 'Spec §6.4, move semantics', href: '/spec/06-value-semantics-ownership-copy/#64-move-semantics' }}>
+After `std::move`, a standard container is "valid but unspecified": the C++ program may read `names` and gets whatever the library left there. In Dazzle, a moved-from value is reset to its defaults, and reading it again is error DZ0401, which shows where it was moved.
+</BugCase>
+
+<BugCase name="ignored" title="An error nobody looks at" cpp="Silently ignored" dazzle="Compile error" spec={{ label: 'Spec §9.7, consumption', href: '/spec/09-errors-and-absence/#97-consumption' }}>
+A returned error code is just a value, and C++ lets the caller drop it. `[[nodiscard]]` helps only where someone wrote it. A Dazzle function that can fail says so with `!->`, and the call has to be handled in the same statement: `or return`, a fallback, or an explicit `or ignore`.
+</BugCase>
+
+<BugCase name="switch" title="A missing case" cpp="Compiles" dazzle="Compile error" spec={{ label: 'Spec §10.3, switch', href: '/spec/10-statements-and-control-flow/#103-switch' }}>
+A `switch` on an enum that forgets a value compiles in C++, and that value runs none of the cases. A Dazzle `switch` on an enum or a union must cover every variant, and the error names the missing ones. A `default` arm says on purpose that the rest share one arm.
+</BugCase>
+
+<BugCase name="return" title="Falling off the end of a function" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.4, definite return', href: '/spec/06-value-semantics-ownership-copy/#64-move-semantics' }}>
+Reaching the end of a function that returns a value is undefined behaviour in C++. Both compilers warn, but the program still builds. Here the g++ build stops on an illegal instruction, and the clang build prints `-1` for `sign(0)`. Dazzle's flow analysis requires a value on every path.
+</BugCase>
+
+<BugCase name="overflow" title="Signed overflow" cpp="Undefined behaviour" dazzle="Defined: it wraps" spec={{ label: 'D-0063, integer overflow', href: '/decisions/d-0063-integer-overflow/' }}>
+Signed overflow is undefined in C++, so an optimiser may assume `x + 1 < x` is never true and delete the check. Both builds print `false` for the largest `int`. Dazzle integers wrap, in every build, signed ones included, so the comparison means what it says.
+</BugCase>
+
+<BugCase name="order" title="Arguments evaluated in an unspecified order" cpp="Unspecified" dazzle="Left to right" spec={{ label: 'D-0049, evaluation order', href: '/decisions/d-0049-evaluation-order-pointers-as-numbers/' }}>
+C++ does not say which argument is evaluated first, and the two compilers disagree: the same source prints in a different order depending on which one built it. Dazzle evaluates arguments left to right, the receiver first, as they are written.
+</BugCase>
+
+<BugCase name="uninit" title="Reading memory nobody initialised" cpp="Undefined behaviour" dazzle="Defined: zero or the default" spec={{ label: 'Spec §6.2, default initialisation', href: '/spec/06-value-semantics-ownership-copy/#62-default-initialisation' }}>
+A local `int` and a field without an initialiser hold whatever was in memory. Dazzle has no uninitialised memory: a value is its type's zero, and a field takes its declared default, so `count` starts at 0 and `score` is 0.
+</BugCase>
+
+<BugCase name="bounds" title="Reading past the end of an array" cpp="Undefined behaviour" dazzle="Panics, in every build" spec={{ label: 'Spec §5.3, bounds checks', href: '/spec/05-types/#53-arrays-slices-and-strings' }}>
+An index past the end reads whatever lies beyond the array. g++ warns here only because it can see that the index is the constant 5. Indexing an array or a slice in Dazzle is checked in every build, release included, and a bad index stops the program and names the line.
+</BugCase>
+
+## Read next
+
+- [Dazzle vs C++](/compare/cpp/): what changes for a C++ programmer, and what stays.
+- [Errors](/tour/errors/): how `!->` and `or` work.
+- [Ownership](/tour/ownership/): moves, copies and `drop`.

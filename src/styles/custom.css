@@ -21,3 +21,31 @@
 .hero + .sl-markdown-content .expressive-code {
 	margin-block: 1.5rem;
 }
+
+/* The landing page's table of bugs: what Dazzle does, highlighted in the accent colour. */
+.dz-bugs table {
+	width: 100%;
+	display: table;
+	margin-block: 1rem;
+}
+.dz-bugs td:nth-child(2) {
+	color: var(--sl-color-gray-3);
+}
+.dz-bugs .ok {
+	font-weight: 600;
+	color: var(--sl-color-accent-high);
+	white-space: nowrap;
+}
+.dz-bugs .ok::before {
+	content: '✓ ';
+	color: var(--sl-color-accent);
+}
+
+/* Diagnostics are wide (a help line can run past a hundred columns), so they stack. */
+.dz-pair {
+	display: grid;
+	gap: 1rem;
+}
+.dz-pair > * {
+	margin: 0 !important;
+}

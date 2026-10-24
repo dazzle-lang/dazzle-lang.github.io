@@ -1,18 +1,18 @@
 ---
-title: Dazzle, a successor to C++ that compiles to C++
-description: Dazzle is a successor to C++ that compiles to standard C++17, so it works with your compiler, your libraries and your existing C++ code. RAII in three members, errors as values, enforced encapsulation.
+title: Dazzle, a systems language that compiles to C++
+description: Dazzle is a systems language for games and engines, embedded systems, tools and real-time code. C++-grade control, a compiler that turns C++'s silent mistakes into errors, and standard C++17 as its output, so your compiler, debugger and libraries stay.
 template: splash
 editUrl: false
 head:
   - tag: title
-    content: Dazzle programming language | A successor to C++ that compiles to C++
+    content: Dazzle programming language | A systems language that compiles to C++
   - tag: script
     attrs:
       type: application/ld+json
     content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
 hero:
-  title: A successor to C++ that compiles to C++
-  tagline: The control of C++ without forty years of accumulated syntax. RAII in three special members, errors as values, encapsulation the compiler enforces, and generics checked where they are written. Dazzle compiles to standard C++17, so it works with the compiler, libraries and C++ code you already have.
+  title: Write games, engines and real-time code without C++'s traps
+  tagline: Dazzle gives you the control of C++ with a compiler that turns its silent mistakes into errors. Use after move, ignored errors and missing cases don't compile, and overflow and evaluation order have one defined meaning. The output is standard C++17, so your compiler, debugger and libraries stay.
   actions:
     - text: Get started
       link: /start/install/
@@ -21,7 +21,7 @@ hero:
       link: /playground/
       variant: secondary
     - text: Take the tour
-      link: /tour/errors/
+      link: /tour/overview/
       variant: secondary
     - text: GitHub
       link: https://github.com/dazzle-lang/Dazzle
@@ -30,14 +30,46 @@ hero:
 ---
 
 import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+import Gallery from '../../components/Gallery.astro';
+import Terminal from '../../components/Terminal.astro';
 
 <Aside type="caution" title="Pre-release">
 Dazzle is **0.1, unreleased**. It compiles and runs programs, checks ownership, calls C and C++, and has a language server, but the language is still changing. See [where it stands](/project/status/).
 </Aside>
 
-## Like Carbon, without a new toolchain
+## Built with Dazzle
 
-Dazzle is an upgrade of C++, meant to replace it in the projects that use it, as Carbon is. The difference is the route: Carbon brings its own LLVM-based toolchain, while **Dazzle compiles to standard C++17** and hands it to clang++ or g++. So there is nothing new to adopt underneath it. Your compiler, optimiser, debugger, profiler, build flags and platforms stay as they are, and a Dazzle module links with the C++ around it, one module at a time. [Why it compiles to C++ →](/start/why-dazzle/#why-compile-to-c)
+Each of these is a complete program in the repository. Each one uses a C library built from its own source and called directly, with no bindings to write. Copy one, and you have a project that already builds.
+
+<Gallery />
+
+## Bugs C++ lets through
+
+These are eight mistakes that both g++ and clang++ compile. Half of them compile without a single warning on either compiler, even with `-Wall -Wextra`. In Dazzle, each one is a compile error or has one defined meaning:
+
+<div class="dz-bugs not-content">
+
+| The mistake | C++ | Dazzle |
+|---|---|---|
+| Using a value after `std::move` | compiles, reads whatever is left | <span class="ok">error DZ0401</span> |
+| Ignoring a returned error | compiles silently | <span class="ok">error DZ0510</span> |
+| A `switch` missing an enum value | compiles; that value does nothing | <span class="ok">error DZ0513</span> |
+| Falling off the end of a function | undefined behaviour, with a warning | <span class="ok">error DZ0405</span> |
+| Signed overflow | undefined, `x + 1 < x` folded to `false` | <span class="ok">wraps, in every build</span> |
+| Order of evaluating arguments | unspecified: g++ and clang disagree | <span class="ok">left to right</span> |
+| Reading an uninitialised variable | undefined behaviour | <span class="ok">every value is initialised</span> |
+| Indexing past the end of an array | undefined behaviour | <span class="ok">checked in every build</span> |
+
+</div>
+
+Each diagnostic points at the line, says what is wrong there, and ends with a help line:
+
+<div class="dz-pair">
+	<Terminal snippet="moved" compact />
+	<Terminal snippet="switch" compact />
+</div>
+
+<LinkCard title="See all eight, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
 
 ## One clause for everything that can fail
 
@@ -65,34 +97,30 @@ fn main() {
 }
 ```
 
-No exceptions and no `Result<T, E>`: a function that can fail says so on its signature, and the caller handles it with one `or` clause. An `Error` is 32 bytes, never allocates, and carries the source location that created it. Forgetting to handle one is a compile error. [Errors →](/tour/errors/)
+<Terminal snippet="fallback" />
+
+There are no exceptions and no `Result<T, E>`. A function that can fail says so in its signature, and the caller handles the failure with one `or` clause. An `Error` is 32 bytes, never allocates, and carries the source location that created it. Forgetting to handle one is a compile error. [Errors →](/tour/errors/)
 
 ## What it gives you
 
 <CardGrid>
 	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. No rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
+		A constructor, `drop` and `copy`. There is no rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
 	</Card>
 	<Card title="Errors point at your code" icon="magnifier">
 		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)
 	</Card>
 	<Card title="C and C++ from source" icon="seti:c">
-		Name a library's sources in the manifest and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. No bindings to write or maintain. [C++ interop →](/tour/cpp-interop/)
+		Name a library's sources in the manifest, and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. There are no bindings to write or maintain. [C++ interop →](/tour/cpp-interop/)
 	</Card>
-	<Card title="No new toolchain" icon="setting">
-		The output is standard C++17, built with `-fno-exceptions -fno-rtti`, so it compiles wherever a C++17 compiler runs. `#line` directives map it back to your `.dz` files, so debuggers and profilers show your source.
-	</Card>
-	<Card title="Modules without headers" icon="list-format">
-		One manifest per module says what every file can name. No headers, no include order, no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)
-	</Card>
-	<Card title="Tooling from day one" icon="laptop">
-		A language server and VS Code extension, `dz fmt`, `dz fix`, `dz explain`, and tests and benchmarks written beside the code they cover. [Tooling →](/tour/tooling/)
+	<Card title="Standard C++17 out" icon="setting">
+		The output is plain C++17, built with `-fno-exceptions -fno-rtti`, so it compiles wherever a C++17 compiler runs. `#line` directives map it back to your `.dz` files, so debuggers and profilers show your source. [Why C++? →](/start/why-dazzle/#why-compile-to-c)
 	</Card>
 </CardGrid>
 
 ## Use C and C++ libraries as they are
 
-A library is built from its own source by a few lines of manifest, and libclang reads its header with the same flags the generated code is compiled with. Its declarations become an ordinary Dazzle module, C++ classes and overloaded methods included:
+A few lines of manifest build a library from its own source. libclang reads its header with the same flags the generated code is compiled with. Its declarations become an ordinary Dazzle module, C++ classes and overloaded methods included:
 
 ```dz
 let mut counter = shp::shapes::Counter(10)    // a C++ class and its constructor
@@ -100,15 +128,21 @@ counter.add(5)                                // an overload set, resolved by ar
 shp::shapes::translate(&mut moving, 1, 1)     // `Point&` is a `&mut Point`
 ```
 
-The repository's examples use raylib this way, built from its own `.c` files with no CMake and no binding layer. [C++ interop →](/tour/cpp-interop/)
+Every example in the gallery above works this way: raylib, SDL3, Box2D, sokol, stb and RGFW, each built from its own source. [C++ interop →](/tour/cpp-interop/)
 
 ## Where it fits
 
-Anywhere you would otherwise reach for C++: **games and engines**, where it is furthest along, with [a small game](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) written in no C++ of its own; **embedded and firmware**, with no runtime and no garbage collector; **tools and native applications**; **real-time code**, where a garbage-collector pause is a bug; and **inside an existing C++ codebase**, one module at a time.
+You can use Dazzle anywhere you would otherwise reach for C++:
+
+- **Games and engines.** This is where it is furthest along.
+- **Embedded and firmware.** There is no runtime and no garbage collector.
+- **Tools and native applications.**
+- **Real-time code**, where a garbage-collector pause is a bug.
+- **An existing C++ codebase**, one module at a time.
 
 <CardGrid>
 	<LinkCard title="Why Dazzle" description="The principles, why it compiles to C++, and what it is not." href="/start/why-dazzle/" />
-	<LinkCard title="Dazzle vs Carbon and cpp2" description="Three successors to C++, three routes." href="/compare/carbon-cpp2/" />
 	<LinkCard title="Dazzle vs C++" description="What changes for a C++ programmer, and what stays." href="/compare/cpp/" />
+	<LinkCard title="Benchmarks" description="Whole programs in Dazzle and C++, timed on the same compiler, and how the numbers change over time." href="/project/benchmarks/" />
 	<LinkCard title="The specification" description="The language contract, section by section." href="/spec/" />
 </CardGrid>

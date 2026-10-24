@@ -1,0 +1,14 @@
+enum SaveError : u32 {
+    DiskFull = 1
+}
+
+fn save(name: str) !-> void {
+    if name.len == 0 {
+        return error(SaveError::DiskFull, "no room for {}", name)
+    }
+}
+
+fn main() {
+    save("slot1")
+    println!("saved")
+}

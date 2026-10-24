@@ -52,6 +52,7 @@ export default defineConfig({
 				{
 					label: 'Tour',
 					items: [
+						'tour/overview',
 						'tour/errors',
 						'tour/ownership',
 						'tour/modules',
@@ -63,7 +64,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Compared with',
-					items: ['compare/carbon-cpp2', 'compare/cpp', 'compare/rust', 'compare/zig'],
+					items: ['compare/cpp-bugs', 'compare/cpp', 'compare/carbon-cpp2', 'compare/rust', 'compare/zig'],
 				},
 				{
 					label: 'Specification',
@@ -79,6 +80,7 @@ export default defineConfig({
 					label: 'Project',
 					items: [
 						'project/status',
+						'project/benchmarks',
 						{ label: 'Contributing', link: 'https://github.com/dazzle-lang/Dazzle/blob/master/CONTRIBUTING.md' },
 						{ label: 'Backlog', link: 'https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md' },
 					],

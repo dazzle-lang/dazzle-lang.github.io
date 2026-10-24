@@ -1,0 +1,17 @@
+enum Weapon {
+    Sword
+    Bow
+    Staff
+}
+
+fn damage(w: Weapon) -> i32 {
+    switch w {
+        case Sword { return 10 }
+        case Bow { return 6 }
+    }
+    return 0
+}
+
+fn main() {
+    println!("{}", damage(Weapon::Staff))
+}

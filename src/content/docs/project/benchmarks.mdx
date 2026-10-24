@@ -1,0 +1,46 @@
+---
+title: Benchmarks
+description: Three whole programs written in both Dazzle and C++, built with the same compiler and flags, checked to compute the same result, and timed end to end. Every run is kept, so the numbers show how the compiler and the standard library improve.
+---
+
+import Benchmarks from '../../../components/Benchmarks.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+How fast is Dazzle compared with C++? Single constructs say little, because an indexed load compiles to the same instruction in both. These are whole programs instead. Each one is written idiomatically in both languages, built by the same compiler at the same optimisation level, and timed from start to finish.
+
+- **A\* search**: 200 searches across a 400×400 grid. It uses a generic binary heap, hash maps keyed by a struct, and allocation in every search.
+- **Tokenizer, parser and evaluator**: 100,000 generated statements, about 8 MB of text. Each statement is parsed into a tree of tagged unions and evaluated, and about one in eight fails on purpose, through `!->`.
+- **Word count**: 2,000,000 generated words. It counts every distinct word in a hash map, then sorts the counts.
+
+Both halves of each pair print a checksum over their whole result, and a run whose two halves disagree is refused. Each C++ half is written as a C++ reviewer would accept it: `std::vector`, `std::unordered_map`, `std::priority_queue`, `std::string`, `std::unique_ptr` and `std::sort`. The [rules and sources](https://github.com/dazzle-lang/Dazzle/tree/master/tests/bench_programs) are in the repository.
+
+## The latest run
+
+<Benchmarks view="latest" />
+
+<Aside type="note" title="Why Dazzle is slower today">
+The gap comes from known, specific places, most of them in the standard library, not from the language's rules. Each one is a task with its measurement:
+
+- `List::sort_by` is a heapsort called through a function pointer. It takes 100 ms where `std::sort` takes 19 ([T-0096](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0096-list-sort-by-heapsort-through-function.md)).
+- Returning a tree node through `!->` costs extra moves and a drop at every step, and `Box` is five times the size of `unique_ptr` ([T-0097](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0097-moving-union-through-fallible-result-costs.md)).
+- The temporary arena calls `malloc` for every resize of a container larger than 64 KiB ([T-0099](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0099-allocators-temp-gives-growing-container-malloc.md)).
+
+Some of the cost is the language's own, and it stays by design: indexing is bounds-checked in every build, and integer arithmetic wraps.
+</Aside>
+
+## Every run
+
+Each run is kept. As the compiler and the standard library improve, this is where the ratios should be seen to fall.
+
+<Benchmarks view="history" />
+
+### Adding a run
+
+Run the suite on a quiet machine, from a Dazzle checkout at the commit being measured. Write its JSON into this site's `src/data/benchmarks/`:
+
+```bash
+cargo build --release -p dz
+python tools/bench_programs.py --json ../dazzle-lang.github.io/src/data/benchmarks/2026-11-30-abc1234.json
+```
+
+Then add `date`, `commit` and a one-line `summary` at the top of the file. Runs are only comparable on the same machine and compilers, so a run on new hardware should say so in its summary.

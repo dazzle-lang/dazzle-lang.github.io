@@ -1,0 +1,5 @@
+fn main() {
+    let scores: [3]i32 = [10, 20, 30]
+    let i: usize = 5
+    println!("{}", scores[i])
+}

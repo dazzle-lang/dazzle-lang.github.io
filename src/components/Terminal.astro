@@ -1,0 +1,145 @@
+---
+// A terminal window showing what a command printed, colours included. Give it `snippet`, a
+// folder in src/snippets/, to show what `dz` printed for that program (recorded by
+// scripts/capture.mjs, so it is always real output); or `command` and `output` directly.
+import { ansiToHtml } from './ansi-html.js';
+import { snippet as load } from './snippets.js';
+
+interface Props {
+	snippet?: string;
+	command?: string;
+	output?: string;
+	exit?: number;
+	title?: string;
+	compact?: boolean;
+}
+
+const props = Astro.props;
+let { command, output, exit } = props;
+if (props.snippet) {
+	const { capture } = load(props.snippet);
+	command ??= capture.dazzle.command;
+	output ??= capture.dazzle.output;
+	exit ??= capture.dazzle.exit;
+}
+const body = ansiToHtml((output ?? '').replace(/\n+$/, ''));
+// A failed `dz check` says so itself; a program that crashed does not, so its status is shown.
+const status = exit && command && !command.startsWith('dz check') ? `exit status ${exit}` : null;
+---
+
+<figure class:list={['dz-terminal', { compact: props.compact }]} aria-label={props.title ?? 'Terminal output'}>
+	<div class="bar" aria-hidden="true">
+		<span class="dot"></span><span class="dot"></span><span class="dot"></span>
+		{props.title && <span class="title">{props.title}</span>}
+	</div>
+	<pre>{command && <code><span class="prompt">$ </span><span class="command">{command}</span>{'\n'}</code>}<code set:html={body} />{status && <code class="status">{'\n'}{status}</code>}</pre>
+</figure>
+
+<style>
+	/* Always a dark terminal, in both themes: it is a picture of a terminal. The colours are
+	   codespan's error red, warning yellow and help blue, as `dz` prints them. */
+	.dz-terminal {
+		--term-bg: #0f1117;
+		--term-bar: #1a1d26;
+		--term-fg: #d6d9e0;
+		--term-dim: #7d8494;
+		--ansi-red: #ff6b6b;
+		--ansi-yellow: #f7c548;
+		--ansi-green: #5fd38d;
+		--ansi-blue: #6ea8fe;
+		--ansi-cyan: #4dd4e6;
+		--ansi-magenta: #e58cf5;
+		margin: 1.25rem 0;
+		border-radius: 0.6rem;
+		overflow: hidden;
+		background: var(--term-bg);
+		border: 1px solid #2a2f3b;
+		box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.55);
+	}
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.5rem 0.8rem;
+		background: var(--term-bar);
+		border-bottom: 1px solid #2a2f3b;
+	}
+	.dot {
+		width: 0.7rem;
+		height: 0.7rem;
+		border-radius: 50%;
+		background: #3a3f4c;
+	}
+	.dot:nth-child(1) {
+		background: #ff5f57;
+	}
+	.dot:nth-child(2) {
+		background: #febc2e;
+	}
+	.dot:nth-child(3) {
+		background: #28c840;
+	}
+	.title {
+		margin-left: 0.6rem;
+		color: var(--term-dim);
+		font-size: var(--sl-text-xs);
+		font-family: var(--sl-font-system-mono);
+	}
+	pre {
+		margin: 0;
+		padding: 0.9rem 1rem 1rem;
+		overflow-x: auto;
+		background: transparent;
+		border: 0;
+		color: var(--term-fg);
+		font-family: var(--sl-font-system-mono);
+		font-size: 0.8rem;
+		line-height: 1.45;
+	}
+	.compact pre {
+		font-size: 0.74rem;
+	}
+	code {
+		background: transparent;
+		padding: 0;
+		color: inherit;
+		font-size: inherit;
+	}
+	.prompt {
+		color: var(--ansi-green);
+		user-select: none;
+	}
+	.command {
+		color: #fff;
+	}
+	.status {
+		color: var(--term-dim);
+	}
+	pre :global(.ansi-bold) {
+		font-weight: 700;
+	}
+	pre :global(.ansi-red),
+	pre :global(.ansi-bright-red) {
+		color: var(--ansi-red);
+	}
+	pre :global(.ansi-yellow),
+	pre :global(.ansi-bright-yellow) {
+		color: var(--ansi-yellow);
+	}
+	pre :global(.ansi-green),
+	pre :global(.ansi-bright-green) {
+		color: var(--ansi-green);
+	}
+	pre :global(.ansi-blue),
+	pre :global(.ansi-bright-blue) {
+		color: var(--ansi-blue);
+	}
+	pre :global(.ansi-cyan),
+	pre :global(.ansi-bright-cyan) {
+		color: var(--ansi-cyan);
+	}
+	pre :global(.ansi-magenta),
+	pre :global(.ansi-bright-magenta) {
+		color: var(--ansi-magenta);
+	}
+</style>

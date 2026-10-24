@@ -1,0 +1,292 @@
+---
+// The whole-program benchmarks: every recorded run in src/data/benchmarks/, one JSON file
+// each, as `tools/bench_programs.py --json` in the Dazzle repository writes them, plus the
+// date, the commit and a one-line summary. `view="latest"` draws the newest run;
+// `view="history"` lists every run, so a change in the compiler or the standard library
+// shows up as a change in the ratios.
+interface Props {
+	view: 'latest' | 'history';
+}
+
+const files = import.meta.glob('../data/benchmarks/*.json', { import: 'default', eager: true });
+const runs = Object.values(files).sort((a, b) => (a.date + a.commit < b.date + b.commit ? -1 : 1));
+if (!runs.length) throw new Error('no benchmark runs in src/data/benchmarks/');
+const latest = runs.at(-1);
+const COMMIT = 'https://github.com/dazzle-lang/Dazzle/commit/';
+const PROGRAMS = {
+	astar: 'A* search',
+	expr: 'Tokenizer, parser and evaluator',
+	words: 'Word count',
+};
+const cxxLabel = (run, cxx) => {
+	const major = run.machine.compilers[cxx]?.match(/(\d+)\.\d+/)?.[1] ?? '';
+	return `${cxx === 'clang++' ? 'clang' : 'g++'} ${major}`;
+};
+const ms = (s) => `${Math.round(s * 1000)} ms`;
+const mib = (k) => (k ? `${(k / 1024).toFixed(0)} MiB` : '—');
+const ratio = (r) => r.dazzle.median / r.cpp.median;
+const geomean = (xs) => Math.exp(xs.reduce((a, x) => a + Math.log(x), 0) / xs.length);
+
+const programs = [...new Set(latest.results.map((r) => r.program))];
+const compilers = [...new Set(latest.results.map((r) => r.cxx))];
+const columns = programs.flatMap((p) => compilers.map((c) => ({ program: p, cxx: c })));
+const find = (run, p, c) => run.results.find((r) => r.program === p && r.cxx === c);
+
+// The history chart: one line per compiler, the geometric mean of its ratios per run.
+const W = 640;
+const H = 220;
+const PAD = { l: 44, r: 16, t: 16, b: 34 };
+const series = compilers.map((c) => ({
+	cxx: c,
+	points: runs.map((run, i) => {
+		const rs = run.results.filter((r) => r.cxx === c).map(ratio);
+		return { i, value: rs.length ? geomean(rs) : null };
+	}),
+}));
+const values = series.flatMap((s) => s.points.map((p) => p.value)).filter((v) => v != null);
+const top = Math.max(2.5, Math.ceil(Math.max(...values) * 2) / 2);
+const x = (i) => PAD.l + (runs.length === 1 ? (W - PAD.l - PAD.r) / 2 : (i * (W - PAD.l - PAD.r)) / (runs.length - 1));
+const y = (v) => PAD.t + (1 - v / top) * (H - PAD.t - PAD.b);
+const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.5);
+---
+
+{
+	Astro.props.view === 'latest' && (
+		<div class="bench not-content">
+			{programs.map((p) => {
+				const rows = compilers.map((c) => find(latest, p, c)).filter(Boolean);
+				const max = Math.max(...rows.flatMap((r) => [r.dazzle.median, r.cpp.median]));
+				return (
+					<section class="program">
+						<h4>{PROGRAMS[p] ?? p}</h4>
+						{rows.map((r) => (
+							<div class="pair">
+								<div class="who">{cxxLabel(latest, r.cxx)}</div>
+								<div class="bars">
+									<div class="bar dz" style={`width: ${(100 * r.dazzle.median) / max}%`}>
+										<span>Dazzle {ms(r.dazzle.median)}</span>
+									</div>
+									<div class="bar cpp" style={`width: ${(100 * r.cpp.median) / max}%`}>
+										<span>C++ {ms(r.cpp.median)}</span>
+									</div>
+								</div>
+								<div class="ratio">{ratio(r).toFixed(2)}×</div>
+							</div>
+						))}
+						<p class="extra">
+							Peak memory {rows.map((r) => `${mib(r.dazzle.peak_kib)} / ${mib(r.cpp.peak_kib)} (${cxxLabel(latest, r.cxx)})`).join(', ')}.
+							Build from clean {rows.map((r) => `${r.build.dazzle.toFixed(1)} s / ${r.build.cpp.toFixed(1)} s`).join(', ')}.
+						</p>
+					</section>
+				);
+			})}
+			<p class="legend">
+				<span class="key dz" /> Dazzle <span class="key cpp" /> C++. Shorter is faster; the figure on the right is Dazzle's time over C++'s.
+				Median of {latest.results[0].dazzle.runs} runs. {latest.machine.cpu}, {Object.values(latest.machine.compilers).join(' and ')},
+				<code>-O2</code>. Dazzle at <a href={COMMIT + latest.commit}>{latest.commit}</a>, {latest.date}.
+			</p>
+		</div>
+	)
+}
+
+{
+	Astro.props.view === 'history' && (
+		<div class="history not-content">
+			<svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Dazzle's time over C++'s, per run and compiler">
+				{ticks.map((t) => (
+					<g>
+						<line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} class:list={['grid', { parity: t === 1 }]} />
+						<text x={PAD.l - 8} y={y(t) + 4} class="tick" text-anchor="end">{t.toFixed(1)}×</text>
+					</g>
+				))}
+				<text x={W - PAD.r} y={y(1) - 6} class="parity-label" text-anchor="end">same speed as C++</text>
+				{series.map((s, k) => (
+					<g class={`series s${k}`}>
+						<polyline points={s.points.filter((p) => p.value != null).map((p) => `${x(p.i)},${y(p.value)}`).join(' ')} />
+						{s.points.filter((p) => p.value != null).map((p) => (
+							<circle cx={x(p.i)} cy={y(p.value)} r="5">
+								<title>{`${cxxLabel(runs[p.i], s.cxx)}: ${p.value.toFixed(2)}× on ${runs[p.i].date}`}</title>
+							</circle>
+						))}
+					</g>
+				))}
+				{runs.map((run, i) => (
+					<text x={x(i)} y={H - 10} class="tick" text-anchor="middle">{run.commit}</text>
+				))}
+			</svg>
+			<p class="legend">
+				{series.map((s, k) => (
+					<span><span class={`key s${k}`} /> {cxxLabel(latest, s.cxx)} </span>
+				))}
+				The geometric mean of the three programs' ratios, for each run. Lower is better; 1.0× is C++'s speed.
+			</p>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Run</th>
+							{columns.map((c) => (
+								<th>
+									{c.program}
+									<br />
+									<small>{cxxLabel(latest, c.cxx)}</small>
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{runs.toReversed().map((run) => (
+							<tr>
+								<td>
+									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}</small>
+									<br />
+									<small>{run.summary}</small>
+								</td>
+								{columns.map((c) => {
+									const r = find(run, c.program, c.cxx);
+									return <td class="num">{r ? `${ratio(r).toFixed(2)}×` : '—'}</td>;
+								})}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)
+}
+
+<style>
+	.bench {
+		margin-block: 1.5rem;
+	}
+	.program {
+		margin-bottom: 1.4rem;
+	}
+	.program h4 {
+		margin: 0 0 0.5rem;
+		font-size: var(--sl-text-base);
+		color: var(--sl-color-white);
+	}
+	.pair {
+		display: grid;
+		grid-template-columns: 4.5rem 1fr 3.5rem;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.5rem;
+	}
+	.who {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-2);
+	}
+	.bars {
+		display: grid;
+		gap: 0.2rem;
+	}
+	.bar {
+		height: 1.35rem;
+		border-radius: 0.3rem;
+		display: flex;
+		align-items: center;
+		min-width: max-content;
+		padding-inline: 0.5rem;
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+	.bar.dz,
+	.key.dz {
+		background: var(--sl-color-accent);
+		color: #1b1405;
+	}
+	.bar.cpp,
+	.key.cpp {
+		background: #5b7fbf;
+		color: #fff;
+	}
+	.ratio {
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--sl-color-white);
+		text-align: right;
+	}
+	.extra,
+	.legend {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		margin: 0.3rem 0 0;
+	}
+	.key {
+		display: inline-block;
+		width: 0.8rem;
+		height: 0.8rem;
+		border-radius: 0.2rem;
+		vertical-align: -0.1rem;
+		margin-left: 0.3rem;
+	}
+	.history svg {
+		width: 100%;
+		height: auto;
+		max-width: 46rem;
+		display: block;
+		margin-block: 1rem 0.5rem;
+	}
+	.grid {
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1;
+	}
+	.grid.parity {
+		stroke: var(--sl-color-gray-3);
+		stroke-dasharray: 4 4;
+	}
+	.tick,
+	.parity-label {
+		fill: var(--sl-color-gray-3);
+		font-size: 11px;
+		font-family: var(--sl-font-system-mono);
+	}
+	.series polyline {
+		fill: none;
+		stroke-width: 2.5;
+	}
+	.s0 polyline,
+	.s0 circle,
+	.key.s0 {
+		stroke: var(--sl-color-accent);
+		fill: var(--sl-color-accent);
+		background: var(--sl-color-accent);
+	}
+	.s1 polyline,
+	.s1 circle,
+	.key.s1 {
+		stroke: #5b7fbf;
+		fill: #5b7fbf;
+		background: #5b7fbf;
+	}
+	.series polyline {
+		fill: none !important;
+	}
+	.table-wrap {
+		overflow-x: auto;
+		margin-top: 1.2rem;
+	}
+	table {
+		border-collapse: collapse;
+		width: 100%;
+		font-size: var(--sl-text-sm);
+	}
+	th,
+	td {
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		padding: 0.45rem 0.6rem;
+		text-align: left;
+		vertical-align: top;
+	}
+	td.num {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+	}
+	small {
+		color: var(--sl-color-gray-3);
+	}
+</style>

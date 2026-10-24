@@ -1,0 +1,11 @@
+struct Player {
+    pub health: i32 = 100
+    pub score:  i32
+}
+
+fn main() {
+    let mut count: i32
+    let p: Player
+    count += 1
+    println!("{} {} {}", count, p.health, p.score)
+}

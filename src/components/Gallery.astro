@@ -1,0 +1,162 @@
+---
+// Screenshots of the examples in the Dazzle repository, each a complete program on a C
+// library built from its own source. The images are the examples' own, copied by
+// scripts/sync.mjs; the words are examples/README.md's.
+const REPO = 'https://github.com/dazzle-lang/Dazzle/tree/master/examples';
+
+const items = [
+	{
+		name: 'sdl3',
+		file: 'sdl3.avif',
+		size: [1920, 1080],
+		title: 'A real-time 3D scene',
+		lib: 'SDL3',
+		text: 'Per-pixel lighting, soft shadows, fog and 400 000 blades of instanced grass in GLSL. A large C library, built by its own CMake.',
+		wide: true,
+	},
+	{
+		name: 'breakout',
+		file: 'breakout.png',
+		size: [800, 600],
+		title: 'A complete game',
+		lib: 'raylib',
+		text: 'The rules in plain Dazzle, drawn with raylib.',
+	},
+	{
+		name: 'box2d',
+		file: 'box2d.gif',
+		size: [600, 375],
+		title: 'Rigid-body physics',
+		lib: 'Box2D + sokol',
+		text: 'Knock down a pyramid. Two C libraries in one project.',
+	},
+	{
+		name: 'stb',
+		file: 'stb.png',
+		size: [960, 540],
+		title: 'A ray tracer',
+		lib: 'stb_image_write',
+		text: 'Renders this image on the CPU and saves it as a PNG.',
+	},
+	{
+		name: 'sokol',
+		file: 'sokol.gif',
+		size: [560, 350],
+		title: 'A particle fountain',
+		lib: 'sokol',
+		text: 'Additive blending, on sokol_app, sokol_gfx and sokol_gl.',
+	},
+	{
+		name: 'rgfw',
+		file: 'rgfw.gif',
+		size: [400, 250],
+		title: 'A plasma effect',
+		lib: 'RGFW',
+		text: 'Computed pixel by pixel in a window, with no GPU API.',
+	},
+	{
+		name: 'raylib',
+		file: 'raylib.png',
+		size: [800, 450],
+		title: 'The smallest window',
+		lib: 'raylib',
+		text: 'A windowed program in sixteen lines.',
+	},
+];
+---
+
+<div class="dz-gallery not-content">
+	{
+		items.map((it) => (
+			<a class:list={['tile', { wide: it.wide }]} href={`${REPO}/${it.name}`}>
+				<div class="shot">
+					<img src={`/examples/${it.file}`} width={it.size[0]} height={it.size[1]} alt={`${it.title}: the ${it.name} example`} loading="lazy" decoding="async" />
+				</div>
+				<div class="caption">
+					<div class="row">
+						<span class="name">{it.title}</span>
+						<span class="lib">{it.lib}</span>
+					</div>
+					<p>{it.text}</p>
+				</div>
+			</a>
+		))
+	}
+</div>
+
+<style>
+	.dz-gallery {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+		gap: 1rem;
+		margin-block: 1.5rem 2rem;
+	}
+	.tile {
+		display: flex;
+		flex-direction: column;
+		border-radius: 0.8rem;
+		overflow: hidden;
+		border: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-6);
+		color: inherit;
+		text-decoration: none;
+		transition:
+			transform 0.15s ease,
+			border-color 0.15s ease,
+			box-shadow 0.15s ease;
+	}
+	.tile:hover,
+	.tile:focus-visible {
+		transform: translateY(-3px);
+		border-color: var(--sl-color-accent);
+		box-shadow: 0 14px 30px -16px rgb(0 0 0 / 0.6);
+	}
+	@media (min-width: 50rem) {
+		.tile.wide {
+			grid-column: span 2;
+			grid-row: span 2;
+		}
+	}
+	.shot {
+		aspect-ratio: 16 / 10;
+		background: #0b0d12;
+		overflow: hidden;
+	}
+	.wide .shot {
+		aspect-ratio: auto;
+		flex: 1;
+	}
+	.shot img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+	.caption {
+		padding: 0.7rem 0.85rem 0.85rem;
+	}
+	.row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+	.name {
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+	.lib {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-accent-high);
+		background: var(--sl-color-accent-low);
+		padding: 0.1rem 0.5rem;
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+	.caption p {
+		margin: 0.35rem 0 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-2);
+		line-height: 1.45;
+	}
+</style>

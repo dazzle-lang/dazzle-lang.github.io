@@ -1,0 +1,21 @@
+enum ErrorCode : u32 {
+    Empty = 1
+}
+
+fn parse_name(text: str) !-> str {
+    if text.len == 0 {
+        return error(ErrorCode::Empty as u32, "a name cannot be empty")
+    }
+    return text
+}
+
+fn main() {
+    let name = parse_name("") or "stranger"          // fall back
+    println!("hello, {}", name)
+
+    let other = parse_name("") or { e ->             // handle it
+        println!("{}:{}: {}", e.location.file, e.location.line, e.message)
+        "nobody"
+    }
+    println!("hello, {}", other)
+}

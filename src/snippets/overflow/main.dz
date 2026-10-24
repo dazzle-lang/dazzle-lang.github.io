@@ -1,0 +1,7 @@
+fn wraps(x: i32) -> bool {
+    return x + 1 < x
+}
+
+fn main() {
+    println!("{}", wraps(2147483647))
+}

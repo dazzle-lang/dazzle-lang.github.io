@@ -9,7 +9,8 @@
 //   repository point at GitHub;
 // - every `§N.M` and `D-NNNN` in prose becomes a link to that section or decision;
 // - the VS Code extension's grammar is copied so `dz` code blocks are highlighted;
-// - `dz` is built for WASI and copied, for the playground to run in the browser.
+// - `dz` is built for WASI and copied, for the playground to run in the browser;
+// - each example's screenshot is copied to public/examples/, for the landing page's gallery.
 //
 // Everything it writes is generated and ignored by git.
 
@@ -161,6 +162,23 @@ fs.copyFileSync(
 	path.join(OUT_GENERATED, 'dazzle.tmLanguage.json'),
 );
 
+// The landing page's gallery shows each example's screenshot, from the examples themselves,
+// so a new screenshot reaches the site on the next build.
+const OUT_EXAMPLES = path.join(SITE, 'public/examples');
+fs.rmSync(OUT_EXAMPLES, { recursive: true, force: true });
+fs.mkdirSync(OUT_EXAMPLES, { recursive: true });
+let screenshots = 0;
+for (const example of fs.readdirSync(path.join(REPO, 'examples'))) {
+	const dir = path.join(REPO, 'examples', example);
+	if (!fs.statSync(dir).isDirectory()) continue;
+	for (const file of fs.readdirSync(dir)) {
+		const ext = file.match(/^screenshot\.(png|gif|avif|jpg|webp)$/)?.[1];
+		if (!ext) continue;
+		fs.copyFileSync(path.join(dir, file), path.join(OUT_EXAMPLES, `${example}.${ext}`));
+		screenshots++;
+	}
+}
+
 // The playground runs the compiler itself in the browser: `dz` built for WASI, from the same
 // checkout as the pages. `DAZZLE_WASM` names one already built, to skip cargo.
 let wasm = process.env.DAZZLE_WASM;
@@ -179,7 +197,7 @@ if (!wasm) {
 fs.copyFileSync(wasm, path.join(OUT_GENERATED, 'dz.wasm'));
 
 console.log(
-	`sync: ${specPages.length + 1} spec pages and ${decisionPages.length + 1} decision pages from ${REPO}, and the compiler for the playground`,
+	`sync: ${specPages.length + 1} spec pages, ${decisionPages.length + 1} decision pages and ${screenshots} screenshots from ${REPO}, and the compiler for the playground`,
 );
 
 // ---------------------------------------------------------------------------------------

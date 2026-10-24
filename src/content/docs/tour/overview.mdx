@@ -1,0 +1,32 @@
+---
+title: The tour
+description: A short tour of Dazzle, one idea per page. Errors as values, ownership and RAII, modules without headers, C and C++ libraries from source, macros, generics and traits, and the tooling.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Each page of the tour covers one idea: what it looks like, why it works that way, and the part of the specification that defines it. You can read them in any order.
+
+<CardGrid>
+	<Card title="Errors as values" icon="warning">
+		`!->` on a signature marks a function that can fail, and one `or` clause handles the failure. The same clause handles an optional and a null pointer. An unhandled failure is a compile error. [Errors →](/tour/errors/)
+	</Card>
+	<Card title="RAII in three members" icon="puzzle">
+		A constructor, `drop` and `copy`. The compiler writes moves and assignments, and a moved-from value is reset to its defaults. [Ownership →](/tour/ownership/)
+	</Card>
+	<Card title="Modules without headers" icon="list-format">
+		One manifest per module says what every file can name. There are no headers, no include order and no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)
+	</Card>
+	<Card title="C and C++ from source" icon="seti:c">
+		A short recipe builds the library, and libclang turns its header into a Dazzle module, with classes and overloaded methods included. [C++ interop →](/tour/cpp-interop/)
+	</Card>
+	<Card title="Macros the editor understands" icon="seti:config">
+		Macros are declarative and hygienic, and their expansions are written in Dazzle. The editor still completes and hovers inside an invocation. [Macros →](/tour/macros/)
+	</Card>
+	<Card title="Generics checked where they are written" icon="magnifier">
+		Bounds are checked at the definition, then Dazzle monomorphizes. Traits dispatch statically or through a fat pointer, and unions switch exhaustively. [Types and generics →](/tour/types-and-generics/)
+	</Card>
+	<Card title="Tooling from day one" icon="laptop">
+		There is a language server and a VS Code extension, plus `dz fmt`, `dz fix` and `dz explain`. Tests and benchmarks are written beside the code they cover. [Tooling →](/tour/tooling/)
+	</Card>
+</CardGrid>

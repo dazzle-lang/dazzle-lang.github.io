@@ -1,0 +1,12 @@
+fn say(word: str) -> i32 {
+    println!("{}", word)
+    return 0
+}
+
+fn both(a: i32, b: i32) -> i32 {
+    return a + b
+}
+
+fn main() {
+    let _ = both(say("first"), say("second"))
+}

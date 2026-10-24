@@ -24,6 +24,7 @@ pnpm-debug.log*
 generated/
 src/content/docs/spec/
 src/content/docs/decisions/
+public/examples/
 dazzle/
 
 # a local code index, not part of the site

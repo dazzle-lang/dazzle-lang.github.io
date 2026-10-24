@@ -1,0 +1,41 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "fdbd580",
+		"g++": "g++ (GCC) 16.2.1 20260810",
+		"clang++": "clang version 23.1.3"
+	},
+	"dazzle": {
+		"command": "dz run --release .",
+		"exit": 134,
+		"output": "panic: index 5 is out of bounds for length 3\n  at main (src/main.dz:4:20)\n"
+	},
+	"cpp": {
+		"g++": {
+			"plain": {
+				"warnings": [],
+				"exit": 0,
+				"output": "-911716128\n"
+			},
+			"wall": {
+				"warnings": [
+					"array subscript 5 is above array bounds of ‘int [3]’ [-Warray-bounds=]"
+				],
+				"exit": 0,
+				"output": "-1274801824\n"
+			}
+		},
+		"clang++": {
+			"plain": {
+				"warnings": [],
+				"exit": 0,
+				"output": "-415342632\n"
+			},
+			"wall": {
+				"warnings": [],
+				"exit": 0,
+				"output": "568160152\n"
+			}
+		}
+	}
+}
