@@ -1,0 +1,23 @@
+/* The logo's gold, as Starlight's accent. Light mode uses darker shades so links keep
+   enough contrast on white. */
+:root {
+	--sl-color-accent-low: #3a2e17;
+	--sl-color-accent: #c1a36a;
+	--sl-color-accent-high: #ecdcb8;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f3e8d0;
+	--sl-color-accent: #8a6a2c;
+	--sl-color-accent-high: #4a3912;
+}
+
+.site-title img {
+	height: 1.6rem;
+	width: auto;
+}
+
+/* The landing page's code samples are the pitch, so give them room. */
+.hero + .sl-markdown-content .expressive-code {
+	margin-block: 1.5rem;
+}

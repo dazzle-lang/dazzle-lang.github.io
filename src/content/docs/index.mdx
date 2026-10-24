@@ -1,0 +1,113 @@
+---
+title: Dazzle, a systems language that compiles to readable C++
+description: Dazzle is a systems programming language that compiles to readable C++17. RAII with three special members, enforced encapsulation, errors as values, and C and C++ libraries used straight from source.
+template: splash
+editUrl: false
+head:
+  - tag: title
+    content: Dazzle programming language | A systems language that compiles to readable C++
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A systems programming language that compiles to readable C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
+hero:
+  title: A systems language that compiles to readable C++
+  tagline: The control of C++ without forty years of accumulated syntax. RAII reduced to three special members, encapsulation the compiler enforces, errors as values, and C and C++ libraries used straight from their source.
+  actions:
+    - text: Get started
+      link: /start/install/
+      icon: right-arrow
+    - text: Take the tour
+      link: /tour/errors/
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/dazzle-lang/Dazzle
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Pre-release">
+Dazzle is **0.1, unreleased**. It compiles and runs programs, checks ownership, calls C and C++, and has a language server, but the language is still changing. See [where it stands](/project/status/).
+</Aside>
+
+## raylib, with no bindings
+
+```dz
+fn main() {
+    rl::InitWindow(800, 450, "Dazzle")
+    defer rl::CloseWindow()
+
+    while !rl::WindowShouldClose() {
+        rl::BeginDrawing()
+        rl::ClearBackground(rl::RAYWHITE)
+        rl::DrawCircleV(rl::GetMousePosition(), 8, rl::MAROON)
+        rl::EndDrawing()
+    }
+}
+```
+
+The compiler, `dz`, built raylib from its own seven `.c` files, which is all a [`dazzle.toml` recipe](/tour/cpp-interop/) names. No CMake, no prebuilt library and no binding layer were involved: libclang read `raylib.h`, and its functions became an ordinary Dazzle module.
+
+## What it gives you
+
+<CardGrid>
+	<Card title="Errors are values" icon="warning">
+		No exceptions, no `try`/`catch`, no `Result<T, E>`. A function that can fail says so with `!->`, and the caller handles it with one postfix `or` clause. An unhandled failure is a compile error. [Errors →](/tour/errors/)
+	</Card>
+	<Card title="RAII in three members" icon="puzzle">
+		A constructor, `drop` and `copy`. No rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
+	</Card>
+	<Card title="C and C++ from source" icon="seti:c">
+		Name a library's sources in the manifest and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. [C++ interop →](/tour/cpp-interop/)
+	</Card>
+	<Card title="Errors point at your code" icon="magnifier">
+		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)
+	</Card>
+	<Card title="Readable C++17 out" icon="document">
+		The output is plain C++17, built with `-fno-exceptions -fno-rtti`, with `#line` directives back to your `.dz` files, so gdb, Visual Studio and profilers show your source.
+	</Card>
+	<Card title="Tooling from day one" icon="laptop">
+		A language server and VS Code extension, `dz fmt`, `dz fix`, `dz explain`, and tests and benchmarks written beside the code they cover. [Tooling →](/tour/tooling/)
+	</Card>
+</CardGrid>
+
+## One clause for everything that can fail
+
+```dz
+enum ErrorCode : u32 {
+    Empty = 1
+}
+
+fn parse_name(text: str) !-> str {
+    if text.len == 0 {
+        return error(ErrorCode::Empty as u32, "a name cannot be empty")
+    }
+    return text
+}
+
+fn main() {
+    let name = parse_name("") or "stranger"          // fall back
+    println!("hello, {}", name)
+
+    let other = parse_name("") or { e ->             // handle it
+        println!("{}:{}: {}", e.location.file, e.location.line, e.message)
+        "nobody"
+    }
+    println!("hello, {}", other)
+}
+```
+
+An `Error` is 32 bytes and never allocates. It carries a code, a message and the source location that created it, which is most of what a stack trace tells you, at no runtime cost. Forgetting to handle one is a compile error.
+
+## Where it fits
+
+Anywhere you would otherwise reach for C++: **games and engines** (the furthest along today, with [a Breakout game](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) written in no C++ of its own), **embedded and firmware** (no runtime, no garbage collector, output any vendor toolchain compiles), **tools and native applications**, **real-time code** where a garbage-collector pause is a bug, and **inside an existing C++ codebase**, one module at a time.
+
+<CardGrid>
+	<LinkCard title="Why Dazzle" description="The principles, and what Dazzle deliberately is not." href="/start/why-dazzle/" />
+	<LinkCard title="Install" description="Build dz from source and run your first program." href="/start/install/" />
+	<LinkCard title="Dazzle compared with C++" description="What changes for a C++ programmer, and what stays." href="/compare/cpp/" />
+	<LinkCard title="The specification" description="The language contract, section by section." href="/spec/" />
+</CardGrid>

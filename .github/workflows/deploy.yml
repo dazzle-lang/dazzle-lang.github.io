@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # The spec and decision pages come from the Dazzle repository, so rebuild daily to pick
+  # up its changes. Run the workflow by hand to publish one sooner.
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check out the Dazzle repository
+        uses: actions/checkout@v7
+        with:
+          repository: dazzle-lang/Dazzle
+          path: dazzle
+          sparse-checkout: |
+            docs
+            editors/vscode/syntaxes
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          DAZZLE_REPO: dazzle
+
+      - name: Check internal links
+        run: npm run check
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

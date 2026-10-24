@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dazzle-lang.github.io/sitemap-index.xml
