@@ -42,7 +42,12 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Start here',
-					items: ['start/why-dazzle', 'start/install', 'start/first-program'],
+					items: [
+						'start/why-dazzle',
+						'start/install',
+						'start/first-program',
+						{ label: 'Playground', link: '/playground/' },
+					],
 				},
 				{
 					label: 'Tour',

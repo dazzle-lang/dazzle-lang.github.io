@@ -1,0 +1,292 @@
+---
+// The playground. Everything it does happens in the browser — the compiler is `dz` itself,
+// built for WASI by `scripts/sync.mjs` — except Run, which asks Compiler Explorer to build
+// and run the generated C++. See `src/playground/`.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+---
+
+<StarlightPage
+	frontmatter={{
+		title: 'Playground',
+		description:
+			'Write Dazzle in the browser and see the C++17 it compiles to as you type, then build and run it on Compiler Explorer.',
+		template: 'splash',
+		editUrl: false,
+	}}
+>
+	<p class="pg-intro">
+		Write Dazzle on the left and the C++ it compiles to appears on the right as you type. The compiler is the real
+		<code>dz</code>, running in your browser, with <code>--no-line-directives</code> so the output reads as plain C++.{' '}
+		<strong>Run</strong> sends that C++ to <a href="https://godbolt.org">Compiler Explorer</a> to build and execute it;
+		nothing leaves the page until you press it.
+	</p>
+
+	<div id="pg" class="not-content" data-failed="false">
+		<div class="pg-bar">
+			<label class="pg-field">
+				<span class="sr-only">Example</span>
+				<select id="pg-example"><option value="" selected disabled hidden>Examples</option></select>
+			</label>
+			<button id="pg-format" type="button">Format</button>
+			<button id="pg-share" type="button">Share</button>
+			<span id="pg-status" class="pg-status" role="status">Loading the compiler…</span>
+			<label class="pg-field pg-push">
+				<span class="sr-only">C++ compiler</span>
+				<select id="pg-compiler"></select>
+			</label>
+			<button id="pg-explorer" type="button">Open in Compiler Explorer</button>
+			<button id="pg-run" class="pg-primary" type="button" title="Ctrl+Enter">Run</button>
+		</div>
+
+		<div class="pg-panes">
+			<section class="pg-pane" aria-label="Dazzle source">
+				<header class="pg-head"><span>main.dz</span></header>
+				<div id="pg-editor" class="pg-code"></div>
+			</section>
+			<section class="pg-pane pg-generated" aria-label="Generated C++">
+				<header id="pg-tabs" class="pg-head pg-tabs" role="tablist"></header>
+				<div id="pg-output" class="pg-code"></div>
+			</section>
+		</div>
+
+		<section class="pg-pane pg-console" aria-label="Output">
+			<header class="pg-head"><span>Output</span></header>
+			<div class="pg-log" aria-live="polite">
+				<pre id="pg-diagnostics"></pre>
+				<pre id="pg-program" class="pg-hint">Press Run, or Ctrl+Enter, to build and run the program.</pre>
+			</div>
+		</section>
+	</div>
+</StarlightPage>
+
+<script>
+	import '../playground/main.js';
+</script>
+
+<style is:global>
+	/* The playground wants the whole width, not the reading column. */
+	main:has(#pg) {
+		--sl-content-width: 110rem;
+	}
+
+	#pg {
+		/* `--sl-font-mono` is Starlight's hook for a site's own choice, unset by default. */
+		--pg-mono: var(--sl-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace);
+		--pg-bg: var(--sl-color-black);
+		--pg-active: color-mix(in srgb, var(--sl-color-gray-5) 35%, transparent);
+		--pg-selection: color-mix(in srgb, var(--sl-color-accent) 35%, transparent);
+		--pg-keyword: #d79ae0;
+		--pg-type: #e5c07b;
+		--pg-string: #98c379;
+		--pg-number: #e09a6b;
+		--pg-comment: #7f8796;
+		--pg-meta: #6cb6e8;
+		--pg-function: #8fb8f0;
+		margin-top: 1.5rem;
+	}
+	:root[data-theme='light'] #pg {
+		--pg-bg: #fbfbfc;
+		--pg-keyword: #8b2fa0;
+		--pg-type: #8a5a00;
+		--pg-string: #3c7a1e;
+		--pg-number: #b04a10;
+		--pg-comment: #6b7280;
+		--pg-meta: #1f6aa5;
+		--pg-function: #2459b5;
+	}
+	.pg-intro {
+		max-width: 48rem;
+	}
+
+	.pg-bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+	.pg-bar button,
+	.pg-bar select {
+		font: inherit;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-white);
+		background: var(--sl-color-gray-6);
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.4rem;
+		padding: 0.35rem 0.8rem;
+		cursor: pointer;
+	}
+	.pg-bar button:hover,
+	.pg-bar select:hover {
+		border-color: var(--sl-color-gray-3);
+	}
+	.pg-bar button:disabled {
+		opacity: 0.6;
+		cursor: progress;
+	}
+	.pg-bar .pg-primary {
+		background: var(--sl-color-accent);
+		border-color: var(--sl-color-accent);
+		color: var(--sl-color-black);
+		font-weight: 600;
+		padding-inline: 1.4rem;
+	}
+	.pg-push {
+		margin-inline-start: auto;
+	}
+	.pg-status {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+
+	.pg-panes {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 0.75rem;
+	}
+	.pg-pane {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.5rem;
+		overflow: hidden;
+		background: var(--pg-bg);
+	}
+	.pg-head {
+		display: flex;
+		gap: 0.25rem;
+		padding: 0.3rem 0.6rem;
+		font-family: var(--pg-mono);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-6);
+	}
+	.pg-tabs {
+		overflow-x: auto;
+		padding-block: 0.2rem;
+	}
+	.pg-tabs button {
+		font: inherit;
+		color: inherit;
+		background: none;
+		border: none;
+		border-radius: 0.3rem;
+		padding: 0.15rem 0.5rem;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+	.pg-tabs button[aria-selected='true'] {
+		color: var(--sl-color-white);
+		background: var(--pg-bg);
+	}
+	.pg-code {
+		height: min(62vh, 38rem);
+	}
+	#pg[data-failed='true'] .pg-generated .pg-code {
+		opacity: 0.45;
+	}
+
+	.pg-console {
+		margin-top: 0.75rem;
+	}
+	.pg-log {
+		padding: 0.6rem 0.8rem;
+		height: 16rem;
+		overflow: auto;
+		font-family: var(--pg-mono);
+		font-size: var(--sl-text-xs);
+		line-height: 1.5;
+		color: var(--sl-color-white);
+	}
+	.pg-log pre {
+		margin: 0;
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		color: inherit;
+		overflow: visible;
+		/* Diagnostics are drawn with columns that must line up. */
+		white-space: pre;
+	}
+	/* The program's part, under the compiler's; its output can wrap. */
+	.pg-log #pg-program {
+		white-space: pre-wrap;
+		margin-top: 0.9rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+	.pg-log #pg-diagnostics:empty + #pg-program {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: none;
+	}
+	.pg-log .pg-hint,
+	.pg-log .pg-quiet {
+		color: var(--sl-color-gray-3);
+	}
+	.pg-log .pg-title {
+		color: var(--sl-color-gray-3);
+		font-weight: 600;
+	}
+
+	/* What `dz` colours, as `ansi.js` names it: codespan's error red, warning yellow, and
+	   the blue and cyan of its gutter and help lines. */
+	#pg {
+		--ansi-red: #f87171;
+		--ansi-yellow: #fbbf24;
+		--ansi-green: #4ade80;
+		--ansi-blue: #60a5fa;
+		--ansi-cyan: #22d3ee;
+		--ansi-magenta: #e879f9;
+	}
+	:root[data-theme='light'] #pg {
+		--ansi-red: #c81e1e;
+		--ansi-yellow: #9a6700;
+		--ansi-green: #1a7f37;
+		--ansi-blue: #1f5fd1;
+		--ansi-cyan: #0e7490;
+		--ansi-magenta: #a21caf;
+	}
+	.ansi-bold {
+		font-weight: 700;
+	}
+	.ansi-red,
+	.ansi-bright-red {
+		color: var(--ansi-red);
+	}
+	.ansi-yellow,
+	.ansi-bright-yellow {
+		color: var(--ansi-yellow);
+	}
+	.ansi-green,
+	.ansi-bright-green {
+		color: var(--ansi-green);
+	}
+	.ansi-blue,
+	.ansi-bright-blue {
+		color: var(--ansi-blue);
+	}
+	.ansi-cyan,
+	.ansi-bright-cyan {
+		color: var(--ansi-cyan);
+	}
+	.ansi-magenta,
+	.ansi-bright-magenta {
+		color: var(--ansi-magenta);
+	}
+
+	@media (max-width: 50rem) {
+		.pg-panes {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.pg-code {
+			height: 50vh;
+		}
+		.pg-push {
+			margin-inline-start: 0;
+		}
+	}
+</style>

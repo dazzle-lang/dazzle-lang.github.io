@@ -1,0 +1,24 @@
+union Command {
+    Say { text: str }
+    Move { x: f32, y: f32 }
+    Quit {}
+}
+
+fn describe(c: &Command) -> str {
+    return switch c {
+        case Say(&s) {
+            s.text
+        }
+        case Move {
+            "move"
+        }
+        case Quit {
+            "quit"
+        }
+    }
+}
+
+fn main() {
+    let c = Command::Move{ x: 1, y: 2 }
+    println!("{} {}", describe(&c), describe(&Command::Say{ text: "hello" }))
+}

@@ -1,0 +1,37 @@
+trait Shape {
+    fn area(&self) -> f32
+
+    fn twice(&self) -> f32 {         // a default method
+        return self.area() * 2
+    }
+}
+
+struct Square {
+    pub side: f32 = 1
+}
+
+impl Shape for Square {
+    fn area(&self) -> f32 {
+        return side * side
+    }
+}
+
+impl Shape for f32 {                 // built-in types implement traits too
+    fn area(&self) -> f32 {
+        return self
+    }
+}
+
+fn total<T: Shape>(a: &T, b: &T) -> f32 {    // static dispatch: one instance per T
+    return a.area() + b.area()
+}
+
+fn measure(s: &Shape) -> f32 {               // dynamic dispatch: any implementer
+    return s.twice()
+}
+
+fn main() {
+    let sq = Square{ side: 3 }
+    let n: f32 = 4
+    println!("{} {} {}", total(&sq, &sq), measure(&sq), measure(&n))
+}

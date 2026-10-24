@@ -8,10 +8,12 @@
 // - links between spec files point at the site's pages, and links to anything else in the
 //   repository point at GitHub;
 // - every `§N.M` and `D-NNNN` in prose becomes a link to that section or decision;
-// - the VS Code extension's grammar is copied so `dz` code blocks are highlighted.
+// - the VS Code extension's grammar is copied so `dz` code blocks are highlighted;
+// - `dz` is built for WASI and copied, for the playground to run in the browser.
 //
 // Everything it writes is generated and ignored by git.
 
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import GithubSlugger from 'github-slugger';
@@ -159,8 +161,25 @@ fs.copyFileSync(
 	path.join(OUT_GENERATED, 'dazzle.tmLanguage.json'),
 );
 
+// The playground runs the compiler itself in the browser: `dz` built for WASI, from the same
+// checkout as the pages. `DAZZLE_WASM` names one already built, to skip cargo.
+let wasm = process.env.DAZZLE_WASM;
+if (!wasm) {
+	const args = ['build', '--release', '-p', 'dz', '--target', 'wasm32-wasip1'];
+	const built = spawnSync('cargo', args, { cwd: REPO, stdio: 'inherit' });
+	if (built.status !== 0) {
+		console.error(
+			`sync: \`cargo ${args.join(' ')}\` failed in ${REPO}; the playground needs it ` +
+				'(rustup target add wasm32-wasip1), or set DAZZLE_WASM to a built dz.wasm.',
+		);
+		process.exit(1);
+	}
+	wasm = path.join(REPO, 'target/wasm32-wasip1/release/dz.wasm');
+}
+fs.copyFileSync(wasm, path.join(OUT_GENERATED, 'dz.wasm'));
+
 console.log(
-	`sync: ${specPages.length + 1} spec pages and ${decisionPages.length + 1} decision pages from ${REPO}`,
+	`sync: ${specPages.length + 1} spec pages and ${decisionPages.length + 1} decision pages from ${REPO}, and the compiler for the playground`,
 );
 
 // ---------------------------------------------------------------------------------------

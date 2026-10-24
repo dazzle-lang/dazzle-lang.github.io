@@ -1,0 +1,39 @@
+struct Image {
+    pub width:  u32
+    pub height: u32
+    m_pixels:   own ^mut u8          // Image frees this; private, like every unmarked field
+
+    Image(width: u32, height: u32) { // the constructor
+        self.width = width
+        self.height = height
+        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
+    }
+
+    fn bytes(&self) -> usize {
+        return width as usize * height as usize * 4
+    }
+}
+
+impl Drop for Image {                // runs exactly once, at the end of the owner's scope
+    fn drop(&mut self) {
+        Allocators::Global.free(m_pixels, self.bytes(), 4)
+    }
+}
+
+impl Copy for Image {                // opt-in: without it, Image is move-only
+    fn copy(&mut self, other: &Self) {
+        width = other.width
+        height = other.height
+        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
+        unsafe {
+            memcpy(m_pixels, other.m_pixels, self.bytes())
+        }
+    }
+}
+
+fn main() {
+    let a = Image(64, 64)
+    let b = a                        // a copy: runs `copy`
+    let c = move(a)                  // a move: `a` is reset to its defaults
+    println!("{} {}", b.width, c.width)
+}                                    // c, b and a are dropped, in that order

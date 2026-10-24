@@ -25,3 +25,6 @@ generated/
 src/content/docs/spec/
 src/content/docs/decisions/
 dazzle/
+
+# a local code index, not part of the site
+.tokensave/

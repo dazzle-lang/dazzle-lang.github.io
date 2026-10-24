@@ -10,7 +10,9 @@ The Dazzle website: Astro + Starlight, deployed to GitHub Pages by
   before writing about a feature. The spec's own rules apply (its `CLAUDE.md`).
 - **Every complete Dazzle program on a hand-written page must compile and run.** Check it
   with `dz run` before publishing; error messages shown on a page should be real `dz`
-  output, not invented.
+  output, not invented. That includes the playground's examples
+  (`src/playground/examples/`), except `a-mistake.dz`, which must fail with exactly one
+  error.
 - **Comparison pages make claims about other languages.** Keep them to well-established
   facts and fair "choose X if" sections.
 - Run `npm run build && npm run check` before finishing: the check fails on a broken

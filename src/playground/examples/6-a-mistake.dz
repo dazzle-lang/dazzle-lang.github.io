@@ -1,0 +1,13 @@
+fn parse_count(text: str) !-> i32 {
+    if text.len == 0 {
+        return error(1, "no count given")
+    }
+    return text.len as i32
+}
+
+fn main() {
+    // This can fail, and nothing handles the failure. Add `or ignore`
+    // to drop it deliberately, or `or 0` to fall back.
+    parse_count("three")
+    println!("counted")
+}

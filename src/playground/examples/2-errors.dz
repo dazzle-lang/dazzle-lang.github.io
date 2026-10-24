@@ -1,0 +1,30 @@
+enum ErrorCode : u32 {
+    Empty = 1
+    TooLong
+}
+
+fn parse_name(text: str) !-> str {
+    if text.len == 0 {
+        return error(ErrorCode::Empty as u32, "a name cannot be empty")
+    }
+    if text.len > 16 {
+        return error(ErrorCode::TooLong as u32, "name too long: {} bytes", text.len)
+    }
+    return text
+}
+
+fn greet(text: str) !-> i32 {
+    let name = parse_name(text) or return          // propagate
+    println!("hello, {}", name)
+    return 0
+}
+
+fn main() {
+    let name = parse_name("") or "stranger"        // fall back
+    println!("hello, {}", name)
+    greet("Ada") or ignore                         // deliberately drop the failure
+    greet("a name that is far too long") or { e -> // handle it
+        println!("failed at {}:{}: {}", e.location.file, e.location.line, e.message)
+        0
+    }
+}

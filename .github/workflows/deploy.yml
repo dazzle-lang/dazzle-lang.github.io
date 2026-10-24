@@ -32,6 +32,16 @@ jobs:
           sparse-checkout: |
             docs
             editors/vscode/syntaxes
+            crates
+
+      # The playground runs `dz` in the browser, built for WASI by `npm run sync`.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: dazzle
 
       - uses: actions/setup-node@v7
         with:
