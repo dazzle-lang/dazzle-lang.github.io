@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   # The spec and decision pages come from the Dazzle repository, so rebuild daily to pick
   # up its changes. Run the workflow by hand to publish one sooner.
   schedule:

@@ -1,11 +1,22 @@
 ---
 title: Why Dazzle
-description: Why Dazzle exists, the six principles that shape it, and what it deliberately does not try to be. A systems language between C++ and Odin.
+description: Why Dazzle exists, why it compiles to C++ instead of bringing its own toolchain, the principles that shape it, and what it deliberately does not try to be.
 ---
 
-C++ gives you control and abstraction, but buries them under undefined behaviour and syntax nobody can hold in their head. Odin gives you clarity, but takes away encapsulation, RAII, and the layered abstractions that hold up in a large codebase. **Dazzle aims at the space between the two**: a systems language with C++'s control, a much smaller surface, and a compiler that teaches you the rules rather than punishing you for them.
+C++ is chosen for control: predictable performance, deterministic destruction, no garbage collector, and every C and C++ library ever written. What it costs is forty years of accumulated syntax, undefined behaviour, the rule of five, headers, exceptions most projects turn off, and template errors that point into code nobody wrote.
 
-It compiles to readable C++17, so it runs everywhere C++ does, links with everything C++ links with, and uses C and C++ libraries directly from their source.
+**Dazzle is an upgrade of C++.** Like Carbon, it is meant to replace C++ in the projects that use it, keeping the control and dropping the cost. Unlike Carbon, it does not bring a toolchain of its own: it compiles to standard C++17.
+
+## Why compile to C++?
+
+A successor to C++ has to work where C++ works: on every desktop, console and embedded target, with the vendor's compiler, inside build systems and codebases that already exist. Building a new LLVM-based toolchain means re-earning all of that, target by target. Compiling to C++ gets it on the first day.
+
+- **Any C++17 compiler builds it**: clang++, g++, or a console SDK's or chip vendor's compiler. The output needs no exceptions and no RTTI, because console and embedded targets routinely turn both off.
+- **Nothing underneath changes.** The C++ compiler's optimiser, debugger, profiler, sanitizers and build flags all still apply. `#line` directives map the output back to your `.dz` files, so the debugger steps through Dazzle, not through generated code.
+- **It drops into an existing C++ project.** A Dazzle module is C++ to the code around it, so a codebase can adopt it one module at a time without changing its compiler or its build.
+- **C++ does the jobs it already does well**, once per construct: destructors and their order, copy constructors, temporaries, struct layout, overload resolution in imported headers. Dazzle does the jobs C++ does badly, such as checking generics, itself.
+
+The generated C++ is not meant to be read, any more than an object file is. It is full of `#line` directives, temporaries and helper functions. What you read and debug is the Dazzle source.
 
 ## The principles
 
@@ -14,25 +25,25 @@ In priority order. When two conflict, the earlier one wins.
 1. **You can always see the machine.** No hidden allocations, no hidden control flow, no garbage collector, no runtime you did not ask for. If a line of Dazzle allocates, it says so.
 2. **Destruction is deterministic and automatic.** RAII, with exactly three special members instead of C++'s five and a half: a constructor, `copy` and `drop`. [More on ownership](/tour/ownership/).
 3. **Encapsulation is enforced, not conventional.** Private is the default. The compiler, not a naming convention, stops one layer reaching into another's internals.
-4. **Errors point at your code.** Generics are checked where they are written and monomorphized by Dazzle, and the output carries `#line` directives, so a mistake in a generic function is reported in *that function*, not in a 400-line template instantiation trace.
-5. **The escape hatch is a door, not a hole.** C++ interop is a first-class feature with a real header importer, not an `extern "C"` afterthought. raylib already works with no bindings. [More on interop](/tour/cpp-interop/).
+4. **Errors point at your code.** Generics are checked where they are written and monomorphized by Dazzle, so a mistake in a generic function is reported in *that function*, not in a 400-line template instantiation trace.
+5. **The escape hatch is a door, not a hole.** C++ interop is a first-class feature with a real header importer, not an `extern "C"` afterthought. [More on interop](/tour/cpp-interop/).
 6. **Compile fast.** Someone working in a large native codebase recompiles hundreds of times a day. A design that trades compile time for cleverness loses.
 
 ## What it is not
 
-- **Not memory-safe in Rust's sense.** Dazzle prevents use-after-move and double-free, but it has no borrow checker and no lifetimes, so it does not prevent every dangling reference. What it does instead is *mark* the places a dangling pointer can bite: every read or write through a raw pointer sits inside `unsafe`, where a reader, or `grep`, can find it. References (`&T`) can never be stored in a field, which removes most of the cases that would need lifetimes.
+- **Not memory-safe in Rust's sense.** Dazzle prevents use-after-move and double-free, but it has no borrow checker and no lifetimes, so it does not prevent every dangling reference. What it does instead is *mark* the places a dangling pointer can bite: every read or write through a raw pointer sits inside `unsafe`, where a reader, or `grep`, can find it. References (`&T`) can never be stored in a field, which removes the most common dangling case without any analysis.
 - **No garbage collector, green threads or implicit runtime.**
-- **Not source-compatible with C++.** Dazzle *calls* C++; it is not a superset of it.
-- **Not small.** Odin is small, and that is part of the problem Dazzle is solving. Dazzle has traits, generics, single inheritance, tagged unions, macros and reflection, because large codebases need them.
+- **Not source-compatible with C++.** Dazzle *calls* C++ and compiles *to* it; it is not a superset of it.
+- **Not a minimal language.** Large codebases need abstraction, so Dazzle has traits, generics, single inheritance, tagged unions, macros and reflection. It keeps each of them visible at the place it acts.
 
 ## Who it is for
 
-Anyone who writes C++ today because nothing else gives them the control, and would rather not:
+Anyone who writes C++ today because nothing else gives them the control:
 
-- **Game and engine programmers.** This is the furthest along: raylib builds from source with no bindings, and the repository's [Breakout example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) is a game with no C++ of its own.
-- **Embedded and firmware developers.** No runtime, no garbage collector, deterministic destruction, and output compiled with `-fno-exceptions -fno-rtti` that any vendor toolchain accepts. Freestanding targets (no heap, no operating system) are on the [roadmap](/project/status/).
+- **Game and engine programmers.** This is the furthest along: the repository's [Breakout example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) is a game with no C++ of its own, drawing through a C library built from source.
+- **Embedded and firmware developers.** No runtime, no garbage collector, deterministic destruction, and output that a vendor's toolchain accepts. Freestanding targets (no heap, no operating system) are on the [roadmap](/project/status/).
 - **Tool and application authors**, where startup time and memory use matter.
-- **Teams with an existing C++ codebase.** The output is plain C++, so Dazzle can be adopted one module at a time.
+- **Teams with an existing C++ codebase**, who can adopt Dazzle one module at a time.
 
 ## Designed to be learned from the compiler
 
@@ -41,4 +52,4 @@ No model has Dazzle in its training data, and no new programmer has it in their 
 ## Next
 
 - [Install `dz`](/start/install/) and run a program.
-- Read how Dazzle compares with [C++](/compare/cpp/), [Rust](/compare/rust/), [Zig](/compare/zig/) or [Odin](/compare/odin/).
+- See how Dazzle compares with [Carbon and cpp2](/compare/carbon-cpp2/), [C++](/compare/cpp/), [Rust](/compare/rust/) and [Zig](/compare/zig/).

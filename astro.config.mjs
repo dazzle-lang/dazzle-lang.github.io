@@ -5,7 +5,7 @@ import starlight from '@astrojs/starlight';
 
 const SITE = 'https://dazzle-lang.github.io';
 const DESCRIPTION =
-	'Dazzle is a systems programming language that compiles to readable C++17: RAII with three special members, enforced encapsulation, errors as values, and C and C++ libraries used straight from source.';
+	'Dazzle is a successor to C++ that compiles to standard C++17: RAII with three special members, errors as values, enforced encapsulation, and C and C++ libraries used straight from source.';
 
 // Copied from the Dazzle repository's VS Code extension by `scripts/sync.mjs`, so code
 // blocks tagged `dz` are highlighted by the same grammar the editor uses.
@@ -26,7 +26,7 @@ export default defineConfig({
 			social: [{ icon: 'github', label: 'Dazzle on GitHub', href: 'https://github.com/dazzle-lang/Dazzle' }],
 			// Hand-written pages are edited here; the spec and decision pages set their own
 			// `editUrl`, pointing at the Dazzle repository they come from.
-			editLink: { baseUrl: 'https://github.com/dazzle-lang/dazzle-lang.github.io/edit/main/' },
+			editLink: { baseUrl: 'https://github.com/dazzle-lang/dazzle-lang.github.io/edit/master/' },
 			customCss: ['./src/styles/custom.css'],
 			expressiveCode: { shiki: { langs: [dazzle] } },
 			head: [
@@ -35,7 +35,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image', content: `${SITE}/og.png` } },
 				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
-				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Dazzle: a systems language that compiles to readable C++' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Dazzle: a systems language that compiles to C++' } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
 				{ tag: 'meta', attrs: { name: 'twitter:image', content: `${SITE}/og.png` } },
 			],
@@ -58,7 +58,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Compared with',
-					items: ['compare/cpp', 'compare/rust', 'compare/zig', 'compare/odin', 'compare/carbon-cpp2'],
+					items: ['compare/carbon-cpp2', 'compare/cpp', 'compare/rust', 'compare/zig'],
 				},
 				{
 					label: 'Specification',

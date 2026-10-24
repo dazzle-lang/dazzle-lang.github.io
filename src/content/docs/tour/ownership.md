@@ -96,6 +96,16 @@ error[DZ0401]: `a` was moved and cannot be used again
 
 Dazzle prevents use-after-move and double-free. It is not memory-safe in Rust's sense: see [Dazzle compared with Rust](/compare/rust/).
 
+## Why it works this way
+
+**Why three members?** In C++, a type that owns a resource needs a destructor, then a copy constructor, copy assignment, move constructor and move assignment to make copies and moves correct, and getting any one of them wrong is a silent bug. Four of those five follow mechanically from the other three, so Dazzle writes them. You write only what is specific to your type: how to build it, how to release it, and, if it can be copied, how.
+
+**Why reset a moved-from value?** C++ leaves a moved-from object "valid but unspecified", so whether its destructor or a later use is safe depends on each type's author. Resetting it to its defaults makes the answer the same for every type: its `drop` runs and does nothing, because it now holds nothing. It costs a few stores per move and removes a whole category of bug, and reading it again is still a compile error.
+
+**Why can't a reference be stored?** The most common dangling reference is one kept in an object that outlives what it points at. Banning references in fields makes that impossible, with no analysis at all, so Dazzle needs no lifetimes and no borrow checker. The cost is that a struct holding a context keeps a `^T` pointer instead, and a pointer that dangles is still your problem, but every use of it is marked `unsafe`.
+
+**Why explicit allocators?** An implicit allocator removes the parameter from every signature, and with it the ability to tell from a call whether it allocates, or from where. Dazzle keeps the parameter and gives it a default, so ordinary code reads cleanly and code that cares, a frame arena in a game loop, says so at the call.
+
 ## What it becomes in C++
 
 The three members map onto C++ special members, and the rest of the rule of five is synthesised, so C++ itself enforces destruction order, temporaries, and the deleted copy of a move-only type. Abridged from `dz cpp`'s output for `Image`:

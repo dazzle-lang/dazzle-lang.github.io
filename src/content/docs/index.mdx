@@ -1,18 +1,18 @@
 ---
-title: Dazzle, a systems language that compiles to readable C++
-description: Dazzle is a systems programming language that compiles to readable C++17. RAII with three special members, enforced encapsulation, errors as values, and C and C++ libraries used straight from source.
+title: Dazzle, a successor to C++ that compiles to C++
+description: Dazzle is a successor to C++ that compiles to standard C++17, so it works with your compiler, your libraries and your existing C++ code. RAII in three members, errors as values, enforced encapsulation.
 template: splash
 editUrl: false
 head:
   - tag: title
-    content: Dazzle programming language | A systems language that compiles to readable C++
+    content: Dazzle programming language | A successor to C++ that compiles to C++
   - tag: script
     attrs:
       type: application/ld+json
-    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A systems programming language that compiles to readable C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
+    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
 hero:
-  title: A systems language that compiles to readable C++
-  tagline: The control of C++ without forty years of accumulated syntax. RAII reduced to three special members, encapsulation the compiler enforces, errors as values, and C and C++ libraries used straight from their source.
+  title: A successor to C++ that compiles to C++
+  tagline: The control of C++ without forty years of accumulated syntax. RAII in three special members, errors as values, encapsulation the compiler enforces, and generics checked where they are written. Dazzle compiles to standard C++17, so it works with the compiler, libraries and C++ code you already have.
   actions:
     - text: Get started
       link: /start/install/
@@ -32,46 +32,9 @@ import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 Dazzle is **0.1, unreleased**. It compiles and runs programs, checks ownership, calls C and C++, and has a language server, but the language is still changing. See [where it stands](/project/status/).
 </Aside>
 
-## raylib, with no bindings
+## Like Carbon, without a new toolchain
 
-```dz
-fn main() {
-    rl::InitWindow(800, 450, "Dazzle")
-    defer rl::CloseWindow()
-
-    while !rl::WindowShouldClose() {
-        rl::BeginDrawing()
-        rl::ClearBackground(rl::RAYWHITE)
-        rl::DrawCircleV(rl::GetMousePosition(), 8, rl::MAROON)
-        rl::EndDrawing()
-    }
-}
-```
-
-The compiler, `dz`, built raylib from its own seven `.c` files, which is all a [`dazzle.toml` recipe](/tour/cpp-interop/) names. No CMake, no prebuilt library and no binding layer were involved: libclang read `raylib.h`, and its functions became an ordinary Dazzle module.
-
-## What it gives you
-
-<CardGrid>
-	<Card title="Errors are values" icon="warning">
-		No exceptions, no `try`/`catch`, no `Result<T, E>`. A function that can fail says so with `!->`, and the caller handles it with one postfix `or` clause. An unhandled failure is a compile error. [Errors →](/tour/errors/)
-	</Card>
-	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. No rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
-	</Card>
-	<Card title="C and C++ from source" icon="seti:c">
-		Name a library's sources in the manifest and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. [C++ interop →](/tour/cpp-interop/)
-	</Card>
-	<Card title="Errors point at your code" icon="magnifier">
-		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)
-	</Card>
-	<Card title="Readable C++17 out" icon="document">
-		The output is plain C++17, built with `-fno-exceptions -fno-rtti`, with `#line` directives back to your `.dz` files, so gdb, Visual Studio and profilers show your source.
-	</Card>
-	<Card title="Tooling from day one" icon="laptop">
-		A language server and VS Code extension, `dz fmt`, `dz fix`, `dz explain`, and tests and benchmarks written beside the code they cover. [Tooling →](/tour/tooling/)
-	</Card>
-</CardGrid>
+Dazzle is an upgrade of C++, meant to replace it in the projects that use it, as Carbon is. The difference is the route: Carbon brings its own LLVM-based toolchain, while **Dazzle compiles to standard C++17** and hands it to clang++ or g++. So there is nothing new to adopt underneath it. Your compiler, optimiser, debugger, profiler, build flags and platforms stay as they are, and a Dazzle module links with the C++ around it, one module at a time. [Why it compiles to C++ →](/start/why-dazzle/#why-compile-to-c)
 
 ## One clause for everything that can fail
 
@@ -99,15 +62,50 @@ fn main() {
 }
 ```
 
-An `Error` is 32 bytes and never allocates. It carries a code, a message and the source location that created it, which is most of what a stack trace tells you, at no runtime cost. Forgetting to handle one is a compile error.
+No exceptions and no `Result<T, E>`: a function that can fail says so on its signature, and the caller handles it with one `or` clause. An `Error` is 32 bytes, never allocates, and carries the source location that created it. Forgetting to handle one is a compile error. [Errors →](/tour/errors/)
+
+## What it gives you
+
+<CardGrid>
+	<Card title="RAII in three members" icon="puzzle">
+		A constructor, `drop` and `copy`. No rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
+	</Card>
+	<Card title="Errors point at your code" icon="magnifier">
+		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)
+	</Card>
+	<Card title="C and C++ from source" icon="seti:c">
+		Name a library's sources in the manifest and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. No bindings to write or maintain. [C++ interop →](/tour/cpp-interop/)
+	</Card>
+	<Card title="No new toolchain" icon="setting">
+		The output is standard C++17, built with `-fno-exceptions -fno-rtti`, so it compiles wherever a C++17 compiler runs. `#line` directives map it back to your `.dz` files, so debuggers and profilers show your source.
+	</Card>
+	<Card title="Modules without headers" icon="list-format">
+		One manifest per module says what every file can name. No headers, no include order, no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)
+	</Card>
+	<Card title="Tooling from day one" icon="laptop">
+		A language server and VS Code extension, `dz fmt`, `dz fix`, `dz explain`, and tests and benchmarks written beside the code they cover. [Tooling →](/tour/tooling/)
+	</Card>
+</CardGrid>
+
+## Use C and C++ libraries as they are
+
+A library is built from its own source by a few lines of manifest, and libclang reads its header with the same flags the generated code is compiled with. Its declarations become an ordinary Dazzle module, C++ classes and overloaded methods included:
+
+```dz
+let mut counter = shp::shapes::Counter(10)    // a C++ class and its constructor
+counter.add(5)                                // an overload set, resolved by argument type
+shp::shapes::translate(&mut moving, 1, 1)     // `Point&` is a `&mut Point`
+```
+
+The repository's examples use raylib this way, built from its own `.c` files with no CMake and no binding layer. [C++ interop →](/tour/cpp-interop/)
 
 ## Where it fits
 
-Anywhere you would otherwise reach for C++: **games and engines** (the furthest along today, with [a Breakout game](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) written in no C++ of its own), **embedded and firmware** (no runtime, no garbage collector, output any vendor toolchain compiles), **tools and native applications**, **real-time code** where a garbage-collector pause is a bug, and **inside an existing C++ codebase**, one module at a time.
+Anywhere you would otherwise reach for C++: **games and engines**, where it is furthest along, with [a small game](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) written in no C++ of its own; **embedded and firmware**, with no runtime and no garbage collector; **tools and native applications**; **real-time code**, where a garbage-collector pause is a bug; and **inside an existing C++ codebase**, one module at a time.
 
 <CardGrid>
-	<LinkCard title="Why Dazzle" description="The principles, and what Dazzle deliberately is not." href="/start/why-dazzle/" />
-	<LinkCard title="Install" description="Build dz from source and run your first program." href="/start/install/" />
-	<LinkCard title="Dazzle compared with C++" description="What changes for a C++ programmer, and what stays." href="/compare/cpp/" />
+	<LinkCard title="Why Dazzle" description="The principles, why it compiles to C++, and what it is not." href="/start/why-dazzle/" />
+	<LinkCard title="Dazzle vs Carbon and cpp2" description="Three successors to C++, three routes." href="/compare/carbon-cpp2/" />
+	<LinkCard title="Dazzle vs C++" description="What changes for a C++ programmer, and what stays." href="/compare/cpp/" />
 	<LinkCard title="The specification" description="The language contract, section by section." href="/spec/" />
 </CardGrid>

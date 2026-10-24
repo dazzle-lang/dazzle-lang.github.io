@@ -108,6 +108,21 @@ Most things that go wrong in a game are not recoverable and should not be modell
 
 Allocation failure is a panic by default, so ordinary code does not carry `or return` on every line; code that does need to handle running out of memory calls `try_alloc`. Neither a panic nor an error ever becomes a C++ exception: the output is compiled with `-fno-exceptions`.
 
+## Why it works this way
+
+**Why not exceptions?** An exception is control flow you cannot see: any call might leave the function, and nothing at the call site says which. Most game, console and embedded projects turn exceptions off for their cost and unpredictability, which is why the C++ Dazzle writes is compiled with `-fno-exceptions`. With `!->`, every call that can fail is marked where it is declared, and handled where it is made.
+
+**Why not `Result<T, E>`?** A result type makes a failure a value you can store and pass around, which is how failures end up ignored or handled far from where they happened. In Dazzle a failure is control flow, not data: there is no `T!` type to put in a variable, so it has to be dealt with at the call. That asymmetry is the point. An optional (`T?`) *is* a type, because absence is a data shape: a field may be empty.
+
+**Why one clause for three things?** A failed call, an empty optional and a null pointer are all "no value here", and in each case you either supply one or leave. One construct with one rule means one thing to learn, and the same `or return` or fallback works for all three.
+
+**Why one `Error` type?** Every fallible function returns the same 32-byte `Error`, so propagating it needs no conversions between error types, and it never touches the heap, which matters where allocation is not allowed. Its source location gives you most of what a stack trace would, at no runtime cost.
+
+**The costs:**
+
+- **No typed errors.** You cannot match exhaustively on a function's own error kinds; an `Error` carries a numeric code (your own enum `as u32`) and a message. A syntax for typed errors is reserved, should a real need appear.
+- **Explicit at every call.** Each fallible call needs its own `or`, which is more to write than an exception that flies past. That visibility is what the design is for.
+
 ## In the specification
 
 [§9 Errors and absence](/spec/09-errors-and-absence/) has the full rules, including [the `or` clause](/spec/09-errors-and-absence/#94-the-or-clause) and [panics](/spec/09-errors-and-absence/#98-what-is-not-an-error-panics). The design choice is [D-0008](/decisions/d-0008-error-propagation-style/).

@@ -46,6 +46,17 @@ if T::is_trivially_copyable {
 
 Both branches are still checked for every `T`, so a generic's errors stay at its definition.
 
+### Why not just emit C++ templates?
+
+Dazzle compiles to C++, so handing generics to C++ templates would be the obvious move, and less work for the compiler. Dazzle lets C++ do every job C++ does **once per construct**: destructors, copy constructors, temporaries, struct layout. Templates are the opposite: C++ does that work **once per instantiation, slowly, and with poor diagnostics**. So this one job Dazzle keeps:
+
+1. **Errors stay in your code.** If C++ re-checked a template at each instantiation, any gap between Dazzle's type system and C++'s would surface as a template error inside generated code.
+2. **Compile time.** Template instantiation is among the slowest things a C++ compiler does. Plain monomorphized structs cost it almost nothing.
+3. **C++17 has no trait bounds.** Concepts are C++20, and Dazzle targets C++17 for the widest compiler support, so bounds would simply be lost.
+4. **Dead branches stay dead.** A folded compile-time branch is not emitted at all, instead of relying on `if constexpr`, whose discarded branch must still be valid C++.
+
+**The cost** is a monomorphization pass in the compiler, and more generated C++ text.
+
 ## Traits: static or dynamic dispatch
 
 A trait is an interface. A bound (`<T: Shape>`) dispatches statically; `&Shape` or `^Shape` is a fat pointer, the object plus its implementation's table, so the object itself carries no extra bytes.
@@ -152,7 +163,7 @@ struct Stats {
 ## Fewer ways to do the same thing
 
 - **No implicit numeric conversions.** `i32` to `f32` is an `as` cast you can see.
-- **No function overloading.** One name is one symbol, which keeps errors, the editor and the generated C++ simple. Default arguments cover most of what overloading was for.
+- **No function overloading, for now.** One name is one symbol, which keeps errors and the editor simple. Default arguments and constructors cover most of what overloading is used for; overloading is deferred, not ruled out. Imported C++ overload sets are still called, resolved by argument type.
 - **Every value is initialised.** Fields have defaults; there is no uninitialised memory.
 
 ## In the specification

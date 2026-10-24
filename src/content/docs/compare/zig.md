@@ -48,4 +48,4 @@ Zig removes abstractions so that nothing is hidden. Dazzle keeps the abstraction
 
 ## Read next
 
-[Ownership and RAII](/tour/ownership/) · [Types, generics and traits](/tour/types-and-generics/) · [Dazzle vs Odin](/compare/odin/)
+[Ownership and RAII](/tour/ownership/) · [Types, generics and traits](/tour/types-and-generics/) · [Dazzle vs Carbon and cpp2](/compare/carbon-cpp2/)

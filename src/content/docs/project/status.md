@@ -7,7 +7,7 @@ description: The status of the Dazzle programming language. What is done, what i
 The language is **0.1, unreleased**, and **expected to change**. Every change to it is a revision row in the [changelog](/spec/21-changelog/).
 :::
 
-Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a language server; it already carries a small raylib game. It is not finished: 0.1 is declared once the editor support, the standard library and C++ interop are all complete. Until then the version number stays at 0.1, and the specification is revised rather than versioned.
+Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a language server; it already carries a small game. It is not finished: 0.1 is declared once the editor support, the standard library and C++ interop are all complete. Until then the version number stays at 0.1, and the specification is revised rather than versioned.
 
 ## Status
 
@@ -15,7 +15,7 @@ Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a 
 |---|---|
 | **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · generics and traits · C and C++ interop from source · tagged unions and `switch` · macros · reflection · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms |
 | **Mostly done** | the language server and VS Code extension: incremental analysis and the remaining quick fixes are still to come |
-| **Now** | the standard library. Its criterion, a raylib game written without any C++, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
+| **Now** | the standard library. Its criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
 | **Later** | dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile; hot reload; freestanding targets for microcontrollers; the web through Emscripten; an installer that bundles libclang |
 
 The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).

@@ -58,6 +58,14 @@ Not everything needs a macro. Generic code can branch on a type at compile time 
 }
 ```
 
+## Why it works this way
+
+**Why declarative?** A macro that runs arbitrary code at compile time can produce anything, which means the editor cannot know what is inside an invocation until it has run it. A declarative macro is a pattern and an expansion, so the language server knows the shape of every invocation, and completion, hover and go to definition keep working inside it.
+
+**Why make a state machine a macro, not a feature?** Every language feature is something every user has to learn, and every tool has to support. When a library-level macro can express an idea as well, with the same editor support, the language stays smaller and the idea stays changeable.
+
+**The cost:** declarative macros cannot do everything a procedural macro can; there is no running code at compile time. Generic code covers type-driven variation, and `#if` covers build configuration.
+
 ## In the specification
 
 [§12 Metaprogramming](/spec/12-metaprogramming/): fragment kinds, repetition, hygiene, attributes, format strings and compile-time conditionals. The notation was settled in [D-0009](/decisions/d-0009-macro-invocation-syntax/).

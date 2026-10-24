@@ -29,5 +29,5 @@ DAZZLE_REPO=/path/to/Dazzle npm run dev
 ## Deploying
 
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to
-`main`, once a day (to pick up spec changes in the Dazzle repository), and when run by
+`master`, once a day (to pick up spec changes in the Dazzle repository), and when run by
 hand from the Actions tab.

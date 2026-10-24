@@ -27,8 +27,8 @@ Dazzle's syntax will look familiar to a Rust programmer: `fn`, `let`, `struct`, 
 | Moved-from values | Statically inaccessible | Reset to their defaults, and statically inaccessible |
 | Copy semantics | `Copy` is bitwise; `Clone` is explicit | `copy` is a copy constructor, run on `let b = a` for types that implement it |
 | Inheritance | None | Single struct inheritance with `virtual`/`override`, opt-in |
-| Function overloading | None | None |
-| Output | Machine code through LLVM | Readable C++17, compiled by clang++ or g++ |
+| Function overloading | None | None for now; default arguments cover most of it |
+| Output | Machine code through LLVM | Standard C++17, compiled by clang++, g++ or a vendor's compiler |
 | C++ libraries | Bindings through bindgen, cxx or similar | Built from source and imported directly, classes and overloaded methods included |
 | Build | Cargo, with crates.io | `dz`, with a `dazzle.toml` per module; fetched dependencies are on the roadmap |
 | Maturity | Stable since 2015, large ecosystem | Pre-release |

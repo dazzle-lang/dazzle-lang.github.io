@@ -1,9 +1,25 @@
 ---
 title: Modules and imports
-description: How Dazzle organises code. A module is a folder with a dazzle.toml manifest, dependencies are declared once there for every file, and folders are organisation only.
+description: How Dazzle organises code, and why. A module is a folder with a dazzle.toml manifest, its dependencies are declared once there for every file, and folders are organisation only.
 ---
 
 Dazzle has no import line at the top of each file. **A module is a project**: a folder with a `dazzle.toml` that lists its source files, and **what the module can name is declared once, in that manifest**, for every one of its files.
+
+This is the part of Dazzle that surprises people most, so the reasons come first.
+
+## Why it works this way
+
+Look at the top of the files in any large C++ or Rust project and you see the same list over and over: the engine, the math library, the containers, the logging. Every file restates what the whole project depends on, and every file can spell it differently. Dazzle states it once.
+
+- **One list per module, not one per file.** In a game, the same engine, math and container types are used in nearly every file. Declaring them in the manifest means no file starts with twenty lines of imports, and adding a file needs no boilerplate.
+- **A library has one name everywhere.** The manifest key is the name. With per-file aliases, one file can call a library `rl` and the next `raylib`; here every file writes the same thing, and swapping a library for another is a one-line change.
+- **Moving a file never breaks anything.** Folders are organisation only, and declaration order never matters, so reorganising a project changes no code.
+- **No silent surprises.** If two dependencies export the same name, using it bare is an error at the line that uses it, not a guess resolved by order. Reordering the manifest or upgrading a library can never quietly change which declaration a name means.
+- **No leaking.** A library's own dependencies stay private unless it re-exports them, so you never end up depending on something you did not list, and a public API cannot mention a type its users cannot name. Those two failures, names leaking transitively and clashes settled silently, are what made C++'s `using namespace` a bad idea; Dazzle rules both out.
+
+**The cost:** a bare name's origin is not written in the file that uses it. The editor shows it on hover, and go to definition takes you there.
+
+There is precedent: C# projects declare global usings once per project, and Rust puts every Cargo dependency in scope under its manifest name. Dazzle takes the idea one step further and makes the manifest the only place.
 
 ```
 game/
@@ -75,7 +91,9 @@ pub struct SpriteBatch {
 
 `protected` opens a member to the structs that inherit from this one, wherever they are written.
 
-This is closer to C# projects or CMake targets than to Go, Rust or Odin, where the directory tree is the module tree.
+**Why private by default:** the compiler, not a naming convention, is what stops one layer of a codebase reaching into another's internals. And there is no file-level privacy on purpose: it would make every helper think about two boundaries instead of one, and the module is already the boundary. Keep modules small instead.
+
+This is closer to C# projects or CMake targets than to Go or Rust, where the directory tree is the module tree.
 
 ## In the specification
 
