@@ -5,7 +5,7 @@
 // `view="history"` lists every run, so a change in the compiler or the standard library
 // shows up as a change in the ratios.
 interface Props {
-	view: 'latest' | 'history';
+	view: 'latest' | 'build' | 'history';
 }
 
 const files = import.meta.glob('../data/benchmarks/*.json', { import: 'default', eager: true });
@@ -48,6 +48,27 @@ const top = Math.max(2.5, Math.ceil(Math.max(...values) * 2) / 2);
 const x = (i) => PAD.l + (runs.length === 1 ? (W - PAD.l - PAD.r) / 2 : (i * (W - PAD.l - PAD.r)) / (runs.length - 1));
 const y = (v) => PAD.t + (1 - v / top) * (H - PAD.t - PAD.b);
 const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.5);
+
+// Build time, from `dz build --timings`: Dazzle's own phases, importing C and C++ headers,
+// the C++ compiler, and whatever none of them accounts for.
+const OWN = ['manifests', 'lex and parse', '#if and macros', 'resolve names', 'type check', 'ownership', 'instantiate generics', 'emit C++'];
+const buildParts = (b) => {
+	const p = b.phases ?? {};
+	const own = OWN.reduce((a, n) => a + (p[n] ?? 0), 0);
+	const headers = (p['C and C++ headers'] ?? 0) + (p['CMake builds'] ?? 0);
+	const compiler = (p['C++ compiler'] ?? 0) + (p['C and C++ libraries'] ?? 0);
+	const other = Math.max(0, b.dazzle - own - headers - compiler);
+	return [
+		{ key: 'own', label: "Dazzle's own phases", t: own },
+		{ key: 'headers', label: 'C and C++ headers (libclang)', t: headers },
+		{ key: 'compiler', label: 'C++ compiler', t: compiler },
+		{ key: 'other', label: 'other', t: other },
+	];
+};
+const hasPhases = latest.results.every((r) => r.build.phases);
+const buildMax = Math.max(...latest.results.flatMap((r) => [r.build.dazzle, r.build.cpp]));
+const s1 = (t) => (t >= 1 ? `${t.toFixed(2)} s` : `${Math.round(t * 1000)} ms`);
+const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 ---
 
 {
@@ -85,6 +106,77 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 				Median of {latest.results[0].dazzle.runs} runs. {latest.machine.cpu}, {Object.values(latest.machine.compilers).join(' and ')},
 				<code>-O2</code>. Dazzle at <a href={COMMIT + latest.commit}>{latest.commit}</a>, {latest.date}.
 			</p>
+		</div>
+	)
+}
+
+{
+	Astro.props.view === 'build' && hasPhases && (
+		<div class="bench not-content">
+			{programs.map((p) => (
+				<section class="program">
+					<h4>{PROGRAMS[p] ?? p}</h4>
+					{compilers.map((c) => {
+						const r = find(latest, p, c);
+						if (!r) return null;
+						const parts = buildParts(r.build);
+						return (
+							<div class="pair">
+								<div class="who">{cxxLabel(latest, c)}</div>
+								<div class="bars">
+									<div class="stack" style={`width: ${(100 * r.build.dazzle) / buildMax}%`} title={parts.map((x) => `${x.label}: ${s1(x.t)}`).join('\n')}>
+										{parts.map((x) => (
+											<div class={`seg ${x.key}`} style={`flex-grow: ${x.t}`} />
+										))}
+										<span class="stack-label">Dazzle {s1(r.build.dazzle)}</span>
+									</div>
+									<div class="bar cpp" style={`width: ${(100 * r.build.cpp) / buildMax}%`}>
+										<span>C++ {s1(r.build.cpp)}</span>
+									</div>
+								</div>
+								<div class="ratio">{(r.build.dazzle / r.build.cpp).toFixed(1)}×</div>
+							</div>
+						);
+					})}
+				</section>
+			))}
+			<p class="legend">
+				<span class="key own" /> Dazzle's own phases <span class="key headers" /> C and C++ headers (libclang) <span class="key compiler" /> C++ compiler, on the generated code <span class="key other" /> other <span class="key cpp" /> the C++ program, one compiler invocation. Median of {latest.results[0].build.builds} builds from clean.
+			</p>
+			<div class="table-wrap">
+				<table class="phases">
+					<thead>
+						<tr>
+							<th>Phase</th>
+							{columns.map((c) => (
+								<th class="num">
+									{c.program}
+									<br />
+									<small>{cxxLabel(latest, c.cxx)}</small>
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{phaseRows.map((name) => (
+							<tr class:list={{ own: OWN.includes(name) }}>
+								<td>{name}</td>
+								{columns.map((c) => {
+									const t = find(latest, c.program, c.cxx)?.build.phases?.[name];
+									return <td class="num">{t == null ? '—' : `${(t * 1000).toFixed(1)} ms`}</td>;
+								})}
+							</tr>
+						))}
+						<tr class="total">
+							<td>total, wall clock</td>
+							{columns.map((c) => {
+								const r = find(latest, c.program, c.cxx);
+								return <td class="num">{r ? s1(r.build.dazzle) : '—'}</td>;
+							})}
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 	)
 }
@@ -137,7 +229,7 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 					<tbody>
 						{runs.toReversed().map((run) => (
 							<tr>
-								<td>
+								<td class="run">
 									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}</small>
 									<br />
 									<small>{run.summary}</small>
@@ -151,6 +243,49 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 					</tbody>
 				</table>
 			</div>
+			<p class="legend">Run time: Dazzle's over C++'s.</p>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Run</th>
+							{columns.map((c) => (
+								<th class="num">
+									{c.program}
+									<br />
+									<small>{cxxLabel(latest, c.cxx)}</small>
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{runs.toReversed().map((run) => (
+							<tr>
+								<td>
+									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}</small>
+								</td>
+								{columns.map((c) => {
+									const r = find(run, c.program, c.cxx);
+									if (!r) return <td class="num">—</td>;
+									const own = r.build.phases ? buildParts(r.build)[0].t : null;
+									return (
+										<td class="num">
+											{s1(r.build.dazzle)} / {s1(r.build.cpp)}
+											{own != null && (
+												<>
+													<br />
+													<small>own phases {Math.round(own * 1000)} ms</small>
+												</>
+											)}
+										</td>
+									);
+								})}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p class="legend">Build time from clean: Dazzle's, then C++'s, with the part spent in Dazzle's own phases below it.</p>
 		</div>
 	)
 }
@@ -202,6 +337,56 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 	.key.cpp {
 		background: #5b7fbf;
 		color: #fff;
+	}
+	.stack {
+		position: relative;
+		display: flex;
+		height: 1.35rem;
+		border-radius: 0.3rem;
+		overflow: hidden;
+		min-width: 9rem;
+	}
+	.seg {
+		flex-basis: 0;
+		min-width: 2px;
+	}
+	.stack-label {
+		position: absolute;
+		inset: 0 auto 0 0;
+		display: flex;
+		align-items: center;
+		padding-inline: 0.5rem;
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		white-space: nowrap;
+		color: #fff;
+		text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+	}
+	.seg.own,
+	.key.own {
+		background: var(--sl-color-accent);
+	}
+	.seg.headers,
+	.key.headers {
+		background: #d9822b;
+	}
+	.seg.compiler,
+	.key.compiler {
+		background: #8f5fd1;
+	}
+	.seg.other,
+	.key.other {
+		background: #6b7280;
+	}
+	tr.own td:first-child {
+		color: var(--sl-color-accent-high);
+	}
+	tr.total td {
+		font-weight: 700;
+		border-top: 2px solid var(--sl-color-gray-4);
+	}
+	th.num {
+		text-align: right;
 	}
 	.ratio {
 		font-weight: 700;
@@ -285,6 +470,17 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 		text-align: right;
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;
+		white-space: nowrap;
+	}
+	table.phases td:first-child {
+		white-space: nowrap;
+	}
+	td.run {
+		min-width: 14rem;
+		max-width: 24rem;
+	}
+	.legend .key:not(:first-child) {
+		margin-left: 0.9rem;
 	}
 	small {
 		color: var(--sl-color-gray-3);

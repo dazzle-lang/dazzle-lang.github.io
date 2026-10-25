@@ -30,14 +30,14 @@
 			"plain": {
 				"warnings": [],
 				"exit": 0,
-				"output": "1318282648 100 -1730335320\n"
+				"output": "-1801338664 100 -338571864\n"
 			},
 			"wall": {
 				"warnings": [
 					"variable 'count' is uninitialized when used here [-Wuninitialized]"
 				],
 				"exit": 0,
-				"output": "1523868728 100 -2116780632\n"
+				"output": "1503104296 100 -2041975384\n"
 			}
 		}
 	}

@@ -69,11 +69,11 @@ const id = `bug-${name}`;
 	.bug-case h3 {
 		margin-bottom: 0.75rem;
 	}
+	/* One above the other: the code and the diagnostics need the page's whole width, and
+	   reading the C++ first, then what Dazzle does with it, is the order of the argument. */
 	.sides {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
 		gap: 1rem;
-		align-items: start;
 	}
 	.side {
 		min-width: 0;

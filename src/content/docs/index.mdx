@@ -11,8 +11,8 @@ head:
       type: application/ld+json
     content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
 hero:
-  title: Write games, engines and real-time code without C++'s traps
-  tagline: Dazzle gives you the control of C++ with a compiler that turns its silent mistakes into errors. Use after move, ignored errors and missing cases don't compile, and overflow and evaluation order have one defined meaning. The output is standard C++17, so your compiler, debugger and libraries stay.
+  title: The control of C++, with a compiler on your side
+  tagline: Dazzle is a systems language for games, engines, tools and real-time code. Its compiler turns C++'s silent mistakes into errors, and its output is standard C++17, so your compiler, debugger and libraries stay.
   actions:
     - text: Get started
       link: /start/install/
@@ -45,31 +45,31 @@ Each of these is a complete program in the repository. Each one uses a C library
 
 ## Bugs C++ lets through
 
-These are eight mistakes that both g++ and clang++ compile. Half of them compile without a single warning on either compiler, even with `-Wall -Wextra`. In Dazzle, each one is a compile error or has one defined meaning:
+Here are eight of the mistakes that both g++ and clang++ compile. Five of them compile without a single warning on either compiler, even with `-Wall -Wextra`, and the first six are undefined behaviour. In Dazzle, each one is a compile error or has one defined meaning:
 
 <div class="dz-bugs not-content">
 
 | The mistake | C++ | Dazzle |
 |---|---|---|
+| Indexing past the end of an array | undefined behaviour | <span class="ok">checked in every build</span> |
+| Reading an uninitialised variable | undefined behaviour | <span class="ok">every value is initialised</span> |
+| Using a pointer that may be null | undefined behaviour, no warning | <span class="ok">error DZ0528</span> |
+| Copying a struct that owns memory | double free, no warning | <span class="ok">error DZ0403</span> |
+| Signed overflow | undefined, `x + 1 < x` folded to `false` | <span class="ok">wraps, in every build</span> |
+| Falling off the end of a function | undefined behaviour, with a warning | <span class="ok">error DZ0405</span> |
 | Using a value after `std::move` | compiles, reads whatever is left | <span class="ok">error DZ0401</span> |
 | Ignoring a returned error | compiles silently | <span class="ok">error DZ0510</span> |
-| A `switch` missing an enum value | compiles; that value does nothing | <span class="ok">error DZ0513</span> |
-| Falling off the end of a function | undefined behaviour, with a warning | <span class="ok">error DZ0405</span> |
-| Signed overflow | undefined, `x + 1 < x` folded to `false` | <span class="ok">wraps, in every build</span> |
-| Order of evaluating arguments | unspecified: g++ and clang disagree | <span class="ok">left to right</span> |
-| Reading an uninitialised variable | undefined behaviour | <span class="ok">every value is initialised</span> |
-| Indexing past the end of an array | undefined behaviour | <span class="ok">checked in every build</span> |
 
 </div>
 
 Each diagnostic points at the line, says what is wrong there, and ends with a help line:
 
 <div class="dz-pair">
-	<Terminal snippet="moved" compact />
-	<Terminal snippet="switch" compact />
+	<Terminal snippet="copy" compact />
+	<Terminal snippet="null" compact />
 </div>
 
-<LinkCard title="See all eight, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
+<LinkCard title="See all twelve, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
 
 ## One clause for everything that can fail
 

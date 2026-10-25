@@ -1,0 +1,19 @@
+struct Player {
+    pub name:   str = ""
+    pub health: i32 = 100
+}
+
+fn find(players: &[2]Player, name: str) -> ^Player {
+    for i in 0..2 {
+        if players[i].name == name {
+            return &players[i]
+        }
+    }
+    return null
+}
+
+fn main() {
+    let players: [2]Player = [Player{ name: "ada" }, Player{ name: "bob" }]
+    let p = find(&players, "eve")
+    println!("{}", p.health)
+}

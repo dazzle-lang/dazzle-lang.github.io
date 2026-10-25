@@ -1,0 +1,19 @@
+struct Buffer {
+    m_data: own ^mut i32 = null
+
+    Buffer() {
+        m_data = unsafe { Allocators::Global.alloc(16, 4) as ^mut i32 }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        Allocators::Global.free(unsafe { m_data as ^mut u8 }, 16, 4)
+    }
+}
+
+fn main() {
+    let a = Buffer()
+    let b = a
+    println!("copied")
+}

@@ -1,0 +1,5 @@
+fn main() {
+    let health: i32 = 300
+    let stored: u8 = health
+    println!("{}", stored)
+}

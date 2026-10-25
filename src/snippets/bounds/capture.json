@@ -15,26 +15,26 @@
 			"plain": {
 				"warnings": [],
 				"exit": 0,
-				"output": "-911716128\n"
+				"output": "1859246688\n"
 			},
 			"wall": {
 				"warnings": [
 					"array subscript 5 is above array bounds of ‘int [3]’ [-Warray-bounds=]"
 				],
 				"exit": 0,
-				"output": "-1274801824\n"
+				"output": "1567081552\n"
 			}
 		},
 		"clang++": {
 			"plain": {
 				"warnings": [],
 				"exit": 0,
-				"output": "-415342632\n"
+				"output": "-1798101976\n"
 			},
 			"wall": {
 				"warnings": [],
 				"exit": 0,
-				"output": "568160152\n"
+				"output": "181667128\n"
 			}
 		}
 	}

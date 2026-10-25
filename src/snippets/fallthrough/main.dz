@@ -1,0 +1,10 @@
+fn run(command: i32) {
+    switch command {
+        case 1 { println!("save") }
+        case 2 { println!("quit") }
+    }
+}
+
+fn main() {
+    run(1)
+}

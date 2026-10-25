@@ -24,7 +24,13 @@ if (props.snippet) {
 }
 const body = ansiToHtml((output ?? '').replace(/\n+$/, ''));
 // A failed `dz check` says so itself; a program that crashed does not, so its status is shown.
-const status = exit && command && !command.startsWith('dz check') ? `exit status ${exit}` : null;
+// A status above 128 is a signal, as a shell reports it; the three these programs die of
+// are named, since "139" means nothing to most readers.
+const SIGNALS = { 132: 'illegal instruction', 134: 'aborted', 139: 'segmentation fault' };
+const status =
+	exit && command && !command.startsWith('dz check')
+		? `exit status ${exit}${SIGNALS[exit] ? ` (${SIGNALS[exit]})` : ''}`
+		: null;
 ---
 
 <figure class:list={['dz-terminal', { compact: props.compact }]} aria-label={props.title ?? 'Terminal output'}>

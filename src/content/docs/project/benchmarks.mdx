@@ -28,6 +28,21 @@ The gap comes from known, specific places, most of them in the standard library,
 Some of the cost is the language's own, and it stays by design: indexing is bounds-checked in every build, and integer arithmetic wraps.
 </Aside>
 
+## Build time
+
+Each half is built from clean three times, and the median is shown. For Dazzle, `dz build --timings` says where the time went, phase by phase: Dazzle's own phases, from reading the manifests to emitting the C++; importing C and C++ headers with libclang; and the C++ compiler on the generated code. The C++ half is a single compiler invocation on one file.
+
+<Benchmarks view="build" />
+
+<Aside type="note" title="Where the build time goes">
+Dazzle's own work, from parsing to emitting the C++, takes about 35 ms on each of these programs. Almost all the rest happens outside it:
+
+- **The C++ compiler**, on the generated code, takes 1.3 s with clang and 2.1–2.4 s with g++. Most of that is the standard library's C++, which is compiled again in every build ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)).
+- **Importing `stdlib.h`** with libclang takes about 380 ms. The standard library uses it for its heap allocator, so every program pays this, in every build ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)).
+
+Both are fixable without changing the language. As they are fixed, this table should show it.
+</Aside>
+
 ## Every run
 
 Each run is kept. As the compiler and the standard library improve, this is where the ratios should be seen to fall.

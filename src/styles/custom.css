@@ -49,3 +49,20 @@
 .dz-pair > * {
 	margin: 0 !important;
 }
+
+/* The landing page's hero has no image, so its copy takes the whole width: Starlight keeps
+   a column for an image and caps every line at 50ch, which broke the title into lines of
+   two or three words. */
+@media (min-width: 50rem) {
+	.hero:not(:has(> img, > .hero-html)) {
+		grid-template-columns: 100%;
+	}
+}
+.hero .copy > * {
+	max-width: 62ch;
+}
+.hero h1 {
+	font-size: clamp(2rem, 1rem + 3vw, 3.4rem);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+}
