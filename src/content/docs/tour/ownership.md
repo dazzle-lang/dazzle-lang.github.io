@@ -53,7 +53,7 @@ fn main() {
 }                                    // c, b and a are dropped, in that order
 ```
 
-An allocator is told the size and alignment it handed out, so it never has to store them. Run this with `dz run --track-memory` and it reports no leaks.
+`own` is for memory and resources Dazzle does not manage itself: here raw bytes from the heap, elsewhere a surface, a file, a window or a GPU buffer from a C library. Dazzle's own data needs none of the three members: a struct of `List` and `String` fields is freed, copied and moved with no code at all, and ordinary code never names an allocator ([below](#where-memory-comes-from)). An allocator is told the size and alignment it handed out, so it never has to store them. Run this with `dz run --track-memory` and it reports no leaks.
 
 ## The rules
 
@@ -89,12 +89,27 @@ error[DZ0401]: `a` was moved and cannot be used again
 
 ## References, pointers and handles
 
-- `&T` and `&mut T` are references. They are never null and **can never be stored in a field**, which is why Dazzle needs no lifetimes.
-- `^T` and `^mut T` are C pointers. Reading or writing through one happens inside `unsafe`, so every place a dangling pointer can bite is marked.
+- `&T` and `&mut T` are references, never null. A reference lives only where references live: a local, a parameter, a result, or a *view struct* such as an iterator. It never sits in an ordinary field or a container, so no struct carries a lifetime parameter.
+- `^T` and `^mut T` are C pointers. Reading or writing through one happens inside `unsafe`, so every unchecked access is marked.
 - `own ^mut T` is a pointer this struct frees.
 - The standard library has `Rc`, `Weak` and `Box` for everything in between.
 
-Dazzle prevents use-after-move and double-free. It is not memory-safe in Rust's sense: see [Dazzle compared with Rust](/compare/rust/).
+What the compiler checks about references is the bug C++ code actually has: a reference used after a call grew, shrank or freed the memory it points into. A type names its memory with **ties**, and every function says in its signature which ties it may end, with a **`kills`** clause. A call ends every reference into what it kills:
+
+```dz
+// in std's List: each signature says what a call may end
+pub fn push(&mut self, v: T) kills self@items      // may move the array
+pub fn len(&self) -> usize                         // no clause: kills nothing
+
+// in your code
+let n = counts.get_or_insert(word, 0)              // a reference into the table
+counts.insert(other, 1)                            // may grow the table
+n += 1        // error[DZ0413]: `insert` kills `counts@items`, and `n` points into it
+```
+
+The compiler checks each clause against its function's body, both ways, and `dz fix` writes the clause a body needs. Aliasing stays legal: a `&mut` and a `&` to one value are fine, as long as nothing in between can move the memory.
+
+So use after move, double free, and a reference used after a call moved or freed what it points into are all compile-time errors. Closing the holes that remain, so that safe code has no undefined behaviour on one thread, is an open decision ([D-0094](/decisions/d-0094-safe-code-has-no-undefined-behaviour/)). [Dazzle compared with Rust](/compare/rust/) says how this differs from a borrow checker.
 
 ## Why it works this way
 
@@ -102,9 +117,9 @@ Dazzle prevents use-after-move and double-free. It is not memory-safe in Rust's 
 
 **Why reset a moved-from value?** C++ leaves a moved-from object "valid but unspecified", so whether its destructor or a later use is safe depends on each type's author. Resetting it to its defaults makes the answer the same for every type: its `drop` runs and does nothing, because it now holds nothing. It costs a few stores per move and removes a whole category of bug, and reading it again is still a compile error.
 
-**Why can't a reference be stored?** The most common dangling reference is one kept in an object that outlives what it points at. Banning references in fields makes that impossible, with no analysis at all, so Dazzle needs no lifetimes and no borrow checker. The cost is that a struct holding a context keeps a `^T` pointer instead, and a pointer that dangles is still your problem, but every use of it is marked `unsafe`.
+**Why ties rather than lifetimes?** The most common dangling reference is one kept in an object that outlives what it points at, and keeping references out of ordinary fields rules that out with no analysis. What is left is the reference that a call invalidates, and a `kills` clause says that in the one place a reader looks: the signature. No struct carries a lifetime parameter, and the C++ shape of code, a pointer into an array you also change, stays legal as long as nothing in between can move the array.
 
-**Why explicit allocators?** An implicit allocator removes the parameter from every signature, and with it the ability to tell from a call whether it allocates, or from where. Dazzle keeps the parameter and gives it a default, so ordinary code reads cleanly and code that cares, a frame arena in a game loop, says so at the call.
+**Why does the compiler place memory?** Passing an allocator to every container makes code that cares about memory say so, but every other line pays for it, and choosing wrong, a scratch arena for something that outlives the frame, is a dangling pointer. The compiler can see what outlives what, through the same ties, so it chooses: the fastest place it can prove safe, the heap otherwise.
 
 ## What it becomes in C++
 
@@ -145,21 +160,21 @@ Image::Image(Image&& other) {
 
 The last row is a second line of defence: even if Dazzle's own move checking had a hole, the C++ compiler would refuse the copy.
 
-## Allocators are explicit
+## Where memory comes from
 
-If a line allocates, it says so. Containers take an allocator, defaulting to the C heap, so `List<i32>(8)` reads cleanly and `List<i32>(8, Allocators::Temp)` puts the list in this thread's scratch arena, freed in one go at the end of the frame:
+Ordinary code names no allocator. `List<Enemy>()` and `String::from(name)` get their memory where the compiler can prove it safe: the region of the scope that owns them, released in one step when the scope ends; wherever the caller keeps a result; or else the heap. The same ties check every placement, the editor shows where each allocation went, and `dz placements` lists them with the reason for each:
 
 ```dz
-fn update(&mut self, dt: f32) {
-    defer Allocators::Temp.reset()
-
-    let visible = self.cull(&camera, Allocators::Temp)   // freed at frame end, no bookkeeping
-    for &e in visible { e.draw(&mut self.batch) }
+fn update(&mut self, camera: &Camera) {
+    let visible = self.cull(camera)      // built in update's region, released when it returns
+    for e in visible {
+        e.draw(&mut self.batch)
+    }
 }
 ```
 
-`dz run --track-memory` records every allocation and reports leaks with the line that allocated them, plus double frees and mismatched frees. It costs nothing when it is off.
+Every build places memory this way; `DZ_REGIONS=0` builds the same program with every value on the heap, to compare against. `dz run --track-memory` records every allocation and reports leaks with the line that allocated them, plus double frees and mismatched frees. It costs nothing when it is off.
 
 ## In the specification
 
-[§6 Value semantics](/spec/06-value-semantics-ownership-copy/) has the full ownership rules, and [§14](/spec/14-memory-and-allocators/) the allocators. The [ownership example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/ownership) builds a growable array this way.
+[§6 Value semantics](/spec/06-value-semantics-ownership-copy/) has the full ownership rules and [§6.7](/spec/06-value-semantics-ownership-copy/) ties, and [§14.6](/spec/14-memory-and-allocators/#146-placement-by-the-compiler) where the compiler places memory. The [ownership example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/ownership) builds a growable array with `own`.

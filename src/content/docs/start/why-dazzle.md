@@ -31,7 +31,7 @@ In priority order. When two conflict, the earlier one wins.
 
 ## What it is not
 
-- **Not memory-safe in Rust's sense.** Dazzle prevents use-after-move and double-free, but it has no borrow checker and no lifetimes, so it does not prevent every dangling reference. What it does instead is *mark* the places a dangling pointer can bite: every read or write through a raw pointer sits inside `unsafe`, where a reader, or `grep`, can find it. References (`&T`) can never be stored in a field, which removes the most common dangling case without any analysis.
+- **Not memory-safe in Rust's sense, yet.** Dazzle checks memory without Rust's rules: use after move, double free, and a reference used after a call moved or freed what it points into are compile-time errors, through [ties and `kills` clauses](/tour/ownership/#references-pointers-and-handles) rather than lifetimes. A `&mut` and a `&` may still point at the same value, and no struct carries a lifetime parameter. Every read or write through a raw pointer sits inside `unsafe`, where a reader, or `grep`, can find it. Closing the holes that remain, so that safe code has no undefined behaviour on one thread, is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads come after the first release.
 - **No garbage collector, green threads or implicit runtime.**
 - **Not source-compatible with C++.** Dazzle *calls* C++ and compiles *to* it; it is not a superset of it.
 - **Not a minimal language.** Large codebases need abstraction, so Dazzle has traits, generics, single inheritance, tagged unions, macros and reflection. It keeps each of them visible at the place it acts.

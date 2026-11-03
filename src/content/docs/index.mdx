@@ -78,7 +78,7 @@ enum ErrorCode : u32 {
     Empty = 1
 }
 
-fn parse_name(text: str) !-> str {
+fn parse_name(text: &str) !-> &str {
     if text.len == 0 {
         return error(ErrorCode::Empty as u32, "a name cannot be empty")
     }
@@ -105,7 +105,7 @@ There are no exceptions and no `Result<T, E>`. A function that can fail says so 
 
 <CardGrid>
 	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. There is no rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
+		A constructor, `drop` and `copy`. There is no rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". A reference used after a call moved or freed its memory is a compile error, and the compiler places memory, so ordinary code names no allocator. [Ownership →](/tour/ownership/)
 	</Card>
 	<Card title="Errors point at your code" icon="magnifier">
 		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)

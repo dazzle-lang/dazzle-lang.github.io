@@ -37,7 +37,7 @@ The compiler is then `target/release/dz` (`dz.exe` on Windows). Put it on your `
 
 `dz` uses the first of `clang++`, `g++` and `c++` it finds. Choose another with `--cxx`, the `DZ_CXX` environment variable, or `cxx` under `[build]` in the manifest.
 
-clang++ 21 and g++ 13 are verified. On Windows that means clang++ or MinGW g++; MSVC's `cl.exe` is not supported, because `dz` passes GCC-style flags.
+clang++ 19 and 21 and g++ 13 and 14 are verified. On Windows that means clang++ or MinGW g++; MSVC's `cl.exe` is not supported, because `dz` passes GCC-style flags.
 
 ## The VS Code extension
 

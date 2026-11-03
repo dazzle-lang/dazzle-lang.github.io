@@ -12,7 +12,7 @@ Each page of the tour covers one idea: what it looks like, why it works that way
 		`!->` on a signature marks a function that can fail, and one `or` clause handles the failure. The same clause handles an optional and a null pointer. An unhandled failure is a compile error. [Errors →](/tour/errors/)
 	</Card>
 	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. The compiler writes moves and assignments, and a moved-from value is reset to its defaults. [Ownership →](/tour/ownership/)
+		A constructor, `drop` and `copy`. The compiler writes moves and assignments, a moved-from value is reset to its defaults, `kills` clauses catch a reference a call invalidated, and the compiler chooses where memory comes from. [Ownership →](/tour/ownership/)
 	</Card>
 	<Card title="Modules without headers" icon="list-format">
 		One manifest per module says what every file can name. There are no headers, no include order and no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)

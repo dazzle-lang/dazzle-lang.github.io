@@ -45,7 +45,7 @@ Dazzle shares Carbon's goal, an upgrade of C++ for the projects that use it, and
 ### Where Carbon's route pays off
 
 - **Deeper interop.** Carbon aims to call C++ templates generically and to inherit from C++ classes. Dazzle imports the template instances you name, and inheritance between imported C++ classes is not supported yet.
-- **Memory safety is on Carbon's roadmap.** Dazzle prevents use-after-move and double-free and marks raw-pointer access with `unsafe`, but a safe subset is not a goal.
+- **Memory safety is on Carbon's roadmap, threads included.** Dazzle checks use after move, double free and references a call invalidates, and marks raw-pointer access with `unsafe`; making safe code free of undefined behaviour is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads are not in the language yet.
 - **Scale and backing.** Carbon is designed around migrating very large codebases, with a large team behind it.
 
 ## Which to choose

@@ -11,7 +11,7 @@ enum ErrorCode : u32 {
     TooLong
 }
 
-fn parse_name(text: str) !-> str {
+fn parse_name(text: &str) !-> &str {
     if text.len == 0 {
         return error(ErrorCode::Empty as u32, "a name cannot be empty")
     }
@@ -21,7 +21,7 @@ fn parse_name(text: str) !-> str {
     return text
 }
 
-fn greet(text: str) !-> i32 {
+fn greet(text: &str) !-> i32 {
     let name = parse_name(text) or return          // propagate
     println!("hello, {}", name)
     return 0

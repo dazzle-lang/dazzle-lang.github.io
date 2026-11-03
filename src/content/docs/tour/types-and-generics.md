@@ -109,12 +109,12 @@ A `union` is a tagged sum type. `switch` has no fallthrough and must cover every
 
 ```dz
 union Command {
-    Say { text: str }
+    Say { text: const &str }
     Move { x: f32, y: f32 }
     Quit {}
 }
 
-fn describe(c: &Command) -> str {
+fn describe(c: &Command) -> const &str {
     return switch c {
         case Say(&s) { s.text }
         case Move { "move" }
@@ -141,7 +141,7 @@ pub struct Widget {
 }
 
 pub struct Panel : Widget {
-    pub title: str = "panel"
+    pub title: const &str = "panel"
 
     pub fn area(&self) -> i32 {
         return left * top            // the base's fields, unqualified

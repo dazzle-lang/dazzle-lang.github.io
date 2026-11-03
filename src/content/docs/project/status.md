@@ -13,17 +13,19 @@ Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a 
 
 | | |
 |---|---|
-| **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · generics and traits · C and C++ interop from source · tagged unions and `switch` · macros · reflection · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms |
+| **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · ties and `kills` clauses · borrowed views · memory placed by the compiler · generics and traits · C and C++ interop from source · tagged unions and `switch` · macros · reflection · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms |
 | **Mostly done** | the language server and VS Code extension: incremental analysis and the remaining quick fixes are still to come |
-| **Now** | the standard library. Its criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
+| **Now** | placing more memory in regions and making it faster; closing the holes safe code still has ([D-0094](/decisions/d-0094-safe-code-has-no-undefined-behaviour/)); and the standard library, whose criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
 | **Later** | dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile; hot reload; freestanding targets for microcontrollers; the web through Emscripten; an installer that bundles libclang |
 
 The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
+**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 1.1 to 2.1 times as long in Dazzle as in C++. The [benchmarks](/project/benchmarks/) have every run, and where the remaining gap comes from.
+
 ## Compatibility
 
 - **Platforms:** Windows, Linux and macOS. CI builds and tests on all three for every change.
-- **C++ compilers:** clang++ and g++. The generated code is C++17, compiled with `-fno-exceptions -fno-rtti` and warning-clean under `-Wall -Wextra` on both; clang++ 21 and g++ 13 are verified. MSVC's `cl.exe` is not supported.
+- **C++ compilers:** clang++ and g++. The generated code is C++17, compiled with `-fno-exceptions -fno-rtti` and warning-clean under `-Wall -Wextra` on both; clang++ 19 and 21 and g++ 13 and 14 are verified. MSVC's `cl.exe` is not supported.
 - **C and C++ libraries:** C, and C++ through namespaces, classes, methods, overloaded methods, references and named template instances. Overloaded free functions, variadic C functions and inheritance between imported C++ classes are not imported yet.
 - **The output is plain C++**, so anything that links with C++ links with Dazzle.
 

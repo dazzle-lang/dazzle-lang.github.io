@@ -19,6 +19,8 @@ Dazzle is meant as a replacement for C++ wherever it is used, and it compiles *t
 | The rule of five: destructor, copy and move constructors, copy and move assignment | **Three members**: a constructor, `drop` and `copy`. Moves and assignments are generated. |
 | A moved-from object is "valid but unspecified" | A moved-from value is **reset to its defaults**, and using it again is a compile error |
 | Uninitialised variables are allowed | **Every value is initialised**: fields have defaults |
+| A `push_back` silently dangles every pointer and iterator into the vector | **Checked**: a function's `kills` clause says what a call may move, and a reference used after it is a compile error |
+| `new` and `delete`, or an allocator passed by hand | **Placed by the compiler**: a scope's region when it can prove that safe, otherwise the heap; ordinary code names no allocator |
 | Exceptions, or error codes nobody checks | **Errors as values**: `!->` on the signature, one `or` clause to handle it, and an unhandled failure is a compile error |
 | Templates checked at instantiation, with long error traces | **Generics checked at the definition**, against their bounds, then monomorphized by Dazzle |
 | Headers, include order, the preprocessor | **Modules**: a `dazzle.toml` per module, no headers, declaration order irrelevant |

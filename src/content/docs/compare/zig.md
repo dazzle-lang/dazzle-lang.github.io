@@ -1,13 +1,13 @@
 ---
 title: Dazzle vs Zig
-description: Dazzle compared with Zig. Both pass allocators explicitly, avoid hidden control flow and build C from source, but Dazzle has RAII, traits, private fields and C++ class interop.
+description: Dazzle compared with Zig. Both avoid hidden control flow, treat errors as values and build C from source, but Dazzle has RAII, traits, private fields, compiler-placed memory and C++ class interop.
 ---
 
-Zig and Dazzle agree on a lot of principles: no hidden allocations, no hidden control flow, no exceptions, explicit allocators, and building C libraries from source instead of shipping binaries. They disagree on how much abstraction a systems language should have.
+Zig and Dazzle agree on a lot of principles: no hidden control flow, no exceptions, no garbage collector, and building C libraries from source instead of shipping binaries. They disagree on who chooses where memory comes from, and on how much abstraction a systems language should have.
 
 ## What they share
 
-- **No hidden allocations.** Both pass the allocator explicitly. Dazzle uses a default argument, so `List<i32>(8)` takes the heap and `List<i32>(8, Allocators::Temp)` a scratch arena.
+- **No garbage collector and no hidden control flow.**
 - **Errors are values**, marked on the signature: Zig's `!T` and `try`, Dazzle's `!->` and `or`.
 - **`defer`.**
 - **C libraries from source.** Zig builds C with its own toolchain; `dz` builds C and C++ from a manifest recipe with clang++ or g++.
@@ -17,6 +17,7 @@ Zig and Dazzle agree on a lot of principles: no hidden allocations, no hidden co
 
 | | Zig | Dazzle |
 |---|---|---|
+| Allocation | **Explicit**: a function that allocates takes an `Allocator` | **Placed by the compiler**: a scope's region when it can prove that safe, otherwise the heap; ordinary code names no allocator, and `dz placements` lists where each allocation went and why |
 | Destruction | Manual, with `defer` and `errdefer` | **RAII**: `drop` runs automatically at the end of scope; `defer` is there for the rest |
 | Copies and moves | Plain memory copies | `copy` and checked `move`; a type that owns a resource is move-only unless it implements `Copy` |
 | Encapsulation | Struct fields are always public | Fields are **private by default**, enforced |
@@ -37,6 +38,7 @@ Zig removes abstractions so that nothing is hidden. Dazzle keeps the abstraction
 ## Choose Zig if
 
 - you want a small language with `comptime` as its one metaprogramming tool;
+- you want to choose every allocator yourself, at every call;
 - you want direct machine-code output and Zig's cross-compilation;
 - you do not need C++ libraries.
 

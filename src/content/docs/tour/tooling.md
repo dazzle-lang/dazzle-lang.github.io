@@ -56,6 +56,10 @@ fn clamp_keeps_values_in_range() {
 
 `dz test` runs each test in its own process, so one crash does not hide the rest, and prints each failing test's own panic message. `#[bench]` functions are timed by `dz bench`, which builds in release mode and reports the fastest of five calibrated batches. The repository compares Dazzle against hand-written C++ this way: bounds-checked indexing, `drop` against a destructor, and `virtual` dispatch against C++'s own.
 
+## Where the memory went
+
+The compiler chooses where each allocation goes: the region of the scope that owns the value, wherever the caller keeps a result, or the heap ([Ownership](/tour/ownership/#where-memory-comes-from)). The editor shows the choice as an inlay hint at each allocation, and `dz placements` lists every one with its reason, as text or with `--format=json`.
+
 ## Debugging the output
 
 The generated C++ carries `#line` directives back to your `.dz` files, so gdb, LLDB, the Visual Studio debugger and profilers show your source. `--track-memory` records every allocation and reports leaks, double frees and mismatched frees with the line that caused them. `dz expand` shows exactly what a macro wrote.
