@@ -12,8 +12,13 @@ export const COMPILERS = [
 	{ id: 'clang2310', name: 'Clang 23.1' },
 ];
 
-/** What `dz build` compiles with (spec §16.5), at `-O1` to keep the compile quick. */
-export const FLAGS = '-std=c++17 -fno-exceptions -fno-rtti -O1';
+/**
+ * What `dz build` compiles with (spec §16.5), at `-O1` to keep the compile quick.
+ * `-fwrapv` is the language's, not an option: Dazzle's integer arithmetic wraps (spec
+ * §5.1), and without it an optimiser may assume a signed overflow never happens. The
+ * program is one translation unit, so link-time optimisation would add nothing.
+ */
+export const FLAGS = '-std=c++17 -fno-exceptions -fno-rtti -fwrapv -O1';
 
 const lines = (output) => (output ?? []).map((l) => l.text).join('\n');
 

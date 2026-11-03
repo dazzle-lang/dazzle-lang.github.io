@@ -3,9 +3,9 @@
 
 import { StreamLanguage } from '@codemirror/language';
 
-// The keywords `dz_lex` reserves (spec §2.4), less the literals, which are atoms.
+// The keywords and reserved words of spec §2.7, less the literals, which are atoms.
 const KEYWORDS = new Set(
-	'as break case ignore const continue defer else enum extern fn for if impl import in let macro module move mut own pub return struct switch trait or union while unreachable unsafe virtual override protected static async await where yield comptime'.split(
+	'as break case ignore const continue defer else enum extern fn for if impl import in kills let macro module move mut own pub return self Self struct switch tie trait or union while unreachable unsafe virtual override protected static async await where yield comptime collect'.split(
 		' ',
 	),
 );
