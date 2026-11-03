@@ -23,7 +23,8 @@ The gap comes from known, specific places, most of them in the standard library,
 
 - `List::sort_by` is a heapsort called through a function pointer. It takes 100 ms where `std::sort` takes 19 ([T-0096](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0096-list-sort-by-heapsort-through-function.md)).
 - Returning a tree node through `!->` costs extra moves and a drop at every step, and `Box` is five times the size of `unique_ptr` ([T-0097](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0097-moving-union-through-fallible-result-costs.md)).
-- The temporary arena calls `malloc` for every resize of a container larger than 64 KiB ([T-0099](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0099-allocators-temp-gives-growing-container-malloc.md)).
+- The parser's tree nodes are on the heap. The compiler puts a value in a scope's region when it can prove the value stays there, but a value rebuilt on every pass of a loop, as each node is, keeps the heap ([T-0146](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0146-value-rebuilt-on-each-pass-loop.md)).
+- A `String` always allocates, where `std::string` keeps text of up to 15 bytes inside itself. Most of the words in the word count are that short.
 
 Some of the cost is the language's own, and it stays by design: indexing is bounds-checked in every build, and integer arithmetic wraps.
 </Aside>
@@ -35,10 +36,10 @@ Each half is built from clean three times, and the median is shown. For Dazzle, 
 <Benchmarks view="build" />
 
 <Aside type="note" title="Where the build time goes">
-Dazzle's own work, from parsing to emitting the C++, takes about 35 ms on each of these programs. Almost all the rest happens outside it:
+Dazzle's own work, from parsing to emitting the C++, takes about 90 ms on each of these programs. The largest part is the ownership check, ties included, which checks the standard library again in every build along with the program. Almost all the rest happens outside Dazzle:
 
-- **The C++ compiler**, on the generated code, takes 1.3 s with clang and 2.1–2.4 s with g++. Most of that is the standard library's C++, which is compiled again in every build ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)).
-- **Importing `stdlib.h`** with libclang takes about 380 ms. The standard library uses it for its heap allocator, so every program pays this, in every build ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)).
+- **The C++ compiler**, on the generated code, takes 1.8–2.2 s with clang and 1.3–1.5 s with g++, link-time optimisation included. Most of that is the standard library's C++, which is compiled again in every build ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)).
+- **Importing `stdlib.h`** with libclang takes about 85 ms in this run (380 ms in the first, with clang 23's libclang). The standard library uses it for its heap allocator, so every program pays this, in every build ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)).
 
 Both are fixable without changing the language. As they are fixed, this table should show it.
 </Aside>

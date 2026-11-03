@@ -22,9 +22,24 @@ const cxxLabel = (run, cxx) => {
 	const major = run.machine.compilers[cxx]?.match(/(\d+)\.\d+/)?.[1] ?? '';
 	return `${cxx === 'clang++' ? 'clang' : 'g++'} ${major}`;
 };
+// The history spans runs on different compiler versions, so its columns name the compiler
+// alone and each run says which versions it used.
+const cxxName = (cxx) => (cxx === 'clang++' ? 'clang' : 'g++');
+const versions = (run) => Object.keys(run.machine.compilers).map((c) => cxxLabel(run, c)).join(', ');
 const ms = (s) => `${Math.round(s * 1000)} ms`;
 const mib = (k) => (k ? `${(k / 1024).toFixed(0)} MiB` : '—');
 const ratio = (r) => r.dazzle.median / r.cpp.median;
+// Peak memory hardly depends on the compiler, so a program shows one row for it when every
+// compiler's peaks round to the same MiB, and one per compiler when they do not.
+const memoryRows = (rows) => {
+	const same = (side) => new Set(rows.map((r) => Math.round(r[side].peak_kib / 1024))).size === 1;
+	const all = rows.filter((r) => r.dazzle.peak_kib && r.cpp.peak_kib);
+	if (!all.length) return [];
+	return same('dazzle') && same('cpp') ? [{ label: 'Peak memory', r: all[0] }] : all.map((r) => ({ label: `Memory, ${cxxLabel(latest, r.cxx)}`, r }));
+};
+// What the latest run's optimised build passed, as `tools/bench_programs.py` records it;
+// runs from before it recorded flags were `-O2`.
+const flags = latest.flags ?? '-O2';
 const geomean = (xs) => Math.exp(xs.reduce((a, x) => a + Math.log(x), 0) / xs.length);
 
 const programs = [...new Set(latest.results.map((r) => r.program))];
@@ -51,7 +66,7 @@ const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.
 
 // Build time, from `dz build --timings`: Dazzle's own phases, importing C and C++ headers,
 // the C++ compiler, and whatever none of them accounts for.
-const OWN = ['manifests', 'lex and parse', '#if and macros', 'resolve names', 'type check', 'ownership', 'instantiate generics', 'emit C++'];
+const OWN = ['manifests', 'lex and parse', '#if and macros', 'resolve names', 'type check', 'ownership', 'placement', 'instantiate generics', 'emit C++'];
 const buildParts = (b) => {
 	const p = b.phases ?? {};
 	const own = OWN.reduce((a, n) => a + (p[n] ?? 0), 0);
@@ -77,9 +92,12 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 			{programs.map((p) => {
 				const rows = compilers.map((c) => find(latest, p, c)).filter(Boolean);
 				const max = Math.max(...rows.flatMap((r) => [r.dazzle.median, r.cpp.median]));
+				const memory = memoryRows(rows);
+				const memMax = Math.max(...memory.flatMap((m) => [m.r.dazzle.peak_kib, m.r.cpp.peak_kib]));
 				return (
 					<section class="program">
 						<h4>{PROGRAMS[p] ?? p}</h4>
+						<div class="metric">Run time</div>
 						{rows.map((r) => (
 							<div class="pair">
 								<div class="who">{cxxLabel(latest, r.cxx)}</div>
@@ -94,17 +112,31 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 								<div class="ratio">{ratio(r).toFixed(2)}×</div>
 							</div>
 						))}
-						<p class="extra">
-							Peak memory {rows.map((r) => `${mib(r.dazzle.peak_kib)} / ${mib(r.cpp.peak_kib)} (${cxxLabel(latest, r.cxx)})`).join(', ')}.
-							Build from clean {rows.map((r) => `${r.build.dazzle.toFixed(1)} s / ${r.build.cpp.toFixed(1)} s`).join(', ')}.
-						</p>
+						{memory.length > 0 && <div class="metric">Peak memory</div>}
+						{memory.map((m) => (
+							<div class="pair mem">
+								<div class="who">{memory.length > 1 ? cxxLabel(latest, m.r.cxx) : 'both'}</div>
+								<div class="bars">
+									<div class="bar dz" style={`width: ${(100 * m.r.dazzle.peak_kib) / memMax}%`}>
+										<span>Dazzle {mib(m.r.dazzle.peak_kib)}</span>
+									</div>
+									<div class="bar cpp" style={`width: ${(100 * m.r.cpp.peak_kib) / memMax}%`}>
+										<span>C++ {mib(m.r.cpp.peak_kib)}</span>
+									</div>
+								</div>
+								<div class="ratio">{(m.r.dazzle.peak_kib / m.r.cpp.peak_kib).toFixed(2)}×</div>
+							</div>
+						))}
 					</section>
 				);
 			})}
 			<p class="legend">
-				<span class="key dz" /> Dazzle <span class="key cpp" /> C++. Shorter is faster; the figure on the right is Dazzle's time over C++'s.
-				Median of {latest.results[0].dazzle.runs} runs. {latest.machine.cpu}, {Object.values(latest.machine.compilers).join(' and ')},
-				<code>-O2</code>. Dazzle at <a href={COMMIT + latest.commit}>{latest.commit}</a>, {latest.date}.
+				<span class="key dz" /> Dazzle <span class="key cpp" /> C++. Shorter is better. The figure on the right is Dazzle's over C++'s: how many times as long, or as much memory; below 1.00× Dazzle is ahead.{' '}
+				Run time is the median of {latest.results[0].dazzle.runs} runs; peak memory is the largest resident set of any of them, the same with either compiler unless a row per compiler says otherwise.
+			</p>
+			<p class="legend">
+				{latest.machine.cpu}, {Object.values(latest.machine.compilers).join(' and ')}, <code>{flags}</code>. Dazzle at <a href={COMMIT + latest.commit}>{latest.commit}</a>, {latest.date}. Build times are{' '}
+				<a href="#build-time">below</a>.
 			</p>
 		</div>
 	)
@@ -203,14 +235,16 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 					</g>
 				))}
 				{runs.map((run, i) => (
-					<text x={x(i)} y={H - 10} class="tick" text-anchor="middle">{run.commit}</text>
+					<text x={x(i)} y={H - 10} class="tick" text-anchor={runs.length === 1 ? 'middle' : i === 0 ? 'start' : i === runs.length - 1 ? 'end' : 'middle'}>
+						{run.commit}
+					</text>
 				))}
 			</svg>
 			<p class="legend">
 				{series.map((s, k) => (
-					<span><span class={`key s${k}`} /> {cxxLabel(latest, s.cxx)} </span>
+					<span><span class={`key s${k}`} /> {cxxName(s.cxx)} </span>
 				))}
-				The geometric mean of the three programs' ratios, for each run. Lower is better; 1.0× is C++'s speed.
+				— the geometric mean of the three programs' ratios, for each run. Lower is better; 1.0× is C++'s speed.
 			</p>
 			<div class="table-wrap">
 				<table>
@@ -218,10 +252,10 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 						<tr>
 							<th>Run</th>
 							{columns.map((c) => (
-								<th>
+								<th class="num">
 									{c.program}
 									<br />
-									<small>{cxxLabel(latest, c.cxx)}</small>
+									<small>{cxxName(c.cxx)}</small>
 								</th>
 							))}
 						</tr>
@@ -230,7 +264,7 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 						{runs.toReversed().map((run) => (
 							<tr>
 								<td class="run">
-									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}</small>
+									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}, {versions(run)}</small>
 									<br />
 									<small>{run.summary}</small>
 								</td>
@@ -253,7 +287,7 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 								<th class="num">
 									{c.program}
 									<br />
-									<small>{cxxLabel(latest, c.cxx)}</small>
+									<small>{cxxName(c.cxx)}</small>
 								</th>
 							))}
 						</tr>
@@ -262,7 +296,7 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 						{runs.toReversed().map((run) => (
 							<tr>
 								<td>
-									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}</small>
+									<a href={COMMIT + run.commit}>{run.commit}</a> <small>{run.date}, {versions(run)}</small>
 								</td>
 								{columns.map((c) => {
 									const r = find(run, c.program, c.cxx);
@@ -270,13 +304,19 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 									const own = r.build.phases ? buildParts(r.build)[0].t : null;
 									return (
 										<td class="num">
-											{s1(r.build.dazzle)} / {s1(r.build.cpp)}
-											{own != null && (
-												<>
-													<br />
-													<small>own phases {Math.round(own * 1000)} ms</small>
-												</>
-											)}
+											{(r.build.dazzle / r.build.cpp).toFixed(1)}×
+											<br />
+											<small class="detail">
+												Dazzle {s1(r.build.dazzle)}
+												<br />
+												C++ {s1(r.build.cpp)}
+												{own != null && (
+													<>
+														<br />
+														own phases {Math.round(own * 1000)} ms
+													</>
+												)}
+											</small>
 										</td>
 									);
 								})}
@@ -285,7 +325,7 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 					</tbody>
 				</table>
 			</div>
-			<p class="legend">Build time from clean: Dazzle's, then C++'s, with the part spent in Dazzle's own phases below it.</p>
+			<p class="legend">Build time from clean: Dazzle's over C++'s, with both times below it, and the part of Dazzle's spent in its own phases, from reading the manifests to emitting the C++.</p>
 		</div>
 	)
 }
@@ -312,6 +352,21 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 	.who {
 		font-size: var(--sl-text-sm);
 		color: var(--sl-color-gray-2);
+	}
+	.metric {
+		font-size: var(--sl-text-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+		margin: 0.6rem 0 0.3rem;
+	}
+	.program h4 + .metric {
+		margin-top: 0;
+	}
+	/* Memory bars are the same colours, lighter, so the two measures do not read as one. */
+	.pair.mem .bar {
+		opacity: 0.75;
 	}
 	.bars {
 		display: grid;
@@ -484,5 +539,9 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 	}
 	small {
 		color: var(--sl-color-gray-3);
+	}
+	small.detail {
+		font-weight: 400;
+		line-height: 1.5;
 	}
 </style>
