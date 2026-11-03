@@ -1,10 +1,10 @@
 union Command {
-    Say { text: str }
+    Say { text: const &str }
     Move { x: f32, y: f32 }
     Quit {}
 }
 
-fn describe(c: &Command) -> str {
+fn describe(c: &Command) -> const &str {
     return switch c {
         case Say(&s) {
             s.text

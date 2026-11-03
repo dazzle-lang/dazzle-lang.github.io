@@ -1,4 +1,4 @@
-fn parse_count(text: str) !-> i32 {
+fn parse_count(text: &str) !-> i32 {
     if text.len == 0 {
         return error(1, "no count given")
     }

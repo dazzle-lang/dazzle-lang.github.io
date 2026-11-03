@@ -1,4 +1,4 @@
-fn say(word: str) -> i32 {
+fn say(word: &str) -> i32 {
     println!("{}", word)
     return 0
 }

@@ -1,7 +1,7 @@
 {
 	"versions": {
 		"dz": "dz 0.1.0",
-		"dazzle_commit": "fdbd580",
+		"dazzle_commit": "17e809f",
 		"g++": "g++ (GCC) 16.2.1 20260810",
 		"clang++": "clang version 23.1.3"
 	},

@@ -1,9 +1,9 @@
 struct Player {
-    pub name:   str = ""
+    pub name:   const &str = ""
     pub health: i32 = 100
 }
 
-fn find(players: &[2]Player, name: str) -> ^Player {
+fn find(players: &[2]Player, name: &str) -> ^Player in players {
     for i in 0..2 {
         if players[i].name == name {
             return &players[i]
