@@ -3,6 +3,9 @@
 // built for WASI by `scripts/sync.mjs` — except Run, which asks Compiler Explorer to build
 // and run the generated C++. See `src/playground/`.
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+// Which `dz` the page carries, written by the sync beside dz.wasm.
+import build from '../../generated/dz-build.json';
+const COMMIT = 'https://github.com/dazzle-lang/Dazzle/commit/';
 ---
 
 <StarlightPage
@@ -19,6 +22,20 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 		<code>dz</code>, running in your browser, with <code>--no-line-directives</code> so the output reads as plain C++.{' '}
 		<strong>Run</strong> sends that C++ to <a href="https://godbolt.org">Compiler Explorer</a> to build and execute it;
 		nothing leaves the page until you press it.
+	</p>
+	<p class="pg-version">
+		The compiler here is <code>dz {build.version ?? '0.1.0'}</code>
+		{
+			build.commit && (
+				<>
+					{' '}
+					built from Dazzle at <a href={COMMIT + build.commit}>{build.commit}</a>
+					{build.date && <>, committed {build.date}</>}
+				</>
+			)
+		}
+		. The language is pre-release and changes from one commit to the next, so a program may compile here and not with an older
+		<code>dz</code>, or the other way round.
 	</p>
 
 	<div id="pg" class="not-content" data-failed="false">
@@ -96,6 +113,11 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 	}
 	.pg-intro {
 		max-width: 48rem;
+	}
+	.pg-version {
+		max-width: 48rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
 	}
 
 	.pg-bar {

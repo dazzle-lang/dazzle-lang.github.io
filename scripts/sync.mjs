@@ -196,6 +196,17 @@ if (!wasm) {
 }
 fs.copyFileSync(wasm, path.join(OUT_GENERATED, 'dz.wasm'));
 
+// Which compiler that is, for the playground to say: the language is pre-release and
+// changes, so a reader needs to know which `dz` their program met. The version stays 0.1.0
+// until release, so the commit is what tells builds apart. A `DAZZLE_WASM` built elsewhere
+// is taken to come from this checkout too.
+const git = (...args) => spawnSync('git', ['-C', REPO, ...args], { encoding: 'utf8' }).stdout?.trim() || null;
+const version = fs.readFileSync(path.join(REPO, 'Cargo.toml'), 'utf8').match(/\[workspace\.package\][^[]*?\bversion\s*=\s*"([^"]+)"/)?.[1] ?? null;
+fs.writeFileSync(
+	path.join(OUT_GENERATED, 'dz-build.json'),
+	JSON.stringify({ version, commit: git('rev-parse', '--short', 'HEAD'), date: git('log', '-1', '--format=%cs') }, null, '\t') + '\n',
+);
+
 console.log(
 	`sync: ${specPages.length + 1} spec pages, ${decisionPages.length + 1} decision pages and ${screenshots} screenshots from ${REPO}, and the compiler for the playground`,
 );

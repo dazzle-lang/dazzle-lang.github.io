@@ -1,6 +1,6 @@
 ---
 title: Ownership and RAII
-description: Dazzle's ownership model. RAII with three special members (constructor, drop, copy), own pointers, moves that reset the source, and no rule of five. How it lowers to C++.
+description: Dazzle's ownership model. RAII with three special members (constructor, drop, copy), own pointers, moves that reset the source, references checked by ties, and memory placed by the compiler. How it lowers to C++.
 ---
 
 A Dazzle struct has at most three special members, and that is the whole list:
@@ -9,83 +9,102 @@ A Dazzle struct has at most three special members, and that is the whole list:
 - **`drop`**, the destructor;
 - **`copy`**, the copy constructor.
 
-There is no move constructor, no move assignment, no copy assignment and no default constructor to write: the compiler derives them. A field marked **`own`** is a pointer the struct is responsible for releasing.
+There is no move constructor, no move assignment, no copy assignment and no default constructor to write: the compiler derives them. Nothing here names an allocator either: the compiler decides where each `String` and `List` keeps its memory ([below](#where-memory-comes-from)).
 
 ```dz
-struct Image {
-    pub width:  u32
-    pub height: u32
-    m_pixels:   own ^mut u8          // Image frees this; private, like every unmarked field
+struct Level {
+    pub name:    String
+    pub enemies: List<i32>
 
-    Image(width: u32, height: u32) { // the constructor
-        self.width = width
-        self.height = height
-        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
-    }
-
-    fn bytes(&self) -> usize {
-        return width as usize * height as usize * 4
+    Level(name: &str) {                // the constructor
+        self.name = String::from(name)
     }
 }
 
-impl Drop for Image {                // runs exactly once, at the end of the owner's scope
+impl Drop for Level {                  // runs exactly once, when its owner's scope ends
     fn drop(&mut self) {
-        Allocators::Global.free(m_pixels, self.bytes(), 4)
+        println!("unload '{}', {} enemies", name, enemies.len())
     }
 }
 
-impl Copy for Image {                // opt-in: without it, Image is move-only
+impl Copy for Level {                  // opt-in: without it, a Level is move-only
     fn copy(&mut self, other: &Self) {
-        width = other.width
-        height = other.height
-        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
-        unsafe {
-            memcpy(m_pixels, other.m_pixels, self.bytes())
-        }
+        name = other.name              // a String copies its text
+        enemies = other.enemies        // a List copies its elements
     }
 }
 
 fn main() {
-    let a = Image(64, 64)
-    let b = a                        // a copy: runs `copy`
-    let c = move(a)                  // a move: `a` is reset to its defaults
-    println!("{} {}", b.width, c.width)
-}                                    // c, b and a are dropped, in that order
+    let mut a = Level("forest")
+    a.enemies.push(10)
+    let b = a                          // a copy: runs `copy`
+    let c = move(a)                    // a move: `a` is reset to its defaults
+    println!("{} and {}", b.name, c.name)
+}                                      // c, b, then a: a's drop runs on an empty Level
 ```
 
-`own` is for memory and resources Dazzle does not manage itself: here raw bytes from the heap, elsewhere a surface, a file, a window or a GPU buffer from a C library. Dazzle's own data needs none of the three members: a struct of `List` and `String` fields is freed, copied and moved with no code at all, and ordinary code never names an allocator ([below](#where-memory-comes-from)). An allocator is told the size and alignment it handed out, so it never has to store them. Run this with `dz run --track-memory` and it reports no leaks.
+```text
+forest and forest
+unload 'forest', 1 enemies
+unload 'forest', 1 enemies
+unload '', 0 enemies
+```
+
+The `drop` here only prints, to show when it runs: a `String` and a `List` free their own memory, so a struct made of them needs no `drop` and no `copy` at all, and is freed, copied and moved with no code.
+
+**`own` is for what Dazzle does not manage itself:** a surface, a file, a window or a GPU buffer that a C library handed over. A field marked `own` is a pointer the struct is responsible for releasing, so its `drop` gives it back to the library:
+
+```dz
+struct Image {
+    pub width:  i32
+    pub height: i32
+    m_surface:  own ^mut sdl::SDL_Surface   // Image frees this; private, like every unmarked field
+
+    Image(width: i32, height: i32) {
+        self.width = width
+        self.height = height
+        m_surface = sdl::SDL_CreateSurface(width, height, .SDL_PIXELFORMAT_RGBA8888)
+    }
+}
+
+impl Drop for Image {
+    fn drop(&mut self) {
+        sdl::SDL_DestroySurface(m_surface)
+    }
+}
+```
 
 ## The rules
 
-**`own` makes a struct move-only.** A struct with an `own` field, or a `drop`, can only be moved (`move(x)`) unless it implements `Copy`. A plain struct of copyable fields is copyable with no code at all.
+**`own` or `drop` makes a struct move-only.** A struct with an `own` field, or a `drop`, can only be moved (`move(x)`) unless it implements `Copy`. A plain struct of copyable fields is copyable with no code at all.
 
 **An `own` field with no `drop` is a compile error**, so a resource cannot be acquired and forgotten:
 
 ```text
-error[DZ0412]: `Image` owns a resource but never releases it
-  ┌─ src/main.dz:4:5
+error[DZ0412]: `Surface` owns a resource but never releases it
+  ┌─ src/main.dz:3:5
   │
-4 │     m_pixels:   own ^mut u8          // Image frees this; private, like every unmarked field
+3 │     m_pixels:  own ^mut u8          // memory a C library handed over
   │     ^^^^^^^^ this field is marked `own`
   │
-  = help: add a `drop()` that releases `m_pixels`, or remove `own` if Image does not own this pointer (spec §6.5)
+  = help: add a `drop()` that releases `m_pixels`, or remove `own` if Surface does not own this pointer (spec §6.5)
 ```
 
-**A moved-from value is reset to its defaults**, not left in C++'s "valid but unspecified" state. Its `drop` still runs and does nothing, because `m_pixels` is now null. Reading it again is an error:
+**A moved-from value is reset to its defaults**, not left in C++'s "valid but unspecified" state. Its `drop` still runs, once, and finds nothing to release: that is the last line of the output above. Reading it again is an error:
 
 ```text
 error[DZ0401]: `a` was moved and cannot be used again
-   ┌─ src/main.dz:38:26
+   ┌─ src/main.dz:30:26
    │
-37 │     let c = move(a)                  // a move: `a` is reset to its defaults
+29 │     let c = move(a)                    // a move: `a` is reset to its defaults
    │             ------- moved here
-38 │     println!("{} {} {}", a.width, b.width, c.width)
-   │                          ^^^^^^^ used here after the move
+30 │     println!("{} {} {}", a.name, b.name, c.name)
+   │                          ^^^^^^ used here after the move
    │
    = help: a moved-from value is left at its defaults, and reading it back would almost never be what was meant (spec §6.4)
 ```
 
-**Every value is initialised.** `let img: Image` is an empty image, never garbage memory, and `copy` always runs on a value already at its defaults, so returning early from it leaves something valid.
+**Every value is initialised.** `let level: Level` is an empty level, never garbage memory, and `copy` always runs on a value already at its defaults, so returning early from it leaves something valid.
 
 ## References, pointers and handles
 
@@ -123,38 +142,35 @@ So use after move, double free, and a reference used after a call moved or freed
 
 ## What it becomes in C++
 
-The three members map onto C++ special members, and the rest of the rule of five is synthesised, so C++ itself enforces destruction order, temporaries, and the deleted copy of a move-only type. Abridged from `dz cpp`'s output for `Image`:
+The three members map onto C++ special members, and the rest of the rule of five is synthesised, so C++ itself enforces destruction order, temporaries, and the deleted copy of a move-only type. Abridged from `dz cpp`'s output for `Level`:
 
 ```cpp
-struct Image {
-    uint32_t width{};
-    uint32_t height{};
-    uint8_t* m_pixels{};
+struct Level {
+    ::dz::std_::String name{};
+    ::dz::std_::List__i32 enemies{};
 
-    Image(uint32_t width, uint32_t height);   // the constructor
-    size_t bytes() const;                     // a `&self` method is `const`
-    Image() = default;                        // every field at its default
-    ~Image();                                 // drop
-    Image(const Image& other);                // copy
-    Image& operator=(const Image& other);     // synthesised: drop, reset, copy
-    Image(Image&& other);                     // synthesised: steal, reset the source
-    Image& operator=(Image&& other);          // synthesised: drop, steal, reset the source
+    Level(::dz::str name);                    // the constructor
+    Level() = default;                        // every field at its default
+    ~Level();                                 // drop
+    Level(const Level& other);                // copy
+    Level& operator=(const Level& other);     // synthesised: drop, reset, copy
+    Level(Level&& other);                     // synthesised: steal, reset the source
+    Level& operator=(Level&& other);          // synthesised: drop, steal, reset the source
 };
 
-Image::Image(Image&& other) {
-    width = other.width;
-    height = other.height;
-    m_pixels = other.m_pixels;
-    other.reset_to_defaults__();              // the moved-from Image is empty, not unspecified
+Level::Level(Level&& other) {
+    name = static_cast<decltype(name)&&>(other.name);
+    enemies = static_cast<decltype(enemies)&&>(other.enemies);
+    other.reset_to_defaults__();              // the moved-from Level is empty, not unspecified
 }
 ```
 
 | Dazzle | C++ |
 |---|---|
-| `Image(w, h)` | `Image(uint32_t w, uint32_t h)` |
-| `impl Drop`'s `drop` | `~Image()` |
-| `impl Copy`'s `copy` | `Image(const Image&)`, run on a defaults-initialised `*this` |
-| move | `Image(Image&&)`: memberwise steal, then reset the source to its defaults |
+| `Level(name)` | `Level(::dz::str name)` |
+| `impl Drop`'s `drop` | `~Level()` |
+| `impl Copy`'s `copy` | `Level(const Level&)`, run on a defaults-initialised `*this` |
+| move | `Level(Level&&)`: memberwise steal, then reset the source to its defaults |
 | copy and move assignment | destroy, reset, then copy or steal, with a self-assignment guard |
 | a move-only type | its copy constructor and copy assignment `= delete`d |
 
@@ -177,4 +193,4 @@ Every build places memory this way; `DZ_REGIONS=0` builds the same program with 
 
 ## In the specification
 
-[§6 Value semantics](/spec/06-value-semantics-ownership-copy/) has the full ownership rules and [§6.7](/spec/06-value-semantics-ownership-copy/) ties, and [§14.6](/spec/14-memory-and-allocators/#146-placement-by-the-compiler) where the compiler places memory. The [ownership example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/ownership) builds a growable array with `own`.
+[§6 Value semantics](/spec/06-value-semantics-ownership-copy/) has the full ownership rules and [§6.7](/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses) ties, and [§14.6](/spec/14-memory-and-allocators/#146-placement-by-the-compiler) where the compiler places memory. The [ownership example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/ownership) builds a growable array with `own`.

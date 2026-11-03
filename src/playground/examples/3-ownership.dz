@@ -1,39 +1,31 @@
-struct Image {
-    pub width:  u32
-    pub height: u32
-    m_pixels:   own ^mut u8          // Image frees this; private, like every unmarked field
+// RAII in three members: a constructor, `drop` and `copy`. Nothing here names an
+// allocator: the compiler decides where each `String` and `List` keeps its memory.
+struct Level {
+    pub name:    String
+    pub enemies: List<i32>
 
-    Image(width: u32, height: u32) { // the constructor
-        self.width = width
-        self.height = height
-        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
-    }
-
-    fn bytes(&self) -> usize {
-        return width as usize * height as usize * 4
+    Level(name: &str) {                // the constructor
+        self.name = String::from(name)
     }
 }
 
-impl Drop for Image {                // runs exactly once, at the end of the owner's scope
+impl Drop for Level {                  // runs exactly once, when its owner's scope ends
     fn drop(&mut self) {
-        Allocators::Global.free(m_pixels, self.bytes(), 4)
+        println!("unload '{}', {} enemies", name, enemies.len())
     }
 }
 
-impl Copy for Image {                // opt-in: without it, Image is move-only
+impl Copy for Level {                  // opt-in: without it, a Level is move-only
     fn copy(&mut self, other: &Self) {
-        width = other.width
-        height = other.height
-        m_pixels = Allocators::Global.alloc(self.bytes(), 4)
-        unsafe {
-            memcpy(m_pixels, other.m_pixels, self.bytes())
-        }
+        name = other.name              // a String copies its text
+        enemies = other.enemies        // a List copies its elements
     }
 }
 
 fn main() {
-    let a = Image(64, 64)
-    let b = a                        // a copy: runs `copy`
-    let c = move(a)                  // a move: `a` is reset to its defaults
-    println!("{} {}", b.width, c.width)
-}                                    // c, b and a are dropped, in that order
+    let mut a = Level("forest")
+    a.enemies.push(10)
+    let b = a                          // a copy: runs `copy`
+    let c = move(a)                    // a move: `a` is reset to its defaults
+    println!("{} and {}", b.name, c.name)
+}                                      // c, b, then a: a's drop runs on an empty Level

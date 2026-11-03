@@ -1,0 +1,41 @@
+// Ties: a reference used after a call moved or freed the memory it points into is a
+// compile error, with no lifetimes to write. A type names its memory with `tie`, and each
+// function says in its signature which ties a call may end, with `kills`.
+struct Enemy {
+    pub hp: i32 = 10
+}
+
+struct Level {
+    pub name:  String
+    m_enemies: List<Enemy>
+    tie @enemies = m_enemies@items          // a public name for this private memory
+
+    Level(name: &str) {
+        self.name = String::from(name)
+    }
+
+    pub fn spawn(&mut self, e: Enemy) kills self@enemies {   // may move the array
+        m_enemies.push(e)
+    }
+
+    pub fn count(&self) -> usize {                            // no clause: kills nothing
+        return m_enemies.len()
+    }
+
+    pub fn first(&self) -> ^Enemy in self@enemies {          // points into the array
+        return m_enemies.first()
+    }
+}
+
+fn main() {
+    let mut level = Level("forest")
+    level.spawn(Enemy{})
+    let boss = level.first() or return      // a reference into the level's array
+    println!("{} enemies, the first has {} hp", level.count(), boss.hp)
+
+    level.spawn(Enemy{ hp: 50 })            // may move the array, which ends `boss`
+    // println!("{}", boss.hp)              // error[DZ0413]: remove the `//` to see it
+
+    let again = level.first() or return     // so take a new one
+    println!("{} enemies, the first has {} hp", level.count(), again.hp)
+}
