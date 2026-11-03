@@ -1,0 +1,8 @@
+fn main() {
+    let mut scores = List<i32>()
+    scores.push(10)
+    let first = &mut scores[0]       // a reference into the list
+    scores.push(20)                  // may move the array
+    first += 1
+    println!("{}", scores[0])
+}

@@ -45,7 +45,7 @@ Each of these is a complete program in the repository. Each one uses a C library
 
 ## Bugs C++ lets through
 
-Here are eight of the mistakes that both g++ and clang++ compile. Five of them compile without a single warning on either compiler, even with `-Wall -Wextra`, and the first six are undefined behaviour. In Dazzle, each one is a compile error or has one defined meaning:
+Here are nine of the mistakes that both g++ and clang++ compile. Six of them compile without a single warning on either compiler, even with `-Wall -Wextra`, and the first seven are undefined behaviour. In Dazzle, each one is a compile error or has one defined meaning:
 
 <div class="dz-bugs not-content">
 
@@ -57,6 +57,7 @@ Here are eight of the mistakes that both g++ and clang++ compile. Five of them c
 | Copying a struct that owns memory | double free, no warning | <span class="ok">error DZ0403</span> |
 | Signed overflow | undefined, `x + 1 < x` folded to `false` | <span class="ok">wraps, in every build</span> |
 | Falling off the end of a function | undefined behaviour, with a warning | <span class="ok">error DZ0405</span> |
+| Keeping a reference across a `push_back` | undefined behaviour, no warning | <span class="ok">error DZ0413</span> |
 | Using a value after `std::move` | compiles, reads whatever is left | <span class="ok">error DZ0401</span> |
 | Ignoring a returned error | compiles silently | <span class="ok">error DZ0510</span> |
 
@@ -69,7 +70,23 @@ Each diagnostic points at the line, says what is wrong there, and ends with a he
 	<Terminal snippet="null" compact />
 </div>
 
-<LinkCard title="See all twelve, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
+<LinkCard title="See all thirteen, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
+
+## References checked, memory placed by the compiler
+
+The bug C++ code actually has is a reference used after a call grew, shrank or freed the memory it points into: a pointer into a vector kept across a `push_back`, an iterator kept across an `erase`. Dazzle catches it at compile time, without lifetimes. A type names its memory with **ties**, and every function says in its signature which of them a call may end, with a **`kills`** clause:
+
+```dz
+// in std's List: each signature says what a call may end
+pub fn push(&mut self, v: T) kills self@items      // may move the array
+pub fn len(&self) -> usize                         // no clause: kills nothing
+```
+
+<Terminal snippet="invalidated" compact />
+
+The compiler checks each clause against its function's body, and `dz fix` writes the clause a body needs. Aliasing stays legal, a `&mut` and a `&` to the same value included, and no struct carries a lifetime parameter.
+
+The same ties let the compiler choose where memory comes from, so **ordinary code names no allocator**. A value that never leaves the scope that builds it goes in that scope's **region**, released in one step when the scope ends; a returned value is built where the caller keeps it; anything else goes on the heap. The editor shows where each allocation went, and `dz placements` lists them with the reason. [Ownership →](/tour/ownership/#references-pointers-and-handles)
 
 ## One clause for everything that can fail
 

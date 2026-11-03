@@ -1,6 +1,6 @@
 ---
 title: Bugs C++ lets through
-description: Twelve mistakes that C++ compiles, often without a warning, beside what Dazzle does with the same mistake. Every output on the page was produced by g++, clang++ and dz.
+description: Thirteen mistakes that C++ compiles, often without a warning, beside what Dazzle does with the same mistake. Every output on the page was produced by g++, clang++ and dz.
 ---
 
 import BugCase from '../../../components/BugCase.astro';
@@ -8,14 +8,14 @@ import { Aside } from '@astrojs/starlight/components';
 
 Each mistake below is written twice: in C++, as a reviewer might miss it, and in Dazzle. Every output on this page was produced by the real compilers: the C++ by g++ and clang++ at `-std=c++17 -O2`, the Dazzle by `dz`. A script (`scripts/capture.mjs` in the site's repository) records them, and the site's build fails if a Dazzle message shown here stops matching what `dz` prints.
 
-The first six are **undefined behaviour** in C++: the program may do anything, and what it does changes with the compiler and the flags. The rest are mistakes C++ defines but does not stop. In Dazzle, each one is either a **compile error** or has **one defined meaning**, the same in every build and on every compiler.
+The first seven are **undefined behaviour** in C++: the program may do anything, and what it does changes with the compiler and the flags. The rest are mistakes C++ defines but does not stop. In Dazzle, each one is either a **compile error** or has **one defined meaning**, the same in every build and on every compiler.
 
 <Aside type="note" title="What C++ has against these">
 Warnings catch some of these mistakes, and sanitizers (`-fsanitize=undefined,address`) catch more, when a test happens to run the bad path. In Dazzle they are rules of the language, so they hold in every build and on every compiler.
 </Aside>
 
-<Aside type="caution" title="What Dazzle does not catch">
-Dazzle does not promise memory safety (spec §1.1). It prevents use after move and double free, but it does not stop a reference from outliving what it points at. Reading through a raw pointer is allowed only inside `unsafe`, so that code is easy to find.
+<Aside type="caution" title="What Dazzle does not catch yet">
+Use after move, double free, and a reference used after a call moved or freed its memory are compile errors. Safe code is not yet free of every undefined behaviour: closing the holes that remain is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads are not in the language yet. Reading through a raw pointer is allowed only inside `unsafe`, so that code is easy to find.
 </Aside>
 
 ## Undefined behaviour in C++
@@ -42,6 +42,10 @@ Signed overflow is undefined in C++, so an optimiser may assume `x + 1 < x` is n
 
 <BugCase name="return" title="Falling off the end of a function" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.4, definite return', href: '/spec/06-value-semantics-ownership-copy/#64-move-semantics' }}>
 Reaching the end of a function that returns a value is undefined behaviour in C++. Both compilers warn, but the program still builds. Here the g++ build stops on an illegal instruction, and the clang build prints `-1` for `sign(0)`. Dazzle's flow analysis requires a value on every path.
+</BugCase>
+
+<BugCase name="invalidated" title="Keeping a reference across a push_back" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.7, ties and kills clauses', href: '/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses' }}>
+`first` refers into the vector's array, and the second `push_back` may move that array, so `first += 1` writes into memory the vector has freed. Neither compiler warns, even with `-Wall -Wextra`, and both builds print `10`: the increment went nowhere anyone will read it. In Dazzle, `List::push` says in its signature that it may move the list's array (`kills self@items`), so the compiler knows the call ends `first`, and using it afterwards is error DZ0413, naming the call that ended it.
 </BugCase>
 
 ## Mistakes C++ does not stop

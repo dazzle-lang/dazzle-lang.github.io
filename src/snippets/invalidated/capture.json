@@ -1,0 +1,39 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "170cdc9",
+		"g++": "g++ (Debian 14.2.0-19) 14.2.0",
+		"clang++": "Debian clang version 19.1.7 (3+b1)"
+	},
+	"dazzle": {
+		"command": "dz check .",
+		"exit": 1,
+		"output": "\u001b[0m\u001b[1m\u001b[38;5;9merror[DZ0413]\u001b[0m\u001b[1m: used after the memory it points into was killed: `scores@items`\u001b[0m\n  \u001b[0m\u001b[34m┌─\u001b[0m src/main.dz:6:5\n  \u001b[0m\u001b[34m│\u001b[0m\n\u001b[0m\u001b[34m5\u001b[0m \u001b[0m\u001b[34m│\u001b[0m     scores.push(20)                  // may move the array\n  \u001b[0m\u001b[34m│\u001b[0m     \u001b[0m\u001b[34m---------------\u001b[0m \u001b[0m\u001b[34mthis call kills `scores@items`\u001b[0m\n\u001b[0m\u001b[34m6\u001b[0m \u001b[0m\u001b[34m│\u001b[0m     \u001b[0m\u001b[31mfirst\u001b[0m += 1\n  \u001b[0m\u001b[34m│\u001b[0m     \u001b[0m\u001b[31m^^^^^\u001b[0m \u001b[0m\u001b[31mpoints into `scores@items`\u001b[0m\n  \u001b[0m\u001b[34m│\u001b[0m\n  \u001b[0m\u001b[34m=\u001b[0m help: a call, write, move or drop that can move or free memory ends every reference into it: use this before that happens, or get it again after (spec §6.7)\n\n\n1 error emitted\n"
+	},
+	"cpp": {
+		"g++": {
+			"plain": {
+				"warnings": [],
+				"exit": 0,
+				"output": "10\n"
+			},
+			"wall": {
+				"warnings": [],
+				"exit": 0,
+				"output": "10\n"
+			}
+		},
+		"clang++": {
+			"plain": {
+				"warnings": [],
+				"exit": 0,
+				"output": "10\n"
+			},
+			"wall": {
+				"warnings": [],
+				"exit": 0,
+				"output": "10\n"
+			}
+		}
+	}
+}
