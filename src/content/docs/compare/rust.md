@@ -33,7 +33,7 @@ Dazzle's syntax will look familiar to a Rust programmer: `fn`, `let`, `struct`, 
 | Output | Machine code through LLVM | Standard C++17, compiled by clang++, g++ or a vendor's compiler |
 | C++ libraries | Bindings through bindgen, cxx or similar | Built from source and imported directly, classes and overloaded methods included |
 | Build | Cargo, with crates.io | `dz`, with a `dazzle.toml` per module; fetched dependencies are on the roadmap |
-| Maturity | Stable since 2015, large ecosystem | Pre-release |
+| Maturity | Stable since 2015, large ecosystem | 0.1, released 2026 |
 
 ## The trade
 

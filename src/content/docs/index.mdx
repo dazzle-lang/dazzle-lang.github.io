@@ -33,9 +33,17 @@ import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 import Gallery from '../../components/Gallery.astro';
 import Terminal from '../../components/Terminal.astro';
 
-<Aside type="caution" title="Pre-release">
-Dazzle is **0.1, unreleased**. It is safe, fast, calls C and C++, carries a complete game, and has a language server, but the language is still changing. See [where it stands](/project/status/).
+<Aside type="note" title="0.1 is out">
+Dazzle **0.1** was released in November 2026. The language is young and still changing. It is safe, fast, calls C and C++, carries a complete game, and has a language server. See [where it stands](/project/status/).
 </Aside>
+
+## Install
+
+```bash
+curl -fsSL https://dazzle-lang.github.io/install.sh | sh
+```
+
+On Windows, in PowerShell: `irm https://dazzle-lang.github.io/install.ps1 | iex`. Then `dz new hello`, `cd hello` and `dz run`. You need a C++ compiler, which is all `dz` asks of the machine. [Installing →](/start/install/)
 
 ## What Dazzle is
 

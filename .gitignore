@@ -25,6 +25,8 @@ generated/
 src/content/docs/spec/
 src/content/docs/decisions/
 public/examples/
+public/install.sh
+public/install.ps1
 dazzle/
 
 # a local code index, not part of the site

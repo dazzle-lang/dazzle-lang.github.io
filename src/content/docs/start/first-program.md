@@ -3,13 +3,18 @@ title: Your first Dazzle program
 description: Create a Dazzle project with a dazzle.toml manifest, write hello world, and build, run, test and format it with the dz command.
 ---
 
-A Dazzle project is a folder with a `dazzle.toml` manifest. One manifest is one module.
+A Dazzle project is a folder with a `dazzle.toml` manifest. One manifest is one module. `dz new` makes one:
+
+```bash
+dz new hello
+```
 
 ```
 hello/
   dazzle.toml
   src/
     main.dz
+  .gitignore
 ```
 
 ## The manifest
@@ -30,26 +35,40 @@ output = "executable"
 
 ## The program
 
-`src/main.dz`:
+`src/main.dz` has a function, a call of it, and a test beside it:
 
 ```dz
 fn main() {
-    println!("Hello, world!")
+    println!("{}", greeting("world"))
+}
+
+fn greeting(name: &str) -> String {
+    return format!("Hello, {}!", name)
+}
+
+// `dz test` runs every `#[test]`; `dz run` and `dz build` leave them out.
+#[test]
+fn greets_by_name() {
+    if greeting("Dazzle").as_str() != "Hello, Dazzle!" {
+        panic!("the greeting should name who it greets")
+    }
 }
 ```
 
 Run it from the project folder:
 
 ```bash
-dz run .
+cd hello
+dz run
 ```
 
-`dz` checks the program, writes C++17, compiles it with your C++ compiler, and runs it. To see the C++ it wrote, run `dz cpp .` and look in `build/cpp/`.
+`dz` checks the program, writes C++17, compiles it with your C++ compiler, and runs it, which prints `Hello, world!`. `dz test` runs the test. To see the C++ it wrote, run `dz cpp` and look in `build/cpp/`.
 
 ## The `dz` command
 
 | Command | Does |
 |---|---|
+| `dz new <dir>` | create a project there: a manifest and a hello world |
 | `dz run [dir]` | build and run |
 | `dz build [dir]` | build an executable into `build/bin/` |
 | `dz check [dir]` | analyse only: every diagnostic, no C++ compiler needed (`--format=json` for JSON) |

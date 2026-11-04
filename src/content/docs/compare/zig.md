@@ -30,7 +30,7 @@ Zig and Dazzle agree on a lot of principles: no hidden control flow, no exceptio
 | Inheritance | None | Single struct inheritance, opt-in |
 | C++ libraries | C only; C++ needs a C wrapper | **C++ classes, methods, overloads and template instances** imported directly |
 | Output | Machine code, its own backends and LLVM | C++17 |
-| Maturity | Pre-1.0, widely used | Pre-release |
+| Maturity | Pre-1.0, widely used | 0.1, released 2026 |
 
 ## The difference in one sentence
 

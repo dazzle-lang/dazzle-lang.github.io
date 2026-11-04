@@ -34,6 +34,7 @@ jobs:
             editors/vscode/syntaxes
             crates
             examples
+            install
 
       # The playground runs `dz` in the browser, built for WASI by `npm run sync`.
       - uses: dtolnay/rust-toolchain@stable

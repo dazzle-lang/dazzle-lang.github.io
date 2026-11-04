@@ -75,7 +75,7 @@ The output is plain C++17, built with `-fno-exceptions -fno-rtti` and warning-cl
 
 ## When to stay with C++
 
-- You need a mature, stable language today: Dazzle is [pre-release](/project/status/) and still changing.
+- You need a mature, stable language today: Dazzle is [young](/project/status/) and still changing.
 - You rely on MSVC's `cl.exe`, which Dazzle does not support yet.
 - You depend on C++ features Dazzle does not import yet: overloaded free functions, variadic C functions, and inheritance between imported C++ classes.
 - You rely on exceptions crossing your code.

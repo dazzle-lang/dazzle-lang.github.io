@@ -10,7 +10,8 @@
 // - every `§N.M` and `D-NNNN` in prose becomes a link to that section or decision;
 // - the VS Code extension's grammar is copied so `dz` code blocks are highlighted;
 // - `dz` is built for WASI and copied, for the playground to run in the browser;
-// - each example's screenshot is copied to public/examples/, for the landing page's gallery.
+// - each example's screenshot is copied to public/examples/, for the landing page's gallery;
+// - the installers are copied to public/, for the install page's one-liners.
 //
 // Everything it writes is generated and ignored by git.
 
@@ -179,6 +180,13 @@ for (const example of fs.readdirSync(path.join(REPO, 'examples'))) {
 	}
 }
 
+// The installers, served from the site's root so the one-liners on the install page are
+// short: `curl -fsSL https://dazzle-lang.github.io/install.sh | sh`. They download the
+// latest GitHub release, so the site never carries a compiler of its own.
+for (const file of ['install.sh', 'install.ps1']) {
+	fs.copyFileSync(path.join(REPO, 'install', file), path.join(SITE, 'public', file));
+}
+
 // The playground runs the compiler itself in the browser: `dz` built for WASI, from the same
 // checkout as the pages. `DAZZLE_WASM` names one already built, to skip cargo.
 let wasm = process.env.DAZZLE_WASM;
@@ -196,9 +204,9 @@ if (!wasm) {
 }
 fs.copyFileSync(wasm, path.join(OUT_GENERATED, 'dz.wasm'));
 
-// Which compiler that is, for the playground to say: the language is pre-release and
-// changes, so a reader needs to know which `dz` their program met. The version stays 0.1.0
-// until release, so the commit is what tells builds apart. A `DAZZLE_WASM` built elsewhere
+// Which compiler that is, for the playground to say: the language is young and
+// changes, so a reader needs to know which `dz` their program met. The playground builds
+// from master, between releases, so the commit is what tells it apart. A `DAZZLE_WASM` built elsewhere
 // is taken to come from this checkout too.
 const git = (...args) => spawnSync('git', ['-C', REPO, ...args], { encoding: 'utf8' }).stdout?.trim() || null;
 const version = fs.readFileSync(path.join(REPO, 'Cargo.toml'), 'utf8').match(/\[workspace\.package\][^[]*?\bversion\s*=\s*"([^"]+)"/)?.[1] ?? null;

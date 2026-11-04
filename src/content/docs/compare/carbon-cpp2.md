@@ -13,7 +13,7 @@ Carbon, cpp2 and Dazzle start from the same place: C++ is chosen for control and
 | Toolchain | Translates to C++ | Its own, built on LLVM | Your C++ compiler: clang++, g++, a vendor's |
 | Semantics | C++'s | Its own | Its own |
 | Mixing with C++ | In the same file | Bidirectional, deep interop | Calls C and C++ headers; its output is C++ that links with yours |
-| Status | Experimental | Experimental | Pre-release: safe code has no undefined behaviour, runs about as fast as C++, has a language server |
+| Status | Experimental | Experimental | 0.1, released 2026: safe code has no undefined behaviour, runs about as fast as C++, has a language server |
 
 ## cpp2 (cppfront)
 
