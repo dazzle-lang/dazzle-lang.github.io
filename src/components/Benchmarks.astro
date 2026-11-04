@@ -9,7 +9,10 @@ interface Props {
 }
 
 const files = import.meta.glob('../data/benchmarks/*.json', { import: 'default', eager: true });
-const runs = Object.values(files).sort((a, b) => (a.date + a.commit < b.date + b.commit ? -1 : 1));
+// In the order they were run: by date, then by `time` (HH:MM) for runs on the same day,
+// whose commit hashes say nothing about order.
+const order = (r) => `${r.date} ${r.time ?? ''} ${r.commit}`;
+const runs = Object.values(files).sort((a, b) => (order(a) < order(b) ? -1 : 1));
 if (!runs.length) throw new Error('no benchmark runs in src/data/benchmarks/');
 const latest = runs.at(-1);
 const COMMIT = 'https://github.com/dazzle-lang/Dazzle/commit/';

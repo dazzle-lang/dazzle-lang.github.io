@@ -20,7 +20,7 @@ Dazzle compiles and runs programs with no undefined behaviour outside `unsafe`, 
 
 The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
-**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++: A\* search is faster than C++, the word count is even, and the parser and evaluator is the one still behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
+**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++: A\* search is faster than C++, mostly through its hash map, the word count is even, and the parser and evaluator is the one still behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 
 ## Compatibility
 

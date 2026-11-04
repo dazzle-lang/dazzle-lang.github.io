@@ -1,5 +1,6 @@
 {
 	"date": "2026-11-03",
+	"time": "07:00",
 	"commit": "4eaf644",
 	"summary": "Regions on by default, #[inline] and link-time optimisation (r104-r106). Same CPU as the first run, but Debian 13 with clang 19 and g++ 14 rather than CachyOS with clang 23 and g++ 16, so the two runs' ratios are not strictly comparable.",
 	"flags": "-O2 -flto=auto",

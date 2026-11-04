@@ -1,7 +1,8 @@
 {
 	"date": "2026-11-04",
+	"time": "08:15",
 	"commit": "f0a0ab9",
-	"summary": "Inlined index checks and Hash and Ord calls (T-0157), an introsort (T-0096), fewer moves through or return and a 24-byte Box (T-0097), parser nodes kept in their region (T-0146), short text kept inside a String (T-0156) and a SwissTable HashMap (T-0164). astar is faster than C++ and peaks under it; expr falls to 1.17x and 1.07x, words to 0.91x and 1.02x.",
+	"summary": "Inlined index checks and Hash and Ord calls (T-0157), an introsort (T-0096), fewer moves through or return and a 24-byte Box (T-0097), parser nodes kept in their region (T-0146), short text kept inside a String (T-0156) and a SwissTable HashMap (T-0164). astar is faster than C++ and peaks under it, mostly because Dazzle's HashMap is a SwissTable where std::unordered_map allocates a node per entry; expr falls to 1.17x and 1.07x, words to 0.91x and 1.02x.",
 	"flags": "-O2 -flto=auto",
 	"machine": {
 		"cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
