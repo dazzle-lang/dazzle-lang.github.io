@@ -1,0 +1,8 @@
+fn average(total: i32, count: i32) -> i32 {
+    return total / count
+}
+
+fn main() {
+    let players = 0
+    println!("average {}", average(120, players))
+}

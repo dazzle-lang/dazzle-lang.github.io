@@ -128,7 +128,7 @@ n += 1        // error[DZ0413]: `insert` kills `counts@items`, and `n` points in
 
 The compiler checks each clause against its function's body, both ways, and `dz fix` writes the clause a body needs. Aliasing stays legal: a `&mut` and a `&` to one value are fine, as long as nothing in between can move the memory.
 
-So use after move, double free, and a reference used after a call moved or freed what it points into are all compile-time errors. Closing the holes that remain, so that safe code has no undefined behaviour on one thread, is an open decision ([D-0094](/decisions/d-0094-safe-code-has-no-undefined-behaviour/)). [Dazzle compared with Rust](/compare/rust/) says how this differs from a borrow checker.
+So use after move, double free, and a reference used after a call moved or freed what it points into are all compile-time errors. With the rest of the rules, they add up to a promise: a program with no `unsafe` has no undefined behaviour on one thread. [Safety](/tour/safety/) has every rule and where the promise ends, and [Dazzle compared with Rust](/compare/rust/) how this differs from a borrow checker.
 
 ## Why it works this way
 

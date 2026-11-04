@@ -5,7 +5,7 @@ import starlight from '@astrojs/starlight';
 
 const SITE = 'https://dazzle-lang.github.io';
 const DESCRIPTION =
-	'Dazzle is a successor to C++ that compiles to standard C++17: RAII with three special members, errors as values, enforced encapsulation, and C and C++ libraries used straight from source.';
+	'Dazzle is a successor to C++ that compiles to standard C++17: no undefined behaviour in code without unsafe and no borrow checker, RAII with three special members, errors as values, enforced encapsulation, and C and C++ libraries used straight from source.';
 
 // Copied from the Dazzle repository's VS Code extension by `scripts/sync.mjs`, so code
 // blocks tagged `dz` are highlighted by the same grammar the editor uses.
@@ -55,10 +55,12 @@ export default defineConfig({
 						'tour/overview',
 						'tour/errors',
 						'tour/ownership',
+						'tour/safety',
 						'tour/modules',
 						'tour/cpp-interop',
 						'tour/macros',
 						'tour/types-and-generics',
+						'tour/standard-library',
 						'tour/tooling',
 					],
 				},

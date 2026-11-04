@@ -62,7 +62,11 @@ The compiler chooses where each allocation goes: the region of the scope that ow
 
 ## Debugging the output
 
-The generated C++ carries `#line` directives back to your `.dz` files, so gdb, LLDB, the Visual Studio debugger and profilers show your source. `--track-memory` records every allocation and reports leaks, double frees and mismatched frees with the line that caused them. `dz expand` shows exactly what a macro wrote.
+The generated C++ carries `#line` directives back to your `.dz` files, so gdb, LLDB, the Visual Studio debugger and profilers show your source. `--track-memory` records every allocation and reports leaks, double frees and mismatched frees with the line that caused them. `[build] check_trusted = true` in the manifest adds a run-time check of the standard library's hand-written `kills` clauses, for test runs. `dz expand` shows exactly what a macro wrote.
+
+## Optimised builds
+
+`--release` builds at `-O2` with link-time optimisation, so the C++ compiler inlines across modules, and `#[inline]` on a function makes its body visible to every module that calls it. The standard library marks its small, hot functions this way.
 
 ## Planned
 

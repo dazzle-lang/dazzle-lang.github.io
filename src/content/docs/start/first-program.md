@@ -60,9 +60,10 @@ dz run .
 | `dz fmt <file>` | format in place (`--stdout` to print instead, `--check` to only report) |
 | `dz expand <file>` | the file with every macro invocation expanded |
 | `dz cpp [dir]` | write the generated C++ to `build/cpp/` |
+| `dz placements [dir]` | where each allocation goes, a region or the heap, and why (`--format=json` for JSON) |
 | `dz lsp` | the language server, on stdio |
 
-`dir` defaults to the current directory. `run`, `build`, `cpp`, `test` and `bench` take `--debug` (the default), `--release` or `--shipping`. `--track-memory` records every allocation and reports leaks and bad frees when the program exits.
+`dir` defaults to the current directory. `run`, `build`, `cpp`, `test` and `bench` take a build mode: `--debug` (the default, `-O0 -g`), `--release` (`-O2` with link-time optimisation) or `--shipping` (`-O3`). `--track-memory` records every allocation and reports leaks and bad frees when the program exits.
 
 ## A test, beside the code
 
@@ -96,6 +97,11 @@ fn clamp_keeps_values_in_range() {
 | [`raylib`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/raylib) | a raylib window, with raylib compiled from source by `dz` |
 | [`rgfw`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/rgfw) | a window from RGFW, a single-header C library |
 | [`breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) | a small game: the rules are plain Dazzle, drawn with raylib |
+| [`stb`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/stb) | a ray tracer that saves its image as a PNG with stb_image_write; no window |
+| [`sokol`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sokol) | a particle fountain on sokol_app, sokol_gfx and sokol_gl |
+| [`box2d`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/box2d) | rigid-body physics with Box2D, drawn with sokol: two C libraries in one project |
+| [`miniaudio`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/miniaudio) | a synthesizer, generated sample by sample and played with miniaudio |
+| [`sdl3`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3) | a real-time 3D scene in GLSL, on SDL3 built by its own CMake |
 
 ## Next
 

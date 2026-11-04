@@ -1,7 +1,7 @@
 // Runs every program in src/snippets/ through the real compilers and records what they
 // print, so the pages show real output and never a transcription of it.
 //
-//   DZ=../Dazzle/target/release/dz node scripts/capture.mjs
+//   DZ=../Dazzle/target/release/dz node scripts/capture.mjs [name…]
 //
 // For each src/snippets/<name>/:
 // - `main.dz` is checked by `dz`. If it fails, the capture is that check: the diagnostics
@@ -47,9 +47,13 @@ const versions = {
 	...Object.fromEntries(COMPILERS.map((c) => [c, firstLine(c)])),
 };
 
+// Names on the command line record only those snippets; with none, every one is recorded.
+const only = process.argv.slice(2);
+
 for (const name of fs.readdirSync(SNIPPETS).sort()) {
 	const dir = path.join(SNIPPETS, name);
 	if (!fs.existsSync(path.join(dir, 'main.dz'))) continue;
+	if (only.length && !only.includes(name)) continue;
 	const work = fs.mkdtempSync(path.join(os.tmpdir(), `dz-snippet-${name}-`));
 	fs.mkdirSync(path.join(work, 'src'));
 	fs.copyFileSync(path.join(dir, 'main.dz'), path.join(work, 'src/main.dz'));

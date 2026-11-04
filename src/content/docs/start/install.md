@@ -12,6 +12,7 @@ There is no release yet, so Dazzle is built from source. An installer that bundl
 | A current stable **Rust** toolchain | to build `dz`, the compiler |
 | **clang++** or **g++** with C++17 | `dz` compiles the C++ it generates with it |
 | **libclang** (any recent LLVM) | to read C and C++ headers: your program's own, and `stdlib.h`, which the standard library's allocator calls `malloc` from |
+| **CMake** (only for some libraries) | to build a C or C++ library whose recipe names its CMake project, such as SDL3 in the `sdl3` example |
 
 Getting libclang:
 
@@ -27,7 +28,7 @@ cd Dazzle
 cargo build --release
 ```
 
-`--recursive` fetches the C libraries the examples build from source, raylib and RGFW, which are git submodules. In a checkout made without it, run `git submodule update --init`. Nothing outside `examples/` needs them.
+`--recursive` fetches the C libraries the examples build from source, which are git submodules: raylib, SDL3, RGFW, sokol, stb, miniaudio and Box2D. In a checkout made without it, run `git submodule update --init`. Nothing outside `examples/` needs them.
 
 The compiler is then `target/release/dz` (`dz.exe` on Windows). Put it on your `PATH`.
 

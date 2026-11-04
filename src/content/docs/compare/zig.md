@@ -18,6 +18,7 @@ Zig and Dazzle agree on a lot of principles: no hidden control flow, no exceptio
 | | Zig | Dazzle |
 |---|---|---|
 | Allocation | **Explicit**: a function that allocates takes an `Allocator` | **Placed by the compiler**: a scope's region when it can prove that safe, otherwise the heap; ordinary code names no allocator, and `dz placements` lists where each allocation went and why |
+| Safety | Checks for illegal behaviour in Debug and ReleaseSafe builds, none in ReleaseFast; a dangling pointer is not a compile error | **No undefined behaviour in code without `unsafe`**, in every build: a reference a call invalidated is a compile error, every index is checked |
 | Destruction | Manual, with `defer` and `errdefer` | **RAII**: `drop` runs automatically at the end of scope; `defer` is there for the rest |
 | Copies and moves | Plain memory copies | `copy` and checked `move`; a type that owns a resource is move-only unless it implements `Copy` |
 | Encapsulation | Struct fields are always public | Fields are **private by default**, enforced |

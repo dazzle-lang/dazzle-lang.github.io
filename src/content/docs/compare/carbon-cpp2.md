@@ -25,7 +25,8 @@ That is also its limit. Keeping C++'s semantics keeps what comes with them: exce
 - **three special members**, with moves and assignments derived, and moved-from values reset to their defaults;
 - **generics checked at the definition** and monomorphized by Dazzle, so a mistake is reported once, in your code;
 - **modules declared in a manifest**, with no headers and no include order;
-- **private by default**, enforced.
+- **private by default**, enforced;
+- **no undefined behaviour in code without `unsafe`**, on one thread: references checked by `kills` clauses, every index checked, arithmetic defined.
 
 ## Carbon
 
@@ -45,7 +46,7 @@ Dazzle shares Carbon's goal, an upgrade of C++ for the projects that use it, and
 ### Where Carbon's route pays off
 
 - **Deeper interop.** Carbon aims to call C++ templates generically and to inherit from C++ classes. Dazzle imports the template instances you name, and inheritance between imported C++ classes is not supported yet.
-- **Memory safety is on Carbon's roadmap, threads included.** Dazzle checks use after move, double free and references a call invalidates, and marks raw-pointer access with `unsafe`; making safe code free of undefined behaviour is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads are not in the language yet.
+- **Threads.** Carbon plans a memory-safe subset that covers threads. Dazzle's safe code has no undefined behaviour on one thread ([Safety](/tour/safety/)), but Dazzle has no threads of its own yet, and how they will share memory is still open.
 - **Scale and backing.** Carbon is designed around migrating very large codebases, with a large team behind it.
 
 ## Which to choose

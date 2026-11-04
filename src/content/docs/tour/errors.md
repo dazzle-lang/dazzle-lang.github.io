@@ -56,7 +56,7 @@ failed at src/main.dz:11: name too long: 27 bytes
 | `f() or return` | pass the failure to the caller, if the enclosing function can fail |
 | `f() or return x`, `or break`, `or continue` | ordinary control flow |
 | `f() or panic!("…")` | abort |
-| `f() or unreachable` | assert it cannot fail: checked in debug builds, free in release |
+| `f() or unreachable` | assert it cannot fail: a panic if it does, in every build. Inside `unsafe`, the optimiser may assume it instead |
 | `f() or ignore` | statement position only: discard it |
 
 `or` is deliberately non-associative: `a() or b() or c` is a syntax error. A fallback that can itself fail gets its own clause, so the nesting is visible:
@@ -103,7 +103,7 @@ fn main() {
 
 Most things that go wrong in a game are not recoverable and should not be modelled as errors. `panic!("…")` aborts with a message, the source location and, in debug builds, a stack trace.
 
-- **Panics are for:** out-of-bounds indexing, failed assertions, exhausted fixed-size pools, violated invariants.
+- **Panics are for:** out-of-bounds indexing, integer division by zero, failed assertions, exhausted fixed-size pools, violated invariants.
 - **Errors are for:** I/O, parsing, user-supplied data, and anything crossing a boundary you do not control.
 
 Allocation failure is a panic by default, so ordinary code does not carry `or return` on every line; code that does need to handle running out of memory calls `try_alloc`. Neither a panic nor an error ever becomes a C++ exception: the output is compiled with `-fno-exceptions`.

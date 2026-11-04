@@ -1,0 +1,163 @@
+---
+title: Safety without a borrow checker
+description: What Dazzle promises about code without unsafe. No undefined behaviour on one thread, kept by ties and kills clauses, checked moves, defined arithmetic and bounds checks instead of Rust's aliasing rule, and where the promise ends.
+---
+
+import Terminal from '../../../components/Terminal.astro';
+
+Dazzle makes one promise about a program with no `unsafe` in it: **on one thread, it has no undefined behaviour.** It reads and writes no freed memory, uses no union payload under another variant, and reaches nothing C++ leaves undefined.
+
+Rust makes the same promise by refusing aliasing: memory is either shared or changed, never both. Dazzle does not refuse it. A `&mut` and a `&` may point at the same value, a pointer into an array you also change is fine, and no struct carries a lifetime parameter, because that is how single-threaded C++ is written and it is not where its bugs come from. What memory may not be is **freed, or given another variant, while something else can still see it.**
+
+## The rules that keep it
+
+Each part of the promise is a rule of the language, checked by the compiler or, where only the running program knows, in every build:
+
+| What could go wrong | The rule | |
+|---|---|---|
+| Using a value after it moved, dropping it twice | A moved value cannot be used again (`DZ0401`), and a move leaves the source at its defaults, so its `drop` frees nothing | [§6.4](/spec/06-value-semantics-ownership-copy/#64-move-semantics) |
+| A reference into memory a call freed or moved | Every function names what it may end in a `kills` clause, and a reference used after such a call is an error (`DZ0413`) | [§6.7](/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses) |
+| A call that frees what another argument points into | A call may reach what it kills through one argument only (`DZ0420`) | [§6.7](/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses) |
+| A null or dangling raw pointer | Reading or writing through a `^T` happens only inside `unsafe` (`DZ0528`). A pointer is turned into a reference with `or`, which handles null, and only a pointer the compiler can tie to its owner converts outside `unsafe` | [§5.2](/spec/05-types/#52-pointers-and-references) |
+| Uninitialised memory | Every value starts at its type's zero or its declared default | [§6.2](/spec/06-value-semantics-ownership-copy/#62-default-initialisation) |
+| An index past the end | Checked in every build, release included | [§5.3](/spec/05-types/#53-arrays-slices-and-strings) |
+| Arithmetic C++ leaves undefined | Defined: see [below](#arithmetic-is-defined) | [§5.1](/spec/05-types/#51-primitives) |
+| `x or unreachable` that is reached | It panics, in every build | [§9.4](/spec/09-errors-and-absence/#94-the-or-clause) |
+| A static changed under a reference into it | A static is checked as a parameter is, and dropped at exit in an order a `drop` can rely on | [§7.7](/spec/07-declarations/#77-statics) |
+| C keeping a pointer to Dazzle memory | A C or C++ function that can be handed a pointer is vouched for in its library's recipe, and one that keeps the pointer is `unsafe` to call | [§15.2](/spec/15-c-interoperability/#152-what-maps-and-how) |
+
+Most of these are checked at compile time. What only the running program knows, an index, a divisor or a float's value, costs a comparison or two where it happens.
+
+## Ties and `kills` clauses
+
+The bug C++ code actually has is a reference used after a call grew, shrank or freed the memory it points into. A type names its memory with **ties**, and every function says in its signature which ties a call may end:
+
+```dz
+// in std's List
+pub fn push(&mut self, v: T) kills self@items      // may move the array
+pub fn len(&self) -> usize                         // no clause: kills nothing
+```
+
+A call ends every reference into what it kills, so keeping one across it is an error that names the call:
+
+<Terminal snippet="invalidated" />
+
+The compiler checks each clause against its function's body, both ways: a body that kills more than its clause says is `DZ0415`, and a clause that names a kill the body never does is `DZ0416`. `dz fix` writes the clause a body needs. A clause is part of the signature, so a caller's check reads only the signature, and changing a body never changes what its callers may do without the signature changing too.
+
+Ties also name memory a struct keeps private. A `Level` that keeps its enemies in a private `List` can still say which of its methods move them:
+
+```dz
+struct Level {
+    m_enemies: List<Enemy>
+    tie @enemies = m_enemies@items        // a public name for private memory
+
+    pub fn spawn(&mut self, e: Enemy) kills self@enemies { … }
+    pub fn first(&self) -> ^Enemy in self@enemies { … }   // where the result points
+}
+```
+
+### Statics are checked the same way
+
+A static is one place for the whole program, so it is checked as a parameter is. A function that may move a static's memory names the static in its clause, and so does every caller, up to `main`:
+
+```dz
+struct Board {
+    pub scores: List<i32> = List<i32>()
+}
+
+static BOARD: Board = Board{}
+
+fn record(v: i32) kills BOARD.scores@items {   // may move the list's array
+    BOARD.scores.push(v)
+}
+
+fn main() {
+    record(10)
+    let best = &BOARD.scores[0]     // a reference into the static
+    println!("{}", best)
+    record(20)                       // ends `best`
+    println!("{} scores", BOARD.scores.len())
+}
+```
+
+Read `best` after the second `record`, and the error names the call:
+
+```text
+error[DZ0413]: used after the memory it points into was killed: `BOARD.scores@items`
+   ┌─ src/main.dz:16:20
+   │
+15 │     record(20)                       // ends `best`
+   │     ---------- this call kills `BOARD.scores@items`
+16 │     println!("{}", best)
+   │                    ^^^^ points into `BOARD.scores@items`
+   │
+   = help: a call, write, move or drop that can move or free memory ends every reference into it: use this before that happens, or get it again after (spec §6.7)
+```
+
+A write that kills nothing, such as `FRAMES += 1`, needs no clause and no `unsafe`.
+
+## Raw pointers and `unsafe`
+
+`^T` is a C pointer: it may be null, and nothing ties it to what it points at. Reading or writing through one happens inside `unsafe`, and the compiler says so:
+
+<Terminal snippet="null" />
+
+The safe way is to turn the pointer into a reference once, with an `or` clause that handles null where it can happen: `let p = find(&players, "eve") or return`. That conversion is safe when the compiler knows what the pointer points into, here because `find` says its result is `in players`. A pointer it cannot tie, a cast or one C returned, converts only inside `unsafe`.
+
+`unsafe` is a block, or an `unsafe fn`'s body. It vouches for what it does, so a reader, or `grep`, finds every place the promise depends on a person rather than the compiler.
+
+## Arithmetic is defined
+
+Arithmetic that C++ leaves undefined has one meaning in Dazzle, the same in every build and on every compiler:
+
+| Operation | In Dazzle |
+|---|---|
+| Integer overflow, signed included | wraps |
+| Integer `/` or `%` by zero | panics, naming the line; a divisor that is a constant zero is a compile error (`DZ0580`) |
+| `MIN / -1` | wraps to `MIN`, and `MIN % -1` is 0 |
+| A shift by the width or more | the count is taken modulo the width: `1 << 40` on an `i32` is `1 << 8` |
+| A float converted to an integer | saturates at the type's `MIN` or `MAX`, and NaN becomes 0 |
+| A float divided by zero | an infinity or NaN, as IEEE 754 says |
+
+<Terminal snippet="divide" />
+
+The integer methods ask for anything else explicitly: `a.checked_add(b)` gives an optional, `n.saturating_sub(1)` stops at zero.
+
+## C and C++ libraries
+
+A function from an imported header that takes only values (numbers, enums, a C string, a callback, a struct with no pointer inside) is safe to call: it cannot be handed a pointer to Dazzle memory to keep. Most of raylib is like this.
+
+One that takes a pointer, and every C++ method, which C++ hands `this`, is `unsafe` to call until the library's recipe vouches for it. `keeps` lists the functions that keep a pointer past the call, which stay `unsafe`; everything else becomes safe:
+
+```toml
+[cpp.libs.miniaudio]
+header = "miniaudio.h"
+import = ["miniaudio.h"]
+keeps  = ["ma_device_init"]       # the audio thread keeps the device it is given
+```
+
+The claim is made once, in the manifest, where it can be reviewed, rather than at every call.
+
+## Where the promise ends
+
+It ends where these rules do, and that is where to look for a bug:
+
+- **`unsafe`**, a block or an `unsafe fn`'s body, which vouches for what it does.
+- **The standard library's trusted code.** Its containers are written over raw pointers, and their `kills` clauses are written by hand. Debug builds check those clauses at run time, and `[build] check_trusted = true` checks their elements too.
+- **The C and C++ a program calls**, and the `keeps` list its recipe vouches for.
+- **Threads.** Dazzle has none of its own yet, and how they will share memory is [still open](/decisions/d-0011-concurrency/).
+- **Running out of stack**, which C++ does not define; on every platform Dazzle targets, it ends the program.
+
+The compiler's own test suite builds every test program under AddressSanitizer and UndefinedBehaviorSanitizer, so a hole in these rules shows up there.
+
+## Why it works this way
+
+**Why not a borrow checker?** Rust's rule buys more than one thread needs. On one thread, a `&mut` and a `&` to the same value cause no bug by themselves: the bug is memory freed or moved while something still points into it. Refusing the aliasing rules out that bug and also most of how games and engines are written, with parents, handles and pointers into arrays the same code changes. Dazzle names the event that causes the bug, a call that kills memory, and checks that instead.
+
+**Why in the signature?** A `kills` clause is where a reader looks first, and it lets the compiler check each function on its own: a call is checked against its callee's signature, never its body, so checking stays fast and errors stay at the line that has them.
+
+**The cost:** a function that may move memory says so, and every caller up the chain names the same kill. `dz fix` and the editor write those clauses. And threads are not covered yet.
+
+## In the specification
+
+[§1.1](/spec/01-design-principles/#11-non-goals) has the promise and its edges, [§6.7](/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses) ties and `kills` clauses, and [D-0094](/decisions/d-0094-safe-code-has-no-undefined-behaviour/) how each hole was closed.

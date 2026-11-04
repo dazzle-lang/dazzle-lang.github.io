@@ -26,11 +26,13 @@ Dazzle is meant as a replacement for C++ wherever it is used, and it compiles *t
 | Headers, include order, the preprocessor | **Modules**: a `dazzle.toml` per module, no headers, declaration order irrelevant |
 | `public` by convention, `struct` members public by default | **Private by default**, enforced by the compiler |
 | Implicit numeric conversions | **None**: `as` casts you can see |
+| Signed overflow, division by zero and oversized shifts are undefined | **Defined**: overflow wraps, division by zero panics, a shift count is taken modulo the width |
+| Undefined behaviour anywhere a rule is broken | **None in code without `unsafe`**, on one thread |
 | Function overloading and ADL | **One name, one symbol** |
 | Implicit constructors and conversion operators, anywhere | A type opts in with `impl ImplicitAs<T>`, and it converts **only when passed as an argument**, at most once |
 | `->` and `.` | `.` reaches through pointers on its own |
 | Raw pointer use anywhere | Reading or writing through a raw pointer happens in **`unsafe`** |
-| CMake, or another build system | `dz build`, and C and C++ libraries built from a manifest recipe |
+| CMake, or another build system | `dz build`, and C and C++ libraries built from a manifest recipe, or by their own CMake |
 
 ## The same idea, side by side
 

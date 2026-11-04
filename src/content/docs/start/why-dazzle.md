@@ -1,11 +1,24 @@
 ---
 title: Why Dazzle
-description: Why Dazzle exists, why it compiles to C++ instead of bringing its own toolchain, the principles that shape it, and what it deliberately does not try to be.
+description: Why Dazzle exists, the idea behind it, why it compiles to C++ instead of bringing its own toolchain, what safe code promises, the principles that shape it, and what it deliberately does not try to be.
 ---
 
 C++ is chosen for control: predictable performance, deterministic destruction, no garbage collector, and every C and C++ library ever written. What it costs is forty years of accumulated syntax, undefined behaviour, the rule of five, headers, exceptions most projects turn off, and template errors that point into code nobody wrote.
 
-**Dazzle is an upgrade of C++.** Like Carbon, it is meant to replace C++ in the projects that use it, keeping the control and dropping the cost. Unlike Carbon, it does not bring a toolchain of its own: it compiles to standard C++17.
+The usual answer is a smaller language. C, and successors such as Odin, give back the clarity, and take away what a large codebase is built from: RAII, encapsulation the compiler enforces, and layers of abstraction that hold up as the code grows. Being small is not the goal, so Dazzle is not small.
+
+**Dazzle is an upgrade of C++.** It keeps the machine model and the abstractions, and changes the parts that make C++ hard:
+
+- **RAII in three members**, a constructor, `drop` and `copy`, with moves and assignments written by the compiler.
+- **No undefined behaviour in safe code**, without a borrow checker or lifetime annotations.
+- **No allocator to pass around**: the compiler decides where each value's memory comes from.
+- **Errors as values**, with one `or` clause to handle them, instead of exceptions.
+- **Generics checked where they are written**, so an error is reported in your code, once.
+- **Encapsulation the compiler enforces**, private by default.
+- **Modules without headers**, declared once in a manifest.
+- **C and C++ libraries used from source**, with no bindings to write.
+
+Like Carbon, it is meant to replace C++ in the projects that use it. Unlike Carbon, it does not bring a toolchain of its own: it compiles to standard C++17.
 
 ## Why compile to C++?
 
@@ -17,6 +30,14 @@ A successor to C++ has to work where C++ works: on every desktop, console and em
 - **C++ does the jobs it already does well**, once per construct: destructors and their order, copy constructors, temporaries, struct layout, overload resolution in imported headers. Dazzle does the jobs C++ does badly, such as checking generics, itself.
 
 The generated C++ is not meant to be read, any more than an object file is. It is full of `#line` directives, temporaries and helper functions. What you read and debug is the Dazzle source.
+
+## Safe, without refusing aliasing
+
+On one thread, Dazzle makes Rust's promise: **a program with no `unsafe` has no undefined behaviour.** It reads and writes no freed memory, uses no union payload under another variant, and reaches nothing C++ leaves undefined.
+
+It keeps that promise without Rust's rule that memory is either shared or changed, never both. In Dazzle it may be both, which is how single-threaded code is usually written: a `&mut` and a `&` may point at the same value, a pointer into an array you also change is fine, and no struct carries a lifetime parameter. What memory may not be is freed, or given another variant, while something else can still see it. Each function's signature says which memory a call may end, with a `kills` clause, and the compiler checks every call against it.
+
+The promise ends at `unsafe` blocks, at the C and C++ a program calls, and at threads, which Dazzle does not have yet. [Safety](/tour/safety/) has each rule and each edge.
 
 ## The principles
 
@@ -31,7 +52,7 @@ In priority order. When two conflict, the earlier one wins.
 
 ## What it is not
 
-- **Not memory-safe in Rust's sense, yet.** Dazzle checks memory without Rust's rules: use after move, double free, and a reference used after a call moved or freed what it points into are compile-time errors, through [ties and `kills` clauses](/tour/ownership/#references-pointers-and-handles) rather than lifetimes. A `&mut` and a `&` may still point at the same value, and no struct carries a lifetime parameter. Every read or write through a raw pointer sits inside `unsafe`, where a reader, or `grep`, can find it. Closing the holes that remain, so that safe code has no undefined behaviour on one thread, is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads come after the first release.
+- **Not Rust.** Safe code has no undefined behaviour on one thread, but through [ties and `kills` clauses](/tour/ownership/#references-pointers-and-handles) rather than lifetimes and an exclusive `&mut`. Threads come after the first release, and how they share memory is [still open](/decisions/d-0011-concurrency/).
 - **No garbage collector, green threads or implicit runtime.**
 - **Not source-compatible with C++.** Dazzle *calls* C++ and compiles *to* it; it is not a superset of it.
 - **Not a minimal language.** Large codebases need abstraction, so Dazzle has traits, generics, single inheritance, tagged unions, macros and reflection. It keeps each of them visible at the place it acts.
@@ -40,7 +61,7 @@ In priority order. When two conflict, the earlier one wins.
 
 Anyone who writes C++ today because nothing else gives them the control:
 
-- **Game and engine programmers.** This is the furthest along: the repository's [Breakout example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) is a game with no C++ of its own, drawing through a C library built from source.
+- **Game and engine programmers.** This is the furthest along: the repository's [Breakout example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) is a game with no C++ of its own, and [`sdl3`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3) is a real-time 3D scene on SDL3, built by SDL's own CMake.
 - **Embedded and firmware developers.** No runtime, no garbage collector, deterministic destruction, and output that a vendor's toolchain accepts. Freestanding targets (no heap, no operating system) are on the [roadmap](/project/status/).
 - **Tool and application authors**, where startup time and memory use matter.
 - **Teams with an existing C++ codebase**, who can adopt Dazzle one module at a time.

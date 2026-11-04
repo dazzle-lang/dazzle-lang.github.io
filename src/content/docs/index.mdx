@@ -1,6 +1,6 @@
 ---
 title: Dazzle, a systems language that compiles to C++
-description: Dazzle is a systems language for games and engines, embedded systems, tools and real-time code. C++-grade control, a compiler that turns C++'s silent mistakes into errors, and standard C++17 as its output, so your compiler, debugger and libraries stay.
+description: Dazzle is a systems language for games and engines, embedded systems, tools and real-time code. C++-grade control, no undefined behaviour in code without unsafe, no borrow checker, and standard C++17 as its output, so your compiler, debugger and libraries stay.
 template: splash
 editUrl: false
 head:
@@ -9,10 +9,10 @@ head:
   - tag: script
     attrs:
       type: application/ld+json
-    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
+    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code. Code without unsafe has no undefined behaviour, without a borrow checker.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
 hero:
-  title: The control of C++, with a compiler on your side
-  tagline: Dazzle is a systems language for games, engines, tools and real-time code. Its compiler turns C++'s silent mistakes into errors, and its output is standard C++17, so your compiler, debugger and libraries stay.
+  title: The control of C++, without its undefined behaviour
+  tagline: Dazzle is a systems language for games, engines, tools and real-time code. A program with no unsafe block has no undefined behaviour, with no borrow checker and no lifetimes to write. Its output is standard C++17, so your compiler, debugger and libraries stay.
   actions:
     - text: Get started
       link: /start/install/
@@ -37,6 +37,25 @@ import Terminal from '../../components/Terminal.astro';
 Dazzle is **0.1, unreleased**. It compiles and runs programs, checks ownership, calls C and C++, and has a language server, but the language is still changing. See [where it stands](/project/status/).
 </Aside>
 
+## The idea
+
+C++ gives you control and abstraction, and buries both under forty years of syntax and undefined behaviour. The languages that strip C++ down give back the clarity, and take away what a large codebase is built from: RAII, encapsulation, and layers of abstraction that hold up. Dazzle keeps all of that and changes the rest.
+
+<CardGrid>
+	<Card title="What C++ is chosen for, kept" icon="rocket">
+		Structs laid out as C++ lays them out, destructors that run at the end of scope, zero-cost generics, traits, inheritance when you want a hierarchy, and every C and C++ library. No garbage collector and no runtime.
+	</Card>
+	<Card title="Safe, without Rust's rules" icon="approve-check">
+		On one thread, a program with no `unsafe` reads no freed memory and reaches nothing C++ leaves undefined. A `&mut` and a `&` may still point at the same value, and no struct carries a lifetime: each function's signature says what memory a call may end, and the compiler checks it. [Safety →](/tour/safety/)
+	</Card>
+	<Card title="Compiled to C++, not away from it" icon="setting">
+		The output is standard C++17 for the compiler you already use, a console SDK's or a chip vendor's included. Debuggers and profilers show your `.dz` source, and a C++ codebase can adopt Dazzle one module at a time. [Why C++? →](/start/why-dazzle/#why-compile-to-c)
+	</Card>
+	<Card title="As fast as the C++ you would write" icon="seti:clock">
+		Three whole programs, written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++. [Benchmarks →](/project/benchmarks/)
+	</Card>
+</CardGrid>
+
 ## Built with Dazzle
 
 Each of these is a complete program in the repository. Each one uses a C library built from its own source and called directly, with no bindings to write. Copy one, and you have a project that already builds.
@@ -45,7 +64,7 @@ Each of these is a complete program in the repository. Each one uses a C library
 
 ## Bugs C++ lets through
 
-Here are nine of the mistakes that both g++ and clang++ compile. Six of them compile without a single warning on either compiler, even with `-Wall -Wextra`, and the first seven are undefined behaviour. In Dazzle, each one is a compile error or has one defined meaning:
+Here are ten of the mistakes that both g++ and clang++ compile. Seven of them compile without a single warning on either compiler, even with `-Wall -Wextra`, and the first eight are undefined behaviour. In Dazzle, each one is a compile error or has one defined meaning:
 
 <div class="dz-bugs not-content">
 
@@ -56,6 +75,7 @@ Here are nine of the mistakes that both g++ and clang++ compile. Six of them com
 | Using a pointer that may be null | undefined behaviour, no warning | <span class="ok">error DZ0528</span> |
 | Copying a struct that owns memory | double free, no warning | <span class="ok">error DZ0403</span> |
 | Signed overflow | undefined, `x + 1 < x` folded to `false` | <span class="ok">wraps, in every build</span> |
+| Dividing by zero | undefined, no warning | <span class="ok">panics, naming the line</span> |
 | Falling off the end of a function | undefined behaviour, with a warning | <span class="ok">error DZ0405</span> |
 | Keeping a reference across a `push_back` | undefined behaviour, no warning | <span class="ok">error DZ0413</span> |
 | Using a value after `std::move` | compiles, reads whatever is left | <span class="ok">error DZ0401</span> |
@@ -70,9 +90,9 @@ Each diagnostic points at the line, says what is wrong there, and ends with a he
 	<Terminal snippet="null" compact />
 </div>
 
-<LinkCard title="See all thirteen, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
+<LinkCard title="See all fourteen, side by side" description="The C++ and the Dazzle for each, with what g++, clang++ and dz actually printed." href="/compare/cpp-bugs/" />
 
-## References checked, memory placed by the compiler
+## Safe code, without a borrow checker
 
 The bug C++ code actually has is a reference used after a call grew, shrank or freed the memory it points into: a pointer into a vector kept across a `push_back`, an iterator kept across an `erase`. Dazzle catches it at compile time, without lifetimes. A type names its memory with **ties**, and every function says in its signature which of them a call may end, with a **`kills`** clause:
 
@@ -86,7 +106,11 @@ pub fn len(&self) -> usize                         // no clause: kills nothing
 
 The compiler checks each clause against its function's body, and `dz fix` writes the clause a body needs. Aliasing stays legal, a `&mut` and a `&` to the same value included, and no struct carries a lifetime parameter.
 
-The same ties let the compiler choose where memory comes from, so **ordinary code names no allocator**. A value that never leaves the scope that builds it goes in that scope's **region**, released in one step when the scope ends; a returned value is built where the caller keeps it; anything else goes on the heap. The editor shows where each allocation went, and `dz placements` lists them with the reason. [Ownership →](/tour/ownership/#references-pointers-and-handles)
+Ties are one rule of several. Together they make a promise: **a program with no `unsafe` has no undefined behaviour on one thread.** A moved value cannot be used, nothing is dropped twice, every value is initialised, every index is checked, arithmetic is defined, and reading through a raw pointer happens only inside `unsafe`. Where the promise ends is written down too: `unsafe` blocks, the C and C++ a program calls, and threads, which Dazzle does not have yet. [Safety →](/tour/safety/)
+
+## Memory placed by the compiler
+
+The same ties let the compiler choose where memory comes from, so **ordinary code names no allocator**. A value that never leaves the scope that builds it goes in that scope's **region**, released in one step when the scope ends. A returned value is built where the caller keeps it, and anything else goes on the heap. The editor shows where each allocation went, and `dz placements` lists them with the reason. [Ownership →](/tour/ownership/#where-memory-comes-from)
 
 ## One clause for everything that can fail
 
@@ -122,22 +146,22 @@ There are no exceptions and no `Result<T, E>`. A function that can fail says so 
 
 <CardGrid>
 	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. There is no rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". A reference used after a call moved or freed its memory is a compile error, and the compiler places memory, so ordinary code names no allocator. [Ownership →](/tour/ownership/)
+		A constructor, `drop` and `copy`. There is no rule of five: the compiler writes moves and assignments, and a moved-from value is reset to its defaults instead of left "valid but unspecified". [Ownership →](/tour/ownership/)
 	</Card>
 	<Card title="Errors point at your code" icon="magnifier">
 		Generics are checked where they are written and monomorphized by Dazzle, not by C++ templates. A mistake is reported once, in your function, never in generated code. [Generics →](/tour/types-and-generics/)
 	</Card>
 	<Card title="C and C++ from source" icon="seti:c">
-		Name a library's sources in the manifest, and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. There are no bindings to write or maintain. [C++ interop →](/tour/cpp-interop/)
+		Name a library's sources in the manifest, or its CMake project, and `dz` builds it and imports its header: functions, structs, enums, macros, namespaces, classes and overloaded methods. There are no bindings to write or maintain. [C++ interop →](/tour/cpp-interop/)
 	</Card>
-	<Card title="Standard C++17 out" icon="setting">
-		The output is plain C++17, built with `-fno-exceptions -fno-rtti`, so it compiles wherever a C++17 compiler runs. `#line` directives map it back to your `.dz` files, so debuggers and profilers show your source. [Why C++? →](/start/why-dazzle/#why-compile-to-c)
+	<Card title="A compiler that teaches" icon="open-book">
+		Every diagnostic has a stable code and nearly every one a `help:` line. `dz explain` prints the rule with a wrong and a right program, `dz fix` applies the fixes it is certain of, and the language server runs on half-typed code. [Tooling →](/tour/tooling/)
 	</Card>
 </CardGrid>
 
 ## Use C and C++ libraries as they are
 
-A few lines of manifest build a library from its own source. libclang reads its header with the same flags the generated code is compiled with. Its declarations become an ordinary Dazzle module, C++ classes and overloaded methods included:
+A few lines of manifest build a library from its own source, or with its own CMake build. libclang reads its header with the same flags the generated code is compiled with. Its declarations become an ordinary Dazzle module, C++ classes and overloaded methods included:
 
 ```dz
 let mut counter = shp::shapes::Counter(10)    // a C++ class and its constructor
@@ -145,7 +169,7 @@ counter.add(5)                                // an overload set, resolved by ar
 shp::shapes::translate(&mut moving, 1, 1)     // `Point&` is a `&mut Point`
 ```
 
-Every example in the gallery above works this way: raylib, SDL3, Box2D, sokol, stb and RGFW, each built from its own source. [C++ interop →](/tour/cpp-interop/)
+A function that takes only values is safe to call. One that is handed a pointer is safe once the library's recipe says which of its functions keep a pointer past the call, and those stay `unsafe`. Every example in the gallery above works this way: raylib, SDL3, Box2D, sokol, stb and RGFW, each built from its own source. [C++ interop →](/tour/cpp-interop/)
 
 ## Where it fits
 
@@ -158,7 +182,7 @@ You can use Dazzle anywhere you would otherwise reach for C++:
 - **An existing C++ codebase**, one module at a time.
 
 <CardGrid>
-	<LinkCard title="Why Dazzle" description="The principles, why it compiles to C++, and what it is not." href="/start/why-dazzle/" />
+	<LinkCard title="Why Dazzle" description="The idea, the principles, why it compiles to C++, and what it is not." href="/start/why-dazzle/" />
 	<LinkCard title="Dazzle vs C++" description="What changes for a C++ programmer, and what stays." href="/compare/cpp/" />
 	<LinkCard title="Benchmarks" description="Whole programs in Dazzle and C++, timed on the same compiler, and how the numbers change over time." href="/project/benchmarks/" />
 	<LinkCard title="The specification" description="The language contract, section by section." href="/spec/" />

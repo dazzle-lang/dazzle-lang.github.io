@@ -1,6 +1,6 @@
 ---
 title: Bugs C++ lets through
-description: Thirteen mistakes that C++ compiles, often without a warning, beside what Dazzle does with the same mistake. Every output on the page was produced by g++, clang++ and dz.
+description: Fourteen mistakes that C++ compiles, often without a warning, beside what Dazzle does with the same mistake. Every output on the page was produced by g++, clang++ and dz.
 ---
 
 import BugCase from '../../../components/BugCase.astro';
@@ -8,14 +8,14 @@ import { Aside } from '@astrojs/starlight/components';
 
 Each mistake below is written twice: in C++, as a reviewer might miss it, and in Dazzle. Every output on this page was produced by the real compilers: the C++ by g++ and clang++ at `-std=c++17 -O2`, the Dazzle by `dz`. A script (`scripts/capture.mjs` in the site's repository) records them, and the site's build fails if a Dazzle message shown here stops matching what `dz` prints.
 
-The first seven are **undefined behaviour** in C++: the program may do anything, and what it does changes with the compiler and the flags. The rest are mistakes C++ defines but does not stop. In Dazzle, each one is either a **compile error** or has **one defined meaning**, the same in every build and on every compiler.
+The first eight are **undefined behaviour** in C++: the program may do anything, and what it does changes with the compiler and the flags. The rest are mistakes C++ defines but does not stop. In Dazzle, each one is either a **compile error** or has **one defined meaning**, the same in every build and on every compiler.
 
 <Aside type="note" title="What C++ has against these">
 Warnings catch some of these mistakes, and sanitizers (`-fsanitize=undefined,address`) catch more, when a test happens to run the bad path. In Dazzle they are rules of the language, so they hold in every build and on every compiler.
 </Aside>
 
-<Aside type="caution" title="What Dazzle does not catch yet">
-Use after move, double free, and a reference used after a call moved or freed its memory are compile errors. Safe code is not yet free of every undefined behaviour: closing the holes that remain is [an open decision](/decisions/d-0094-safe-code-has-no-undefined-behaviour/), and threads are not in the language yet. Reading through a raw pointer is allowed only inside `unsafe`, so that code is easy to find.
+<Aside type="caution" title="Where Dazzle's promise ends">
+A program with no `unsafe` has no undefined behaviour on one thread, so none of these can happen in it. The promise ends at `unsafe` blocks, where reading through a raw pointer is allowed, at the C and C++ a program calls, and at threads, which Dazzle does not have yet. [Safety](/tour/safety/) has the rules and every edge.
 </Aside>
 
 ## Undefined behaviour in C++
@@ -38,6 +38,10 @@ C++ generates a copy constructor that copies the pointer, so `a` and `b` share o
 
 <BugCase name="overflow" title="Signed overflow" cpp="Undefined behaviour" dazzle="Defined: it wraps" spec={{ label: 'D-0063, integer overflow', href: '/decisions/d-0063-integer-overflow/' }}>
 Signed overflow is undefined in C++, so an optimiser may assume `x + 1 < x` is never true and delete the check. Both builds print `false` for the largest `int`. Dazzle integers wrap in every build, signed ones included, so the comparison means what it says.
+</BugCase>
+
+<BugCase name="divide" title="Dividing by zero" cpp="Undefined behaviour" dazzle="Panics, naming the line" spec={{ label: 'Spec §5.1, primitives', href: '/spec/05-types/#51-primitives' }}>
+Nobody has joined, so the average divides by zero. Neither compiler warns, and the two builds disagree: the g++ build stops on an illegal instruction, and the clang build prints an average that was never computed and carries on, with a different number on each run. In Dazzle, integer division by zero panics in every build and names the line, and a divisor that is a constant zero is a compile error. The rest of the arithmetic C++ leaves undefined is defined too: `MIN / -1` wraps, a shift count is taken modulo the width, and a float converted to an integer saturates.
 </BugCase>
 
 <BugCase name="return" title="Falling off the end of a function" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.4, definite return', href: '/spec/06-value-semantics-ownership-copy/#64-move-semantics' }}>

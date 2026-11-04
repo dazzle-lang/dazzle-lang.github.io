@@ -13,14 +13,14 @@ Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a 
 
 | | |
 |---|---|
-| **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · ties and `kills` clauses · borrowed views · memory placed by the compiler · generics and traits · C and C++ interop from source · tagged unions and `switch` · macros · reflection · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms |
+| **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · ties and `kills` clauses · borrowed views · [no undefined behaviour in safe code](/tour/safety/), on one thread · memory placed by the compiler, in regions by default · generics and traits · C and C++ interop from source, CMake builds included · tagged unions and `switch` · macros · reflection · `#[inline]` and link-time optimisation · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms, every test program also run under AddressSanitizer and UndefinedBehaviorSanitizer |
 | **Mostly done** | the language server and VS Code extension: incremental analysis and the remaining quick fixes are still to come |
-| **Now** | placing more memory in regions and making it faster; closing the holes safe code still has ([D-0094](/decisions/d-0094-safe-code-has-no-undefined-behaviour/)); and the standard library, whose criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
+| **Now** | more tests of the safety rules, and the cases placement still leaves on the heap; then a game of ten thousand lines, to see how the rules hold at scale. Alongside: the [standard library](/tour/standard-library/), whose criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
 | **Later** | dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile; hot reload; freestanding targets for microcontrollers; the web through Emscripten; an installer that bundles libclang |
 
 The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
-**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 1.1 to 2.1 times as long in Dazzle as in C++. The [benchmarks](/project/benchmarks/) have every run, and where the remaining gap comes from.
+**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++: A\* search is faster than C++, the word count is even, and the parser and evaluator is the one still behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 
 ## Compatibility
 

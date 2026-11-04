@@ -1,0 +1,39 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "f0a0ab9",
+		"g++": "g++ (Debian 14.2.0-19) 14.2.0",
+		"clang++": "Debian clang version 19.1.7 (3+b1)"
+	},
+	"dazzle": {
+		"command": "dz run --release .",
+		"exit": 134,
+		"output": "panic: division by zero\n  at average (src/main.dz:2:12)\n"
+	},
+	"cpp": {
+		"g++": {
+			"plain": {
+				"warnings": [],
+				"exit": 132,
+				"output": ""
+			},
+			"wall": {
+				"warnings": [],
+				"exit": 132,
+				"output": ""
+			}
+		},
+		"clang++": {
+			"plain": {
+				"warnings": [],
+				"exit": 0,
+				"output": "average -62512600\n"
+			},
+			"wall": {
+				"warnings": [],
+				"exit": 0,
+				"output": "average 2005099624\n"
+			}
+		}
+	}
+}

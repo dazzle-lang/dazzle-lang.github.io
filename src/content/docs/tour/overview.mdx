@@ -12,7 +12,10 @@ Each page of the tour covers one idea: what it looks like, why it works that way
 		`!->` on a signature marks a function that can fail, and one `or` clause handles the failure. The same clause handles an optional and a null pointer. An unhandled failure is a compile error. [Errors →](/tour/errors/)
 	</Card>
 	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. The compiler writes moves and assignments, a moved-from value is reset to its defaults, `kills` clauses catch a reference a call invalidated, and the compiler chooses where memory comes from. [Ownership →](/tour/ownership/)
+		A constructor, `drop` and `copy`. The compiler writes moves and assignments, a moved-from value is reset to its defaults, and the compiler chooses where memory comes from. [Ownership →](/tour/ownership/)
+	</Card>
+	<Card title="Safety without a borrow checker" icon="approve-check">
+		A program with no `unsafe` has no undefined behaviour on one thread. `kills` clauses catch a reference a call invalidated, arithmetic is defined, and aliasing stays legal. [Safety →](/tour/safety/)
 	</Card>
 	<Card title="Modules without headers" icon="list-format">
 		One manifest per module says what every file can name. There are no headers, no include order and no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)
@@ -25,6 +28,9 @@ Each page of the tour covers one idea: what it looks like, why it works that way
 	</Card>
 	<Card title="Generics checked where they are written" icon="magnifier">
 		Bounds are checked at the definition, then Dazzle monomorphizes. Traits dispatch statically or through a fat pointer, and unions switch exhaustively. [Types and generics →](/tour/types-and-generics/)
+	</Card>
+	<Card title="A standard library in Dazzle" icon="open-book">
+		`List`, a SwissTable `HashMap`, `SlotMap`, a `String` that keeps short text in place, vectors and matrices, files, time and random numbers, none of them taking an allocator. [Standard library →](/tour/standard-library/)
 	</Card>
 	<Card title="Tooling from day one" icon="laptop">
 		There is a language server and a VS Code extension, plus `dz fmt`, `dz fix` and `dz explain`. Tests and benchmarks are written beside the code they cover. [Tooling →](/tour/tooling/)
