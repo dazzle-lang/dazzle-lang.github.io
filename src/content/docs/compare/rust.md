@@ -94,6 +94,24 @@ fn add_neighbour() {
 
 In Rust the way out is `split_at_mut`, or indices instead of references.
 
+Appending the whole neighbour, not one character of it, works as well. `push_str` can move the text of `strings[i]`, and the check knows `strings[i + 1]` is another element: two indices are told apart when both are literals that differ, or the same local that is not `mut` plus or minus different literals. A view into `nest[0]` kept while `nest[1]` grows is the same case.
+
+```dz
+fn append_next_text() {
+    let mut strings = List<String>()
+    strings.push(String::from("A"))
+    strings.push(String::from("B"))
+    strings.push(String::from("C"))
+    for i in 0..strings.len() - 1 {
+        let s = &mut strings[i]
+        s.push_str(strings[i + 1].as_str())
+    }
+    println!("{} {} {}", strings[0], strings[1], strings[2])   // AB BC C
+}
+```
+
+`strings[0].push_str(strings[0].as_str())` is refused, since the text it reads moves as it grows.
+
 ### A method borrows all of `self`
 
 A Rust method that takes `&self` borrows the whole value for as long as its result lives, and one that takes `&mut self` needs the whole value to itself. So a name read through one method cannot be kept across another that only records a score:
@@ -266,11 +284,10 @@ fn tick() {
 
 ### What Dazzle refuses too
 
-The check follows a list's elements as one place, `strings[*]`, so it cannot tell `strings[i]` from `strings[i + 1]` when a call changes one of them. Both languages refuse these:
+Both languages refuse these, though none of them reads freed memory:
 
-- `s.push_str(next)` in the first loop above, appending the whole next string, which could move the text of `strings[i]`: Dazzle's ``DZ0413: used after the memory it points into was killed: `strings[*]@text` ``. The rule exists for `strings[i].push_str(strings[i].as_str())`, which really does read freed memory.
-- A reference into `nest[0]` kept while `nest[1]` grows, in a list of lists.
-- One list passed twice to a function that grows both of its arguments, `grow_both(&mut xs, &mut xs)`: Dazzle's `DZ0420`.
+- Two elements indexed by different locals, `strings[i]` beside `strings[j]`, when a call changes one: the check cannot know `i` and `j` differ, and treats them as one element, ``DZ0413: used after the memory it points into was killed: `strings[*]@text` ``.
+- One list passed twice to a function that grows both of its arguments, `grow_both(&mut xs, &mut xs)`: Dazzle's `DZ0420`. The function could hold a reference into one argument while it grows the other, and whether it does is in its body, which a call does not read.
 - A struct that owns a buffer and holds a reference into it.
 
 ### What Rust accepts and Dazzle does not
