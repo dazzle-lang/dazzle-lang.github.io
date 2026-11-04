@@ -104,7 +104,7 @@ pub fn len(&self) -> usize                         // no clause: kills nothing
 
 <Terminal snippet="invalidated" compact />
 
-The compiler checks each clause against its function's body, and `dz fix` writes the clause a body needs. Aliasing stays legal, a `&mut` and a `&` to the same value included, and no struct carries a lifetime parameter.
+The compiler checks each clause against its function's body, and `dz fix` writes the clause a body needs. Aliasing stays legal, a `&mut` and a `&` to the same value included, and no struct carries a lifetime parameter. So safe programs Rust's borrow checker refuses compile: a `&mut` to one element beside a `&` to the next, a name kept across a method that only records a score, a value returned from a lookup or inserted. [What the borrow checker refuses →](/compare/rust/#what-the-borrow-checker-refuses)
 
 Ties are one rule of several. Together they make a promise: **a program with no `unsafe` has no undefined behaviour on one thread.** A moved value cannot be used, nothing is dropped twice, every value is initialised, every index is checked, arithmetic is defined, and reading through a raw pointer happens only inside `unsafe`. Where the promise ends is written down too: `unsafe` blocks, the C and C++ a program calls, and threads, which Dazzle does not have yet. [Safety →](/tour/safety/)
 
