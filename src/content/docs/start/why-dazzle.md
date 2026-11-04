@@ -7,11 +7,12 @@ C++ is chosen for control: predictable performance, deterministic destruction, n
 
 The usual answer is a smaller language. C, and successors such as Odin, give back the clarity, and take away what a large codebase is built from: RAII, encapsulation the compiler enforces, and layers of abstraction that hold up as the code grows. Being small is not the goal, so Dazzle is not small.
 
-**Dazzle is an upgrade of C++.** It keeps the machine model and the abstractions, and changes the parts that make C++ hard:
+**Dazzle is an upgrade of C++: safe, fast, and fluent in C++.** It keeps the machine model and the abstractions, and changes the parts that make C++ hard:
 
-- **RAII in three members**, a constructor, `drop` and `copy`, with moves and assignments written by the compiler.
 - **No undefined behaviour in safe code**, without a borrow checker or lifetime annotations.
-- **No allocator to pass around**: the compiler decides where each value's memory comes from.
+- **As fast as the C++ you would write**: whole programs written idiomatically in both languages take 0.77 to 1.17 times as long in Dazzle ([benchmarks](/project/benchmarks/)).
+- **No allocator to pass around**: the compiler decides where each value's memory comes from, in a scope's region whenever it can prove that safe.
+- **RAII in three members**, a constructor, `drop` and `copy`, with moves and assignments written by the compiler.
 - **Errors as values**, with one `or` clause to handle them, instead of exceptions.
 - **Generics checked where they are written**, so an error is reported in your code, once.
 - **Encapsulation the compiler enforces**, private by default.

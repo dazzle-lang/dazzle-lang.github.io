@@ -1,18 +1,18 @@
 ---
-title: Dazzle, a systems language that compiles to C++
-description: Dazzle is a systems language for games and engines, embedded systems, tools and real-time code. C++-grade control, no undefined behaviour in code without unsafe, no borrow checker, and standard C++17 as its output, so your compiler, debugger and libraries stay.
+title: 'Dazzle: safe, fast, fluent in C++'
+description: Dazzle is a safe, fast systems language and a successor to C++, for games and engines, embedded systems, tools and real-time code. No undefined behaviour in code without unsafe and no borrow checker, whole programs as fast as their C++, and C and C++ libraries used straight from source.
 template: splash
 editUrl: false
 head:
   - tag: title
-    content: Dazzle programming language | A systems language that compiles to C++
+    content: Dazzle programming language | Safe. Fast. Fluent in C++.
   - tag: script
     attrs:
       type: application/ld+json
-    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A successor to C++ that compiles to standard C++17, for games and engines, embedded systems, tools and real-time code. Code without unsafe has no undefined behaviour, without a borrow checker.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
+    content: '{"@context":"https://schema.org","@type":"ComputerLanguage","name":"Dazzle","alternateName":"Dazzle programming language","url":"https://dazzle-lang.github.io/","description":"A safe, fast systems language and a successor to C++, for games and engines, embedded systems, tools and real-time code. No undefined behaviour in code without unsafe, no borrow checker, whole programs as fast as their C++, and C and C++ libraries used straight from source.","license":"https://opensource.org/licenses/MIT","sameAs":"https://github.com/dazzle-lang/Dazzle"}'
 hero:
-  title: The control of C++, without its undefined behaviour
-  tagline: Dazzle is a systems language for games, engines, tools and real-time code. A program with no unsafe block has no undefined behaviour, with no borrow checker and no lifetimes to write. Its output is standard C++17, so your compiler, debugger and libraries stay.
+  title: Safe. Fast. Fluent in C++.
+  tagline: Dazzle is a systems language for games, engines, tools and real-time code. Code with no unsafe block has no undefined behaviour, with no borrow checker. Whole programs run as fast as their C++. And C and C++ libraries are used straight from source, with no bindings, because Dazzle compiles to standard C++17.
   actions:
     - text: Get started
       link: /start/install/
@@ -34,25 +34,25 @@ import Gallery from '../../components/Gallery.astro';
 import Terminal from '../../components/Terminal.astro';
 
 <Aside type="caution" title="Pre-release">
-Dazzle is **0.1, unreleased**. It compiles and runs programs, checks ownership, calls C and C++, and has a language server, but the language is still changing. See [where it stands](/project/status/).
+Dazzle is **0.1, unreleased**. It is safe, fast, calls C and C++, carries a complete game, and has a language server, but the language is still changing. See [where it stands](/project/status/).
 </Aside>
 
-## The idea
+## What Dazzle is
 
-C++ gives you control and abstraction, and buries both under forty years of syntax and undefined behaviour. The languages that strip C++ down give back the clarity, and take away what a large codebase is built from: RAII, encapsulation, and layers of abstraction that hold up. Dazzle keeps all of that and changes the rest.
+Dazzle is a successor to C++ for the code C++ is chosen for. C++ gives you control and abstraction, and buries both under forty years of syntax and undefined behaviour; the languages that strip it down take away what a large codebase is built from. Dazzle keeps RAII, encapsulation, traits, generics and inheritance, with no garbage collector and no runtime, and adds what C++ cannot promise.
 
 <CardGrid>
-	<Card title="What C++ is chosen for, kept" icon="rocket">
-		Structs laid out as C++ lays them out, destructors that run at the end of scope, zero-cost generics, traits, inheritance when you want a hierarchy, and every C and C++ library. No garbage collector and no runtime.
+	<Card title="Safe" icon="approve-check">
+		On one thread, a program with no `unsafe` has no undefined behaviour: no use after free, no reference left dangling by a `push_back`, no unchecked index, no undefined arithmetic. There is no borrow checker: aliasing stays legal and no struct carries a lifetime. Each signature says what memory a call may end, and the compiler checks it. [Safety →](/tour/safety/)
 	</Card>
-	<Card title="Safe, without Rust's rules" icon="approve-check">
-		On one thread, a program with no `unsafe` reads no freed memory and reaches nothing C++ leaves undefined. A `&mut` and a `&` may still point at the same value, and no struct carries a lifetime: each function's signature says what memory a call may end, and the compiler checks it. [Safety →](/tour/safety/)
+	<Card title="Fast" icon="rocket">
+		The C++ optimiser underneath, no garbage collector, and memory the compiler places in each scope's region by itself. Three whole programs, written idiomatically in both languages, take 0.77 to 1.17 times as long in Dazzle as in C++, and A\* search beats its C++ on time and memory. [Benchmarks →](/project/benchmarks/)
 	</Card>
-	<Card title="Compiled to C++, not away from it" icon="setting">
-		The output is standard C++17 for the compiler you already use, a console SDK's or a chip vendor's included. Debuggers and profilers show your `.dz` source, and a C++ codebase can adopt Dazzle one module at a time. [Why C++? →](/start/why-dazzle/#why-compile-to-c)
+	<Card title="Fluent in C++" icon="seti:c">
+		C and C++ libraries are used straight from their source and headers, classes, overloaded methods and the template instances you name included, with no bindings to write. The output is standard C++17 for the compiler you already use, so a C++ codebase can adopt Dazzle one module at a time. [C++ interop →](/tour/cpp-interop/)
 	</Card>
-	<Card title="As fast as the C++ you would write" icon="seti:clock">
-		Three whole programs, written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++. [Benchmarks →](/project/benchmarks/)
+	<Card title="Simple where C++ is not" icon="puzzle">
+		RAII in three members instead of the rule of five, errors as values with one `or` clause, generics checked where they are written, modules without headers, and a compiler whose every error says what to write instead. [The tour →](/tour/overview/)
 	</Card>
 </CardGrid>
 
@@ -111,6 +111,22 @@ Ties are one rule of several. Together they make a promise: **a program with no 
 ## Memory placed by the compiler
 
 The same ties let the compiler choose where memory comes from, so **ordinary code names no allocator**. A value that never leaves the scope that builds it goes in that scope's **region**, released in one step when the scope ends. A returned value is built where the caller keeps it, and anything else goes on the heap. The editor shows where each allocation went, and `dz placements` lists them with the reason. [Ownership →](/tour/ownership/#where-memory-comes-from)
+
+## As fast as the C++ you would write
+
+Safety costs little at run time: most of it is checked while compiling, and what is left is a bounds check, a divisor check, and an instruction or two where arithmetic C++ leaves undefined is given a meaning. Three whole programs are written idiomatically in both languages, built by the same compiler with the same flags, and checked to compute the same result. Here is how long the Dazzle program takes, as a multiple of the C++ program's time:
+
+<div class="dz-speed not-content">
+
+| Program | clang++ | g++ | Peak memory against C++ |
+|---|---:|---:|---:|
+| A\* search: a binary heap and hash maps keyed by a struct | <b>0.77×</b> | <b>0.88×</b> | <b>0.75×</b> |
+| A word count: 2 million words in a hash map, then sorted | <b>0.91×</b> | 1.02× | 1.17× |
+| A tokenizer, parser and evaluator, failing through `!->` | 1.17× | 1.07× | <b>0.94×</b> |
+
+</div>
+
+Below 1.00× Dazzle is ahead. The C++ halves use `std::vector`, `std::unordered_map`, `std::string`, `std::unique_ptr` and `std::sort`, as a C++ reviewer would accept them. [Every run, and what is left →](/project/benchmarks/)
 
 ## One clause for everything that can fail
 

@@ -5,7 +5,7 @@ import starlight from '@astrojs/starlight';
 
 const SITE = 'https://dazzle-lang.github.io';
 const DESCRIPTION =
-	'Dazzle is a successor to C++ that compiles to standard C++17: no undefined behaviour in code without unsafe and no borrow checker, RAII with three special members, errors as values, enforced encapsulation, and C and C++ libraries used straight from source.';
+	'Dazzle is a safe, fast systems language and a successor to C++: no undefined behaviour in code without unsafe and no borrow checker, whole programs as fast as their C++, C and C++ libraries used straight from source, and standard C++17 as its output.';
 
 // Copied from the Dazzle repository's VS Code extension by `scripts/sync.mjs`, so code
 // blocks tagged `dz` are highlighted by the same grammar the editor uses.
@@ -35,7 +35,7 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image', content: `${SITE}/og.png` } },
 				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
-				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Dazzle: a systems language that compiles to C++' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Dazzle: safe, fast, fluent in C++. A systems language for games, engines and real-time code.' } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
 				{ tag: 'meta', attrs: { name: 'twitter:image', content: `${SITE}/og.png` } },
 			],

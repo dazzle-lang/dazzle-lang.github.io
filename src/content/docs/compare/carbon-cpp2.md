@@ -13,7 +13,7 @@ Carbon, cpp2 and Dazzle start from the same place: C++ is chosen for control and
 | Toolchain | Translates to C++ | Its own, built on LLVM | Your C++ compiler: clang++, g++, a vendor's |
 | Semantics | C++'s | Its own | Its own |
 | Mixing with C++ | In the same file | Bidirectional, deep interop | Calls C and C++ headers; its output is C++ that links with yours |
-| Status | Experimental | Experimental | Pre-release: compiles, runs, checks ownership, has a language server |
+| Status | Experimental | Experimental | Pre-release: safe code has no undefined behaviour, runs about as fast as C++, has a language server |
 
 ## cpp2 (cppfront)
 
@@ -40,7 +40,7 @@ Dazzle shares Carbon's goal, an upgrade of C++ for the projects that use it, and
 - **Nothing underneath changes.** The C++ compiler's optimiser, debuggers, profilers and sanitizers apply as they are, with `#line` directives mapping everything back to your `.dz` source.
 - **Adoption is a module at a time.** A Dazzle module is C++ to the code around it, so a project adopts it without changing its compiler or its build.
 - **C and C++ libraries come from source.** `dz` builds a library from a few lines of manifest and imports its header with the same flags the output is compiled with: namespaces, classes, constructors, overloaded methods, references and template instances.
-- **It is usable now.** Dazzle compiles and runs programs, checks ownership, has a language server and VS Code extension, a formatter, built-in tests and benchmarks, and a small game written in it.
+- **It is usable now.** Dazzle compiles and runs programs about as fast as their C++, with no undefined behaviour outside `unsafe`, and has a language server and VS Code extension, a formatter, built-in tests and benchmarks, and a complete game written in it.
 - **A smaller language to learn**, built to be learned from the compiler: stable diagnostic codes, a `help:` line on nearly every error, and `dz explain`.
 
 ### Where Carbon's route pays off

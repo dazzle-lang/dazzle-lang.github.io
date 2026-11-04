@@ -7,7 +7,7 @@ description: The status of the Dazzle programming language. What is done, what i
 The language is **0.1, unreleased**, and **expected to change**. Every change to it is a revision row in the [changelog](/spec/21-changelog/).
 :::
 
-Dazzle compiles and runs programs, checks ownership, calls C and C++, and has a language server; it already carries a small game. It is not finished: 0.1 is declared once the editor support, the standard library and C++ interop are all complete. Until then the version number stays at 0.1, and the specification is revised rather than versioned.
+Dazzle compiles and runs programs with no undefined behaviour outside `unsafe`, about as fast as the same programs in C++. It places memory itself, calls C and C++ libraries built from source, has a language server, and already carries a complete game and a real-time 3D scene. It is not finished: 0.1 is declared once the editor support, the standard library and C++ interop are all complete. Until then the version number stays at 0.1, and the specification is revised rather than versioned.
 
 ## Status
 

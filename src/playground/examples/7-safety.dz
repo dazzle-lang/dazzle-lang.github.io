@@ -1,0 +1,41 @@
+// Safe code has no undefined behaviour. Arithmetic C++ leaves undefined has one meaning,
+// a pointer that may be null is handled with `or` before it is read, and a static is
+// checked as a parameter is: a function that may move its memory says so with `kills`.
+struct Board {
+    pub scores: List<i32> = List<i32>()
+}
+
+static BOARD: Board = Board{}
+
+fn record(v: i32) kills BOARD.scores@items {     // may move the list's array
+    BOARD.scores.push(v)
+}
+
+fn find(xs: &List<i32>, v: i32) -> ^i32 in xs {  // null when it is not there
+    for i in 0..xs.len() {
+        if xs[i] == v {
+            return &xs[i]
+        }
+    }
+    return null
+}
+
+fn main() {
+    let big: i32 = 2147483647
+    let shift: i32 = 33
+    let huge: f64 = 3.0e10
+    println!("{} {} {}", big + 1, 1 << shift, huge as i32)   // wraps, modulo the width, saturates
+
+    record(10)
+    record(20)
+    let p = find(&BOARD.scores, 20) or {
+        println!("no 20")
+        return
+    }
+    println!("found {}", p)
+    record(30)                                     // ends `p`: reading it now is DZ0413
+    println!("{} scores", BOARD.scores.len())
+
+    let players = BOARD.scores.len() - 3
+    println!("average {}", 60 / players as i32)    // panics: division by zero, naming the line
+}

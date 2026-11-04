@@ -41,6 +41,23 @@
 	color: var(--sl-color-accent);
 }
 
+/* The front page's speed table: Dazzle's time as a multiple of C++'s, ahead in bold. */
+.dz-speed table {
+	width: 100%;
+	display: table;
+	margin-block: 1rem;
+}
+.dz-speed th:first-child {
+	text-align: start;
+}
+.dz-speed td:not(:first-child) {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.dz-speed b {
+	color: var(--sl-color-accent-high);
+}
+
 /* Diagnostics are wide (a help line can run past a hundred columns), so they stack. */
 .dz-pair {
 	display: grid;
