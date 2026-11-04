@@ -65,9 +65,9 @@ error[E0502]: cannot borrow `strings` as immutable because it is also borrowed a
 ```dz
 fn append_next() {
     let mut strings = List<String>()
-    strings.push(String::from("A"))
-    strings.push(String::from("B"))
-    strings.push(String::from("C"))
+    strings.push(String("A"))
+    strings.push(String("B"))
+    strings.push(String("C"))
     for i in 0..strings.len() - 1 {
         let s = &mut strings[i]
         let next = &strings[i + 1]
@@ -99,9 +99,9 @@ Appending the whole neighbour, not one character of it, works as well. `push_str
 ```dz
 fn append_next_text() {
     let mut strings = List<String>()
-    strings.push(String::from("A"))
-    strings.push(String::from("B"))
-    strings.push(String::from("C"))
+    strings.push(String("A"))
+    strings.push(String("B"))
+    strings.push(String("C"))
     for i in 0..strings.len() - 1 {
         let s = &mut strings[i]
         s.push_str(strings[i + 1].as_str())
@@ -148,7 +148,7 @@ struct Level {
     Level() {
         names = List<String>()
         scores = List<i32>()
-        names.push(String::from("ada"))
+        names.push(String("ada"))
     }
 
     pub fn first_name(&self) -> &str in self.names {
@@ -217,10 +217,10 @@ Pushing onto the blue team's list moves that list's array, not the map's slots, 
 ```dz
 fn two_values() {
     let mut teams = HashMap<String, List<i32>>()
-    teams.insert(String::from("red"), List<i32>())
-    teams.insert(String::from("blue"), List<i32>())
-    let red = teams.get(&String::from("red")) or return
-    if let &mut blue = teams.get_mut(&String::from("blue")) {
+    teams.insert(String("red"), List<i32>())
+    teams.insert(String("blue"), List<i32>())
+    let red = teams.get(&String("red")) or return
+    if let &mut blue = teams.get_mut(&String("blue")) {
         blue.push(1)
     }
     println!("{}", red.len())   // 0
@@ -250,11 +250,11 @@ fn count_of(
     map: &mut HashMap<String, i32>,
     key: &str
 ) -> &mut i32 in map@items kills map@items, map[*] {
-    if let &mut n = map.get_mut(&String::from(key)) {
+    if let &mut n = map.get_mut(&String(key)) {
         return n
     }
-    map.insert(String::from(key), 0)
-    return map.get_or_insert(String::from(key), 0)
+    map.insert(String(key), 0)
+    return map.get_or_insert(String(key), 0)
 }
 ```
 

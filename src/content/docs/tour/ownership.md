@@ -17,7 +17,7 @@ struct Level {
     pub enemies: List<i32>
 
     Level(name: &str) {                // the constructor
-        self.name = String::from(name)
+        self.name = String(name)
     }
 }
 
@@ -178,7 +178,7 @@ The last row is a second line of defence: even if Dazzle's own move checking had
 
 ## Where memory comes from
 
-Ordinary code names no allocator. `List<Enemy>()` and `String::from(name)` get their memory where the compiler can prove it safe: the region of the scope that owns them, released in one step when the scope ends; wherever the caller keeps a result; or else the heap. The same ties check every placement, the editor shows where each allocation went, and `dz placements` lists them with the reason for each:
+Ordinary code names no allocator. `List<Enemy>()` and `String(name)` get their memory where the compiler can prove it safe: the region of the scope that owns them, released in one step when the scope ends; wherever the caller keeps a result; or else the heap. The same ties check every placement, the editor shows where each allocation went, and `dz placements` lists them with the reason for each:
 
 ```dz
 fn update(&mut self, camera: &Camera) {
