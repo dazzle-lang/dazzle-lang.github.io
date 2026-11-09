@@ -10,9 +10,11 @@ const items = [
 		file: 'sdl3.avif',
 		size: [1920, 1080],
 		title: 'A real-time 3D scene',
-		lib: 'SDL3',
-		text: 'Per-pixel lighting, soft shadows, fog and 400 000 blades of instanced grass in GLSL. A large C library, built by its own CMake.',
+		lib: 'SDL3 + Dear ImGui',
+		text: 'Per-pixel lighting, soft shadows, fog and 400 000 blades of instanced grass in GLSL, with a Dear ImGui panel that changes the scene live. A large C library built by its own CMake, and a C++ one called as it is written.',
 		wide: true,
+		// The tile crops the sides; the ImGui panel is on the left, so keep that edge.
+		position: 'left center',
 	},
 	{
 		name: 'breakout',
@@ -70,7 +72,7 @@ const items = [
 		items.map((it) => (
 			<a class:list={['tile', { wide: it.wide }]} href={`${REPO}/${it.name}`}>
 				<div class="shot">
-					<img src={`/examples/${it.file}`} width={it.size[0]} height={it.size[1]} alt={`${it.title}: the ${it.name} example`} loading="lazy" decoding="async" />
+					<img src={`/examples/${it.file}`} width={it.size[0]} height={it.size[1]} alt={`${it.title}: the ${it.name} example`} loading="lazy" decoding="async" style={it.position ? `object-position: ${it.position}` : undefined} />
 				</div>
 				<div class="caption">
 					<div class="row">

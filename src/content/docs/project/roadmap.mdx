@@ -1,0 +1,99 @@
+---
+title: The road to 0.2
+description: What Dazzle 0.2 will bring, and how far along each part is. Faster builds, more of the standard library, Dear ImGui called from Dazzle, and new benchmarks against C++ and Rust.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+Dazzle **0.1** was released on 4 November 2026. **0.2** is planned in six parts, roughly in this order. This page follows the plan as it moves; the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
+
+| | Part | Status |
+|---|---|---|
+| 1 | [Bugs in the generated C++ and the tools](#1-bugs) | <Badge text="planned" variant="default" /> |
+| 2 | [Faster builds](#2-faster-builds) | <Badge text="planned" variant="default" /> |
+| 3 | [More of the standard library](#3-the-standard-library) | <Badge text="planned" variant="default" /> |
+| 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="panel done" variant="success" /> |
+| 5 | [New benchmarks](#5-benchmarks) | <Badge text="planned" variant="default" /> |
+| 6 | [The release](#6-the-release) | <Badge text="last" variant="default" /> |
+
+## 1. Bugs
+
+Generated C++ that fails to compile is a compiler bug, never the user's, so these come first.
+
+| | Status |
+|---|---|
+| A `for` loop over a view of a temporary, `for c in format!(…).chars()`, reads freed memory ([T-0178](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0178-for-loop-over-view-temporary-reads.md)) | <Badge text="in progress" variant="caution" /> |
+| A local named like a free function hides it in the generated C++ ([T-0121](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0121-local-named-like-free-function-hides.md)) | <Badge text="planned" variant="default" /> |
+| A field default that calls a function of its own module does not compile ([T-0167](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0167-field-default-that-calls-free-function.md)) | <Badge text="planned" variant="default" /> |
+| A module named after a runtime identifier does not compile ([T-0034](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0034-module-named-after-runtime-shim-identifier.md)) | <Badge text="planned" variant="default" /> |
+| `error(…)` shares a ring of four buffers ([T-0053](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0053-error-shares-static-ring-four-buffers.md)) | <Badge text="planned" variant="default" /> |
+| `as` binds tighter than a prefix `-`, against the precedence table ([T-0161](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0161-parser-binds-as-tighter-than-prefix.md)) | <Badge text="planned" variant="default" /> |
+| `dz fmt` collapses a multi-line array literal ([T-0092](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0092-dz-fmt-collapses-multi-line-array.md)) | <Badge text="planned" variant="default" /> |
+
+## 2. Faster builds
+
+About 90% of a build is the C++ compiler, and most of that is the standard library's C++, compiled again every time.
+
+| | Status |
+|---|---|
+| Compile the standard library once, not in every build. **The targets for 0.2:** a debug rebuild after a small change in under 0.5 s, and a clean release build within twice the time of the same program in C++ ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)) | <Badge text="planned" variant="default" /> |
+| Measure build time on a large program ([T-0012](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0012-measure-compile-time-at-scale.md)) | <Badge text="planned" variant="default" /> |
+| Remove the generated C++ of a renamed or deleted module ([T-0103](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0103-renamed-or-removed-module-generated-c.md)) | <Badge text="planned" variant="default" /> |
+| The editor checks the standard library once, not on every keystroke ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="planned" variant="default" /> |
+
+## 3. The standard library
+
+New containers, then what the benchmarks and the ImGui panel show is missing.
+
+| | Status |
+|---|---|
+| `BinaryHeap`, a priority queue ([T-0175](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0175-binaryheap-priority-queue-in-std.md)) | <Badge text="planned" variant="default" /> |
+| `Deque`, a double-ended queue ([T-0176](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0176-deque-double-ended-queue-in-std.md)) | <Badge text="planned" variant="default" /> |
+| `BitSet`, a set of small integers ([T-0177](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0177-bitset-set-small-integers-in-std.md)) | <Badge text="planned" variant="default" /> |
+| Slicing a `str`, `s[a..b]` ([T-0098](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0098-str-cannot-be-cut-str-b.md)) | <Badge text="planned" variant="default" /> |
+| `indexed()` outside a `for` head ([T-0037](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0037-indexed-exists-only-in-for-head.md)) | <Badge text="planned" variant="default" /> |
+| Generic methods in a trait ([T-0007](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0007-generic-methods-in-trait.md)) | <Badge text="planned" variant="default" /> |
+
+## 4. C++ interop: Dear ImGui
+
+raylib, SDL3, Box2D and sokol are all C. This part shows Dazzle calling a C++ library as it is written, with no C wrapper: [Dear ImGui](https://github.com/ocornut/imgui), the panel a game reaches for to tune values while it runs.
+
+![The SDL3 example with its Dear ImGui panel, changing the scene while it runs](/examples/sdl3.avif)
+
+| | Status |
+|---|---|
+| A Dear ImGui panel in the [SDL3 example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3) that changes the scene live: presets, time, the sun, the sky, the lamps ([T-0171](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0171-dear-imgui-controls-in-sdl3-scene.md)) | <Badge text="done" variant="success" /> |
+| Overloaded C++ functions, chosen by their arguments ([T-0016](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0016-overloaded-free-function-imports-only-its.md)) | <Badge text="done" variant="success" /> |
+| Default arguments left out, array parameters taken by reference, and one type for a C++ class whichever header declares it | <Badge text="done" variant="success" /> |
+| A C++ namespace as a module of its own, named by the key the manifest gives it: `ImGui::Begin` or `imgui::Begin`, not `imgui::ImGui::Begin` ([T-0179](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0179-c-namespace-reached-as-module-its.md)) | <Badge text="planned" variant="default" /> |
+| Variadic C functions such as `printf` and ImGui's `Text` ([T-0008](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0008-variadic-c-functions.md)) | <Badge text="planned" variant="default" /> |
+| An imported C or C++ enum's own list of variants, where today only its type and the header's constants arrive ([T-0048](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0048-imported-c-or-c-enum-variants.md)) | <Badge text="planned" variant="default" /> |
+
+[C++ interop](/tour/cpp-interop/) shows what the panel's code looks like.
+
+## 5. Benchmarks
+
+Three new programs. The two whole programs are measured against C++, as the [current three](/project/benchmarks/) are.
+
+| | Status |
+|---|---|
+| **An ECS**, a small entity-component system of a few hundred lines, in Dazzle, C++ and Rust. It shows a query inside a query: Dazzle and C++ write it directly, and Rust has to collect the first query's results before it can run the second ([T-0172](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0172-ecs-benchmark-against-rust-c-query.md)) | <Badge text="planned" variant="default" /> |
+| **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)) | <Badge text="planned" variant="default" /> |
+| **raytrace**: floating-point and vector math, against C++ ([T-0174](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0174-raytrace-benchmark-floating-point-vector-math.md)) | <Badge text="planned" variant="default" /> |
+| What generic instantiation costs in build time, tracked from release to release ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="planned" variant="default" /> |
+
+## 6. The release
+
+Release notes from the [changelog](/spec/21-changelog/) since revision 117, which 0.1 carries. If there is time, dependencies fetched from git and pinned by a lockfile ([T-0077](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0077-git-dependencies-pinned-by-lockfile.md)); otherwise they move to 0.3.
+
+## After 0.2
+
+- **Packages:** dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile, if they miss 0.2.
+- **Scale:** a game of ten thousand lines, to see how the safety rules hold in a large program, and fewer of the cases where the compiler still puts memory on the heap. Those cost speed, not safety.
+- **Hot reload:** a rebuilt module swapped into a running game, keeping its state.
+- **The editor:** incremental analysis, and the rest of the quick fixes.
+- **Microcontrollers:** builds with no heap and no operating system, for boards such as an Arduino Uno and an STM32.
+- **The web:** the same game running in a browser, through Emscripten.
+- **Threads:** a mutex, atomics and a job system.
+
+Not planned for now: **Jolt Physics**, the other C++ library once planned beside ImGui. The milestones are in [spec §19](/spec/19-roadmap/).

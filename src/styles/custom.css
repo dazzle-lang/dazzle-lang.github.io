@@ -83,3 +83,9 @@
 	line-height: 1.1;
 	letter-spacing: -0.01em;
 }
+
+/* The roadmap's status badges: one word each, never broken across lines. */
+.sl-markdown-content td .sl-badge {
+	overflow-wrap: normal;
+	white-space: nowrap;
+}

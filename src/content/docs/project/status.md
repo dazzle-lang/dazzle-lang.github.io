@@ -1,24 +1,25 @@
 ---
 title: Where Dazzle stands
-description: The status of the Dazzle programming language. What is done, what is in progress, the roadmap to 0.1, supported platforms and compilers, and how Dazzle is made.
+description: The status of the Dazzle programming language. What is done, what is in progress, the plan for 0.2, supported platforms and compilers, and how Dazzle is made.
 ---
 
 :::note[0.1 is out]
-**Dazzle 0.1** was released on 4 November 2026. The language is young and **still changes**. Every change to it is a revision row in the [changelog](/spec/21-changelog/).
+**Dazzle 0.1** was released on 4 November 2026. The language is young and **still changes**. Every change to it is a revision row in the [changelog](/spec/21-changelog/). Next is **0.2**: [the road to 0.2](/project/roadmap/) has the plan and how far along it is.
 :::
 
 Dazzle compiles and runs programs with no undefined behaviour outside `unsafe`, about as fast as the same programs in C++. It places memory itself, calls C and C++ libraries built from source, has a language server, and already carries a complete game and a real-time 3D scene. It is young: the standard library is still growing, and the editor still lacks some code actions and incremental analysis. The specification is revised rather than versioned, and each compiler release (`v0.1.0`, `v0.1.1`, …) says which revision it carries.
 
-## Status
+## What you can build today
 
-| | |
-|---|---|
-| **Done** | lexer, parser, formatter · modules and visibility · type checker · C++ code generation · ownership · ties and `kills` clauses · borrowed views · [no undefined behaviour in safe code](/tour/safety/), on one thread · memory placed by the compiler, in regions by default · generics and traits · C and C++ interop from source, CMake builds included · tagged unions and `switch` · macros · reflection · `#[inline]` and link-time optimisation · `dz test` · `dz bench` and the C++ comparison suite · `dz fix` and `dz explain` · CI on three platforms, every test program also run under AddressSanitizer and UndefinedBehaviorSanitizer · releases for Linux, macOS and Windows with libclang bundled, and one-line installers |
-| **Mostly done** | the language server and VS Code extension: incremental analysis and the remaining quick fixes are still to come |
-| **Now** | more tests of the safety rules, and the cases placement still leaves on the heap; then a game of ten thousand lines, to see how the rules hold at scale. Alongside: the [standard library](/tour/standard-library/), whose criterion, a game written without any C++ of its own, is met: [`examples/breakout`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) |
-| **Later** | dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile; hot reload; freestanding targets for microcontrollers; the web through Emscripten |
+The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) include a complete game on raylib, a real-time 3D scene on SDL3 with a Dear ImGui panel, rigid-body physics on Box2D and a synthesizer on miniaudio. Each is a project you can copy, and each builds its library from source.
 
-The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
+## Next: 0.2
+
+Faster builds, `BinaryHeap`, `Deque` and `BitSet` in the [standard library](/tour/standard-library/), more of C++ imported (a namespace as a module of its own, variadic functions), and new benchmarks, an ECS against C++ and Rust among them. Dear ImGui called from Dazzle is already done. [The road to 0.2](/project/roadmap/) has every item and how far along it is.
+
+## Later
+
+Packages fetched from git, a game of ten thousand lines to test the safety rules at scale, hot reload, microcontrollers, the web and threads. [After 0.2](/project/roadmap/#after-02) says a line about each, the milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
 **How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++: A\* search is faster than C++, mostly through its hash map, the word count is even, and the parser and evaluator is the one still behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 
@@ -26,7 +27,7 @@ The milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by
 
 - **Platforms:** Windows, Linux and macOS. CI builds and tests on all three for every change.
 - **C++ compilers:** clang++ and g++. The generated code is C++17, compiled with `-fno-exceptions -fno-rtti` and warning-clean under `-Wall -Wextra` on both; clang++ 19 and 21 and g++ 13 and 14 are verified. MSVC's `cl.exe` is not supported.
-- **C and C++ libraries:** C, and C++ through namespaces, classes, methods, overloaded methods, references and named template instances. Overloaded free functions, variadic C functions and inheritance between imported C++ classes are not imported yet.
+- **C and C++ libraries:** C, and C++ through namespaces, classes, methods, overloaded functions and methods, default arguments, references and named template instances. Variadic C functions and inheritance between imported C++ classes are not imported yet.
 - **The output is plain C++**, so anything that links with C++ links with Dazzle.
 
 ## Follow along

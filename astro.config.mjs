@@ -82,6 +82,7 @@ export default defineConfig({
 					label: 'Project',
 					items: [
 						'project/status',
+						'project/roadmap',
 						'project/benchmarks',
 						{ label: 'Contributing', link: 'https://github.com/dazzle-lang/Dazzle/blob/master/CONTRIBUTING.md' },
 						{ label: 'Backlog', link: 'https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md' },

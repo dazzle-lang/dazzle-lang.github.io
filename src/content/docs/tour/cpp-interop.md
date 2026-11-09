@@ -58,9 +58,9 @@ fn main() {
 ## What maps
 
 - **C:** functions, structs, unions, enums, array members and bit-fields, callbacks, `#define` constants, and types a header only declares (as opaque handles).
-- **C++:** namespaces and nested namespaces, scoped enums, classes with constructors and `const` and mutating methods, overloaded methods chosen by argument type, `const T&` and `T&` as `&T` and `&mut T`, classes with destructors (move-only in Dazzle, destroyed by C++), and named template instances.
+- **C++:** namespaces and nested namespaces, scoped enums, classes with constructors and `const` and mutating methods, overloaded functions and methods chosen by argument type, default arguments (leave them out, and C++ fills them in), `const T&` and `T&` as `&T` and `&mut T`, array parameters (`float col[3]` takes a `&mut [3]f32`), classes with destructors (move-only in Dazzle, destroyed by C++), and named template instances. A type is one type whichever header declares it, so a handle from one library passes to another that only names it.
 
-Not imported yet: overloaded *free* functions, variadic C functions, and inheritance between imported C++ classes. These are open tasks.
+Not imported yet: variadic C functions, and inheritance between imported C++ classes. These are open tasks, and variadics are planned for [0.2](/project/roadmap/).
 
 ## Which calls are safe
 
@@ -85,6 +85,32 @@ The repository's examples use larger libraries the same way, each built before t
 cmake   = "vendor/SDL"                     # a folder with a CMakeLists.txt
 options = { SDL_TEST_LIBRARY = false }
 import  = ["SDL3/SDL.h"]
+```
+
+- [**Dear ImGui**](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3), a C++ library, draws the same example's control panel. Its recipe compiles its sources and its SDL3 and OpenGL 3 backends, and `uses` builds them against the headers SDL's CMake installed:
+
+```toml
+[cpp.libs.imgui]
+root         = "../vendor/imgui"
+sources      = ["imgui.cpp", "imgui_draw.cpp", "imgui_tables.cpp", "imgui_widgets.cpp",
+                "backends/imgui_impl_sdl3.cpp", "backends/imgui_impl_opengl3.cpp"]
+include_dirs = [".", "backends"]
+uses         = ["sdl3"]
+import       = ["imgui.h", "imgui_impl_sdl3.h", "imgui_impl_opengl3.h"]
+keeps        = []
+```
+
+and its C++ API is called as it is written, with no C wrapper:
+
+```dz
+imgui::ImGui::Begin("Scene")                       // C++ fills in the two default arguments
+// One of three `Combo` overloads, chosen by its arguments: the one taking one string.
+if imgui::ImGui::Combo("Preset", &mut s.preset, "Afternoon\0Dusk\0Night\0") {
+    apply(s, s.preset)
+}
+imgui::ImGui::SliderFloat("Height", &mut s.sun_height, 0.05, 1.5)
+imgui::ImGui::ColorEdit3("Colour##sun", &mut s.sun_color)   // `float col[3]`: a `&mut [3]f32`
+imgui::ImGui::End()
 ```
 
 ## Why it works this way
