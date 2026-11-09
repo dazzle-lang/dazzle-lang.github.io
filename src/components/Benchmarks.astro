@@ -3,9 +3,11 @@
 // each, as `tools/bench_programs.py --json` in the Dazzle repository writes them, plus the
 // date, the commit and a one-line summary. `view="latest"` draws the newest run;
 // `view="history"` lists every run, so a change in the compiler or the standard library
-// shows up as a change in the ratios.
+// shows up as a change in the ratios. `view="build"` draws the newest run's build times in
+// one `mode`: the run's own, release, or debug.
 interface Props {
 	view: 'latest' | 'build' | 'history';
+	mode?: 'release' | 'debug';
 }
 
 const files = import.meta.glob('../data/benchmarks/*.json', { import: 'default', eager: true });
@@ -68,25 +70,37 @@ const y = (v) => PAD.t + (1 - v / top) * (H - PAD.t - PAD.b);
 const ticks = Array.from({ length: Math.round(top / 0.5) + 1 }, (_, k) => k * 0.5);
 
 // Build time, from `dz build --timings`: Dazzle's own phases, importing C and C++ headers,
-// the C++ compiler, and whatever none of them accounts for.
+// the C++ compiler and the link, and whatever none of them accounts for. Since T-0102 the
+// link is a phase of its own; before it, it was part of `C++ compiler`.
 const OWN = ['manifests', 'lex and parse', '#if and macros', 'resolve names', 'type check', 'ownership', 'placement', 'instantiate generics', 'emit C++'];
 const buildParts = (b) => {
 	const p = b.phases ?? {};
 	const own = OWN.reduce((a, n) => a + (p[n] ?? 0), 0);
 	const headers = (p['C and C++ headers'] ?? 0) + (p['CMake builds'] ?? 0);
-	const compiler = (p['C++ compiler'] ?? 0) + (p['C and C++ libraries'] ?? 0);
+	const compiler = (p['C++ compiler'] ?? 0) + (p['C and C++ libraries'] ?? 0) + (p['link'] ?? 0);
 	const other = Math.max(0, b.dazzle - own - headers - compiler);
 	return [
 		{ key: 'own', label: "Dazzle's own phases", t: own },
 		{ key: 'headers', label: 'C and C++ headers (libclang)', t: headers },
-		{ key: 'compiler', label: 'C++ compiler', t: compiler },
+		// `other` is a sliver, so it goes before the compiler: the bar's rounded right end
+		// is then the compiler's, not a few pixels of grey.
 		{ key: 'other', label: 'other', t: other },
+		{ key: 'compiler', label: 'C++ compiler and link', t: compiler },
 	];
 };
-const hasPhases = latest.results.every((r) => r.build.phases);
-const buildMax = Math.max(...latest.results.flatMap((r) => [r.build.dazzle, r.build.cpp]));
+// Each result records its builds in the run's mode (`build`, `rebuild`) and in debug
+// (`debug_build`, `debug_rebuild`): from clean, and after a one-line change. Runs from
+// before rebuilds were measured have `build` alone.
+const debug = Astro.props.mode === 'debug';
+const KINDS = [
+	{ key: debug ? 'debug_build' : 'build', label: 'from clean' },
+	{ key: debug ? 'debug_rebuild' : 'rebuild', label: 'one-line change' },
+].filter((k) => latest.results.every((r) => r[k.key]?.phases));
+const hasPhases = KINDS.length > 0;
+const buildMax = Math.max(...latest.results.flatMap((r) => KINDS.flatMap((k) => [r[k.key].dazzle, r[k.key].cpp])));
 const s1 = (t) => (t >= 1 ? `${t.toFixed(2)} s` : `${Math.round(t * 1000)} ms`);
-const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
+const phaseRows = hasPhases ? Object.keys(latest.results[0][KINDS[0].key].phases) : [];
+const buildFlags = debug ? '-O0 -g' : flags;
 ---
 
 {
@@ -147,71 +161,88 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 
 {
 	Astro.props.view === 'build' && hasPhases && (
-		<div class="bench not-content">
+		<div class="bench build not-content">
 			{programs.map((p) => (
 				<section class="program">
 					<h4>{PROGRAMS[p] ?? p}</h4>
 					{compilers.map((c) => {
 						const r = find(latest, p, c);
 						if (!r) return null;
-						const parts = buildParts(r.build);
-						return (
-							<div class="pair">
-								<div class="who">{cxxLabel(latest, c)}</div>
-								<div class="bars">
-									<div class="stack" style={`width: ${(100 * r.build.dazzle) / buildMax}%`} title={parts.map((x) => `${x.label}: ${s1(x.t)}`).join('\n')}>
-										{parts.map((x) => (
-											<div class={`seg ${x.key}`} style={`flex-grow: ${x.t}`} />
-										))}
-										<span class="stack-label">Dazzle {s1(r.build.dazzle)}</span>
+						return KINDS.map((k) => {
+							const b = r[k.key];
+							const parts = buildParts(b);
+							return (
+								<div class="pair">
+									<div class="who">
+										{cxxLabel(latest, c)}
+										<br />
+										<small>{k.label}</small>
 									</div>
-									<div class="bar cpp" style={`width: ${(100 * r.build.cpp) / buildMax}%`}>
-										<span>C++ {s1(r.build.cpp)}</span>
+									<div class="bars">
+										<div class="stack" style={`width: ${(100 * b.dazzle) / buildMax}%`} title={parts.map((x) => `${x.label}: ${s1(x.t)}`).join('\n')}>
+											{/* In milliseconds: flex-grow values summing to under 1 fill only that
+											fraction of the bar, which a build under a second would. */}
+											{parts.map((x) => (
+												<div class={`seg ${x.key}`} style={`flex-grow: ${x.t * 1000}`} />
+											))}
+											<span class="stack-label">Dazzle {s1(b.dazzle)}</span>
+										</div>
+										<div class="bar cpp" style={`width: ${(100 * b.cpp) / buildMax}%`}>
+											<span>C++ {s1(b.cpp)}</span>
+										</div>
 									</div>
+									<div class="ratio">{(b.dazzle / b.cpp).toFixed(1)}×</div>
 								</div>
-								<div class="ratio">{(r.build.dazzle / r.build.cpp).toFixed(1)}×</div>
-							</div>
-						);
+							);
+						});
 					})}
 				</section>
 			))}
 			<p class="legend">
-				<span class="key own" /> Dazzle's own phases <span class="key headers" /> C and C++ headers (libclang) <span class="key compiler" /> C++ compiler, on the generated code <span class="key other" /> other <span class="key cpp" /> the C++ program, one compiler invocation. Median of {latest.results[0].build.builds} builds from clean.
+				<span class="key own" /> Dazzle's own phases <span class="key headers" /> C and C++ headers (libclang) <span class="key other" /> other <span class="key compiler" /> C++ compiler and link, on the generated code <span class="key cpp" /> the C++ program, one compiler invocation.
 			</p>
-			<div class="table-wrap">
-				<table class="phases">
-					<thead>
-						<tr>
-							<th>Phase</th>
-							{columns.map((c) => (
-								<th class="num">
-									{c.program}
-									<br />
-									<small>{cxxLabel(latest, c.cxx)}</small>
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{phaseRows.map((name) => (
-							<tr class:list={{ own: OWN.includes(name) }}>
-								<td>{name}</td>
-								{columns.map((c) => {
-									const t = find(latest, c.program, c.cxx)?.build.phases?.[name];
-									return <td class="num">{t == null ? '—' : `${(t * 1000).toFixed(1)} ms`}</td>;
-								})}
-							</tr>
-						))}
-						<tr class="total">
-							<td>total, wall clock</td>
-							{columns.map((c) => {
-								const r = find(latest, c.program, c.cxx);
-								return <td class="num">{r ? s1(r.build.dazzle) : '—'}</td>;
-							})}
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<p class="legend">
+				<code>{buildFlags}</code>. Each the median of {latest.results[0][KINDS[0].key].builds} builds. From clean, <code>build/</code> is deleted first. A one-line change is a function appended to the program's source, whose number changes before each build, after one more build that is not counted: Dazzle compiles the program's own generated C++ again and links, and C++ compiles its one file again.
+			</p>
+			{KINDS.map((k) => (
+				<details class="phases-details">
+					<summary>Every phase, {k.label}</summary>
+					<div class="table-wrap">
+						<table class="phases">
+							<thead>
+								<tr>
+									<th>Phase</th>
+									{columns.map((c) => (
+										<th class="num">
+											{c.program}
+											<br />
+											<small>{cxxLabel(latest, c.cxx)}</small>
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{phaseRows.map((name) => (
+									<tr class:list={{ own: OWN.includes(name) }}>
+										<td>{name}</td>
+										{columns.map((c) => {
+											const t = find(latest, c.program, c.cxx)?.[k.key].phases?.[name];
+											return <td class="num">{t == null ? '—' : `${(t * 1000).toFixed(1)} ms`}</td>;
+										})}
+									</tr>
+								))}
+								<tr class="total">
+									<td>total, wall clock</td>
+									{columns.map((c) => {
+										const r = find(latest, c.program, c.cxx);
+										return <td class="num">{r ? s1(r[k.key].dazzle) : '—'}</td>;
+									})}
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</details>
+			))}
 		</div>
 	)
 }
@@ -319,6 +350,12 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 														own phases {Math.round(own * 1000)} ms
 													</>
 												)}
+												{r.rebuild && (
+													<>
+														<br />
+														one line: {s1(r.rebuild.dazzle)} / {s1(r.rebuild.cpp)}
+													</>
+												)}
 											</small>
 										</td>
 									);
@@ -328,7 +365,7 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 					</tbody>
 				</table>
 			</div>
-			<p class="legend">Build time from clean: Dazzle's over C++'s, with both times below it, and the part of Dazzle's spent in its own phases, from reading the manifests to emitting the C++.</p>
+			<p class="legend">Build time from clean: Dazzle's over C++'s, with both times below it, and the part of Dazzle's spent in its own phases, from reading the manifests to emitting the C++. Where a run measured it, also a rebuild after a one-line change: Dazzle's time, then C++'s.</p>
 		</div>
 	)
 }
@@ -435,6 +472,23 @@ const phaseRows = hasPhases ? Object.keys(latest.results[0].build.phases) : [];
 	.seg.other,
 	.key.other {
 		background: #6b7280;
+	}
+	.build .pair {
+		grid-template-columns: 6.5rem 1fr 3.5rem;
+	}
+	.who small {
+		font-size: var(--sl-text-xs);
+	}
+	.phases-details {
+		margin-top: 0.8rem;
+		font-size: var(--sl-text-sm);
+	}
+	.phases-details summary {
+		cursor: pointer;
+		color: var(--sl-color-gray-2);
+	}
+	.phases-details .table-wrap {
+		margin-top: 0.5rem;
 	}
 	tr.own td:first-child {
 		color: var(--sl-color-accent-high);

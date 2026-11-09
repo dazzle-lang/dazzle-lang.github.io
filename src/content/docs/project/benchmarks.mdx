@@ -4,7 +4,7 @@ description: Three whole programs written in both Dazzle and C++, built with the
 ---
 
 import Benchmarks from '../../../components/Benchmarks.astro';
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 How fast is Dazzle compared with C++? Single constructs say little, because an indexed load compiles to the same instruction in both. These are whole programs instead. Each one is written idiomatically in both languages, built by the same compiler at the same optimisation level, and timed from start to finish.
 
@@ -19,30 +19,43 @@ Both halves of each pair print a checksum over their whole result, and a run who
 <Benchmarks view="latest" />
 
 <Aside type="note" title="How the gap closed, and what is left">
-Every gap the earlier runs showed had a known cause in the standard library or the compiler, not in the language's rules. Between the previous run and this one:
+Every gap the earlier runs showed had a known cause in the standard library or the compiler, not in the language's rules. Between the runs at [aa58e02](https://github.com/dazzle-lang/Dazzle/commit/aa58e02) and [f0a0ab9](https://github.com/dazzle-lang/Dazzle/commit/f0a0ab9) (the latest run changed only the build, and its run times are the same):
 
 - **A\* search:** its hash and comparison functions are inlined, and so are `List`'s index checks ([T-0157](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0157-astar-each-search-hash-maps-regrow.md)), and `HashMap` is a SwissTable: one control byte per slot, read eight at a time ([T-0164](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0164-peak-memory-30-50-over-c.md)). It is now faster than the C++ half, and its peak memory is under it, mostly because of the hash table: Dazzle's is a SwissTable, one array of slots probed eight at a time, where `std::unordered_map` allocates a node per entry. Measured once with Dazzle's map, heap and sort ported line for line into the C++ half, A\* search was even with C++ (1.00× and 1.01×), the parser and evaluator 1.13–1.19× and the word count 1.13–1.29×.
 - **The parser and evaluator:** fewer moves through `or return` and a 24-byte `Box`, moved once ([T-0097](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0097-moving-union-through-fallible-result-costs.md)), and its tree nodes, each rebuilt on every pass of a loop, kept in the scope's region ([T-0146](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0146-value-rebuilt-on-each-pass-loop.md)).
 - **The word count:** `List::sort_by` is an introsort, where it was a heapsort ([T-0096](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0096-list-sort-by-heapsort-through-function.md)), and a `String` keeps text of up to 15 bytes inside itself, as `std::string` does ([T-0156](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0156-string-always-allocates-short-text-kept.md)).
 
-What is left: the parser and evaluator, still 7–17% slower than C++, and the word count's peak memory, about 5 MiB over C++'s, whose cause is not yet measured.
+What is left: the parser and evaluator, still 8–15% slower than C++, and the word count's peak memory, about 5 MiB over C++'s, whose cause is not yet measured.
 
 Some of the cost is the language's own, and it stays by design: indexing is bounds-checked in every build, integer arithmetic wraps, and division checks its divisor.
 </Aside>
 
 ## Build time
 
-Each half is built from clean three times, and the median is shown. For Dazzle, `dz build --timings` says where the time went, phase by phase: Dazzle's own phases, from reading the manifests to emitting the C++; importing C and C++ headers with libclang; and the C++ compiler on the generated code. The C++ half is a single compiler invocation on one file.
+Each half is built two ways, three times each, and the median is shown: **from clean**, with nothing built before, and after a **one-line change** to the program, as someone working on it waits for. Both are measured in release, the build whose program the timings above ran, and in debug, `dz build`'s default. For Dazzle, `dz build --timings` says where the time went, phase by phase: Dazzle's own phases, from reading the manifests to emitting the C++; importing C and C++ headers with libclang; and the C++ compiler and the link, on the generated code. The C++ half is a single compiler invocation on one file, so a one-line change compiles all of it again.
 
-<Benchmarks view="build" />
+<Tabs syncKey="build-mode">
+<TabItem label="Release">
+<Benchmarks view="build" mode="release" />
+</TabItem>
+<TabItem label="Debug">
+<Benchmarks view="build" mode="debug" />
+</TabItem>
+</Tabs>
 
 <Aside type="note" title="Where the build time goes">
-Dazzle's own work, from parsing to emitting the C++, takes 90 to 100 ms on each of these programs. The largest part is the ownership check, ties included, which checks the standard library again in every build along with the program. Almost all the rest happens outside Dazzle:
+**From clean**, a release build takes 1.16–1.24 s with clang and 1.05–1.17 s with g++, down from 2.0–2.1 s and 1.6–1.7 s in the previous run: 2.2–2.9 times as long as the C++ half, where it was 3.3–4.7 times. Two changes did it. Each generated C++ file is now compiled to its own object, all of them at once, and reused while it is unchanged ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)), and the runtime, the standard library's declarations and each module's C and C++ headers are precompiled ([T-0181](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0181-precompiled-header-for-runtime-standard-library.md)).
 
-- **The C++ compiler**, on the generated code, takes 1.8–1.9 s with clang and 1.4–1.5 s with g++, link-time optimisation included. Most of that is the standard library's C++, which is compiled again in every build ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)).
+**After a one-line change**, only the program's own generated C++ is compiled again. In debug that takes 0.37–0.43 s, 0.9–1.4 times as long as the C++ half, which compiles its whole file again; the parser and evaluator rebuilds faster than its C++. In release it takes 0.60–0.81 s, since link-time optimisation works on the whole program at the link, which is 0.2–0.5 s of that.
+
+Dazzle's own work, from parsing to emitting the C++, takes 90 to 100 ms on each of these programs. The largest part is the ownership check, ties included, which checks the standard library again in every build along with the program. The rest happens outside Dazzle:
+
+- **The C++ compiler and the link**, on the generated code, take 0.97–1.06 s with clang and 0.86–0.98 s with g++ in a release build from clean, the link 0.2–0.3 s and 0.35–0.5 s of it. A build from clean still compiles the whole standard library; one compiled copy shared by every project is what is left ([T-0182](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0182-one-compiled-standard-library-shared-by.md)).
 - **Importing `stdlib.h`** with libclang takes about 85 ms in this run (380 ms in the first, with clang 23's libclang). The standard library uses it for its heap allocator, so every program pays this, in every build ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)).
 
-Both are fixable without changing the language. As they are fixed, this table should show it.
+Neither Dazzle's own phases nor that import is kept from one build to the next, so in a debug rebuild they are about 175 ms, over 40% of it.
+
+The targets for 0.2 are a debug rebuild after a one-line change in under 0.5 s, met by all three programs, and a release build from clean within twice the C++ half's time, not met yet ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)).
 </Aside>
 
 ## Every run
