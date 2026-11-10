@@ -1,0 +1,628 @@
+{
+	"date": "2026-11-09",
+	"time": "20:19",
+	"commit": "6971727",
+	"summary": "One compiled standard library for every project (T-0182), the LTO fallback remembered (T-0183), imported headers kept on disk (T-0101), objects judged by size and time (T-0186), generic instance bodies defined once rather than in every header (T-0185), and g++ given an inline function's budget (T-0190). A build from clean now costs what a one-line change does: 0.31-0.45 s in debug, against 0.28-0.47 s for C++, and in release 1.25-1.9x the C++ build, from 2.2-2.9x. Importing stdlib.h falls from 85 ms to 2 ms. With g++ every program runs faster: A* search 0.83x C++, the word count 0.86x.",
+	"flags": "-O2 -flto=auto",
+	"machine": {
+		"cpu": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+		"cores": 16,
+		"os": "Linux-6.12.115+deb13.1-amd64-x86_64-with-glibc2.41",
+		"commit": "6971727",
+		"load_before": 0.29,
+		"compilers": {
+			"clang++": "Debian clang version 19.1.7 (3+b1)",
+			"g++": "g++ (Debian 14.2.0-19) 14.2.0"
+		},
+		"load_after": 1.02
+	},
+	"mode": "release",
+	"results": [
+		{
+			"program": "astar",
+			"cxx": "clang++",
+			"checksum": "353809710345082361",
+			"dazzle": {
+				"median": 0.31750900000000004,
+				"min": 0.314045,
+				"runs": 10,
+				"peak_kib": 9664
+			},
+			"cpp": {
+				"median": 0.4138505,
+				"min": 0.412034,
+				"runs": 10,
+				"peak_kib": 12940
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.6980731839994405,
+				"dazzle_frontend": 0.0989,
+				"phases": {
+					"manifests": 0.0006,
+					"C and C++ headers": 0.002,
+					"lex and parse": 0.0083,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.014,
+					"ownership": 0.04,
+					"placement": 0.0094,
+					"instantiate generics": 0.0046,
+					"emit C++": 0.020300000000000002,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.354,
+					"link": 0.21769999999999998
+				},
+				"cpp": 0.4560374530010449
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.6999699440002587,
+				"dazzle_frontend": 0.09770000000000001,
+				"phases": {
+					"manifests": 0.0003,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0083,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.014199999999999999,
+					"ownership": 0.039200000000000006,
+					"placement": 0.0094,
+					"instantiate generics": 0.0046,
+					"emit C++": 0.02,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.3573,
+					"link": 0.21880000000000002
+				},
+				"cpp": 0.45627669600071386
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.40582787600033043,
+				"dazzle_frontend": 0.0976,
+				"phases": {
+					"manifests": 0.0007,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.008,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0135,
+					"ownership": 0.0391,
+					"placement": 0.0095,
+					"instantiate generics": 0.0044,
+					"emit C++": 0.0207,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.24209999999999998,
+					"link": 0.054799999999999995
+				},
+				"cpp": 0.3198005149988603
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.4022964889991272,
+				"dazzle_frontend": 0.0969,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0078,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.0135,
+					"ownership": 0.039200000000000006,
+					"placement": 0.0095,
+					"instantiate generics": 0.0046,
+					"emit C++": 0.020300000000000002,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.24109999999999998,
+					"link": 0.053700000000000005
+				},
+				"cpp": 0.31574347999958263
+			}
+		},
+		{
+			"program": "astar",
+			"cxx": "g++",
+			"checksum": "353809710345082361",
+			"dazzle": {
+				"median": 0.3298135,
+				"min": 0.328457,
+				"runs": 10,
+				"peak_kib": 9664
+			},
+			"cpp": {
+				"median": 0.39639800000000003,
+				"min": 0.39509,
+				"runs": 10,
+				"peak_kib": 12960
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.7513893140003347,
+				"dazzle_frontend": 0.0987,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0087,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.013800000000000002,
+					"ownership": 0.0395,
+					"placement": 0.0096,
+					"instantiate generics": 0.0046,
+					"emit C++": 0.020399999999999998,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.22540000000000002,
+					"link": 0.4132
+				},
+				"cpp": 0.3865666729998338
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.751623207999728,
+				"dazzle_frontend": 0.0979,
+				"phases": {
+					"manifests": 0.0005,
+					"C and C++ headers": 0.0016,
+					"lex and parse": 0.0081,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.013699999999999999,
+					"ownership": 0.0399,
+					"placement": 0.0095,
+					"instantiate generics": 0.0045,
+					"emit C++": 0.02,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.22640000000000002,
+					"link": 0.4161
+				},
+				"cpp": 0.3862570639994374
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.4543524629989406,
+				"dazzle_frontend": 0.0987,
+				"phases": {
+					"manifests": 0.0007,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0078,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0146,
+					"ownership": 0.0394,
+					"placement": 0.0095,
+					"instantiate generics": 0.0044,
+					"emit C++": 0.0206,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.2999,
+					"link": 0.0427
+				},
+				"cpp": 0.31614840700058267
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.4526236849997076,
+				"dazzle_frontend": 0.1,
+				"phases": {
+					"manifests": 0.0006,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0088,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.014,
+					"ownership": 0.040600000000000004,
+					"placement": 0.0096,
+					"instantiate generics": 0.0045,
+					"emit C++": 0.0202,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.2994,
+					"link": 0.0427
+				},
+				"cpp": 0.3168164100006834
+			}
+		},
+		{
+			"program": "expr",
+			"cxx": "clang++",
+			"checksum": "10250790211639376999",
+			"dazzle": {
+				"median": 0.1572345,
+				"min": 0.155605,
+				"runs": 10,
+				"peak_kib": 144356
+			},
+			"cpp": {
+				"median": 0.1340695,
+				"min": 0.132824,
+				"runs": 10,
+				"peak_kib": 153704
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.7110748070008412,
+				"dazzle_frontend": 0.089,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0081,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.013800000000000002,
+					"ownership": 0.0359,
+					"placement": 0.0078,
+					"instantiate generics": 0.0035,
+					"emit C++": 0.0178,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.29660000000000003,
+					"link": 0.2984
+				},
+				"cpp": 0.5721655770012148
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.7157529379983316,
+				"dazzle_frontend": 0.0889,
+				"phases": {
+					"manifests": 0.0003,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0079,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.014,
+					"ownership": 0.0359,
+					"placement": 0.0078,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0177,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.29769999999999996,
+					"link": 0.30110000000000003
+				},
+				"cpp": 0.5716359090001788
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.3469880419997935,
+				"dazzle_frontend": 0.08900000000000001,
+				"phases": {
+					"manifests": 0.0003,
+					"C and C++ headers": 0.0014,
+					"lex and parse": 0.0083,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0135,
+					"ownership": 0.0359,
+					"placement": 0.0077,
+					"instantiate generics": 0.0035,
+					"emit C++": 0.0181,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.19069999999999998,
+					"link": 0.055600000000000004
+				},
+				"cpp": 0.4269867580005666
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.3479733420008415,
+				"dazzle_frontend": 0.0887,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0019,
+					"lex and parse": 0.0079,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0135,
+					"ownership": 0.0359,
+					"placement": 0.0078,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0179,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1941,
+					"link": 0.054700000000000006
+				},
+				"cpp": 0.4268072069990012
+			}
+		},
+		{
+			"program": "expr",
+			"cxx": "g++",
+			"checksum": "10250790211639376999",
+			"dazzle": {
+				"median": 0.151772,
+				"min": 0.150915,
+				"runs": 10,
+				"peak_kib": 144164
+			},
+			"cpp": {
+				"median": 0.146946,
+				"min": 0.145037,
+				"runs": 10,
+				"peak_kib": 154220
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.8772589550007979,
+				"dazzle_frontend": 0.0894,
+				"phases": {
+					"manifests": 0.0003,
+					"C and C++ headers": 0.0014,
+					"lex and parse": 0.008,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.014,
+					"ownership": 0.0361,
+					"placement": 0.0077,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.018,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.18130000000000002,
+					"link": 0.5927
+				},
+				"cpp": 0.5092466890000651
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.8748478959987551,
+				"dazzle_frontend": 0.0905,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0083,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0144,
+					"ownership": 0.0367,
+					"placement": 0.0077,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0177,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1815,
+					"link": 0.5931000000000001
+				},
+				"cpp": 0.5075399889992696
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.3791523429990775,
+				"dazzle_frontend": 0.091,
+				"phases": {
+					"manifests": 0.0007,
+					"C and C++ headers": 0.0018,
+					"lex and parse": 0.008400000000000001,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0144,
+					"ownership": 0.0362,
+					"placement": 0.0078,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0182,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.233,
+					"link": 0.0443
+				},
+				"cpp": 0.4681276940009411
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.3766868450002221,
+				"dazzle_frontend": 0.09029999999999999,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.008,
+					"#if and macros": 0.0006,
+					"resolve names": 0.0011,
+					"type check": 0.0144,
+					"ownership": 0.0365,
+					"placement": 0.0078,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0179,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.2334,
+					"link": 0.0432
+				},
+				"cpp": 0.46889418700084207
+			}
+		},
+		{
+			"program": "words",
+			"cxx": "clang++",
+			"checksum": "18012059585114795422",
+			"dazzle": {
+				"median": 0.139789,
+				"min": 0.137428,
+				"runs": 10,
+				"peak_kib": 38892
+			},
+			"cpp": {
+				"median": 0.1547245,
+				"min": 0.153185,
+				"runs": 10,
+				"peak_kib": 33084
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.6027331430013874,
+				"dazzle_frontend": 0.0887,
+				"phases": {
+					"manifests": 0.0005,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.008,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.0134,
+					"ownership": 0.0361,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0173,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.2258,
+					"link": 0.262
+				},
+				"cpp": 0.4256743780006218
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.6043803709999338,
+				"dazzle_frontend": 0.0887,
+				"phases": {
+					"manifests": 0.0005,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.008,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.013300000000000001,
+					"ownership": 0.0362,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0037,
+					"emit C++": 0.0172,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.2275,
+					"link": 0.2612
+				},
+				"cpp": 0.42820123999990756
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.3114215650002734,
+				"dazzle_frontend": 0.0891,
+				"phases": {
+					"manifests": 0.0007,
+					"C and C++ headers": 0.0018,
+					"lex and parse": 0.0078,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.0134,
+					"ownership": 0.0362,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0176,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1591,
+					"link": 0.053899999999999997
+				},
+				"cpp": 0.28711061499961943
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.313294429999587,
+				"dazzle_frontend": 0.0886,
+				"phases": {
+					"manifests": 0.0007,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0077,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.0132,
+					"ownership": 0.0361,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0037,
+					"emit C++": 0.0174,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.16169999999999998,
+					"link": 0.0536
+				},
+				"cpp": 0.28536809100114624
+			}
+		},
+		{
+			"program": "words",
+			"cxx": "g++",
+			"checksum": "18012059585114795422",
+			"dazzle": {
+				"median": 0.1427275,
+				"min": 0.142234,
+				"runs": 10,
+				"peak_kib": 38636
+			},
+			"cpp": {
+				"median": 0.165905,
+				"min": 0.164668,
+				"runs": 10,
+				"peak_kib": 33128
+			},
+			"build": {
+				"builds": 3,
+				"dazzle": 0.7990778140010661,
+				"dazzle_frontend": 0.0884,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0018,
+					"lex and parse": 0.0077,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.013300000000000001,
+					"ownership": 0.0361,
+					"placement": 0.0083,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0174,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.15130000000000002,
+					"link": 0.548
+				},
+				"cpp": 0.4213228299995535
+			},
+			"rebuild": {
+				"builds": 3,
+				"dazzle": 0.7985101169997506,
+				"dazzle_frontend": 0.08929999999999999,
+				"phases": {
+					"manifests": 0.0006,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0086,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.0136,
+					"ownership": 0.0358,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0037,
+					"emit C++": 0.0172,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1512,
+					"link": 0.5464
+				},
+				"cpp": 0.4193811450004432
+			},
+			"debug_build": {
+				"builds": 3,
+				"dazzle": 0.33509630099979404,
+				"dazzle_frontend": 0.09029999999999999,
+				"phases": {
+					"manifests": 0.0003,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.008199999999999999,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.013900000000000001,
+					"ownership": 0.036899999999999995,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0037,
+					"emit C++": 0.0175,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1901,
+					"link": 0.0442
+				},
+				"cpp": 0.2753421699999308
+			},
+			"debug_rebuild": {
+				"builds": 3,
+				"dazzle": 0.3309170200009248,
+				"dazzle_frontend": 0.0889,
+				"phases": {
+					"manifests": 0.0004,
+					"C and C++ headers": 0.0015,
+					"lex and parse": 0.0077,
+					"#if and macros": 0.0006,
+					"resolve names": 0.001,
+					"type check": 0.014,
+					"ownership": 0.0362,
+					"placement": 0.008199999999999999,
+					"instantiate generics": 0.0036,
+					"emit C++": 0.0172,
+					"C and C++ libraries": 0.0001,
+					"C++ compiler": 0.1899,
+					"link": 0.0423
+				},
+				"cpp": 0.2776272680002876
+			}
+		}
+	]
+}
