@@ -1,4 +1,5 @@
 ---
+pagefind: false
 title: Dazzle vs C++
 description: Dazzle compared with C++ for C++ programmers. What changes (three special members, no exceptions, definition-checked generics, manifests instead of headers) and what stays, since Dazzle compiles to C++17.
 ---

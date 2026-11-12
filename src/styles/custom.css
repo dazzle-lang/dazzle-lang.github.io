@@ -17,71 +17,31 @@
 	width: auto;
 }
 
-/* The landing page's code samples are the pitch, so give them room. */
-.hero + .sl-markdown-content .expressive-code {
-	margin-block: 1.5rem;
-}
-
-/* The landing page's table of bugs: what Dazzle does, highlighted in the accent colour. */
-.dz-bugs table {
-	width: 100%;
-	display: table;
-	margin-block: 1rem;
-}
-.dz-bugs td:nth-child(2) {
-	color: var(--sl-color-gray-3);
-}
-.dz-bugs .ok {
-	font-weight: 600;
-	color: var(--sl-color-accent-high);
-	white-space: nowrap;
-}
-.dz-bugs .ok::before {
-	content: '✓ ';
-	color: var(--sl-color-accent);
-}
-
-/* The front page's speed table: Dazzle's time as a multiple of C++'s, ahead in bold. */
-.dz-speed table {
-	width: 100%;
-	display: table;
-	margin-block: 1rem;
-}
-.dz-speed th:first-child {
-	text-align: start;
-}
-.dz-speed td:not(:first-child) {
-	font-variant-numeric: tabular-nums;
-	white-space: nowrap;
-}
-.dz-speed b {
-	color: var(--sl-color-accent-high);
-}
-
-/* Diagnostics are wide (a help line can run past a hundred columns), so they stack. */
-.dz-pair {
+.home-topics {
 	display: grid;
-	gap: 1rem;
-}
-.dz-pair > * {
-	margin: 0 !important;
+	gap: 1.25rem;
+	margin-block: 1.25rem 0;
 }
 
-/* The landing page's hero has no image, so its copy takes the whole width: Starlight keeps
-   a column for an image and caps every line at 50ch, which broke the title into lines of
-   two or three words. */
-@media (min-width: 50rem) {
-	.hero:not(:has(> img, > .hero-html)) {
-		grid-template-columns: 100%;
+.home-topics > * {
+	min-width: 0;
+	margin-block: 0;
+}
+
+.home-topics > section {
+	border-block-start: 1px solid var(--sl-color-gray-5);
+	padding-block-start: 0.75rem;
+}
+
+.home-topics h3 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+
+@media (min-width: 60rem) {
+	.home-topics {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
-}
-.hero .copy > * {
-	max-width: 62ch;
-}
-.hero h1 {
-	font-size: clamp(2rem, 1rem + 3vw, 3.4rem);
-	line-height: 1.1;
-	letter-spacing: -0.01em;
 }
 
 /* The roadmap's status badges: one word each, never broken across lines. */

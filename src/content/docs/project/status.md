@@ -7,7 +7,7 @@ description: The status of the Dazzle programming language. What is done, what i
 **Dazzle 0.1** was released on 4 November 2026. The language is young and **still changes**. Every change to it is a revision row in the [changelog](/spec/21-changelog/). Next is **0.2**: [the road to 0.2](/project/roadmap/) has the plan and how far along it is.
 :::
 
-Dazzle compiles and runs programs with no undefined behaviour outside `unsafe`, about as fast as the same programs in C++. It places memory itself, calls C and C++ libraries built from source, has a language server, and already carries a complete game and a real-time 3D scene. It is young: the standard library is still growing, and the editor still lacks some code actions and incremental analysis. The specification is revised rather than versioned, and each compiler release (`v0.1.0`, `v0.1.1`, …) says which revision it carries.
+Dazzle specifies defined behaviour for safe code on one thread. The compiler places allocations, uses C and C++ libraries built from source, and has a language server. The examples include a complete game and a real-time 3D scene. It is young: the standard library is still growing, and the editor still lacks some code actions and incremental analysis. The specification is revised rather than versioned, and each compiler release (`v0.1.0`, `v0.1.1`, …) says which revision it carries.
 
 ## What you can build today
 
@@ -15,7 +15,7 @@ The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) inclu
 
 ## Next: 0.2
 
-Faster builds, `BinaryHeap`, `Deque` and `BitSet` in the [standard library](/tour/standard-library/), more of C++ imported (a namespace as a module of its own, variadic functions), and new benchmarks, an ECS against C++ and Rust among them. Dear ImGui called from Dazzle is already done. [The road to 0.2](/project/roadmap/) has every item and how far along it is.
+The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Remaining work includes code generation and tooling fixes, `BinaryHeap`, `Deque` and `BitSet`, more C++ imports, and new benchmarks. [The road to 0.2](/project/roadmap/) tracks the work.
 
 ## Later
 

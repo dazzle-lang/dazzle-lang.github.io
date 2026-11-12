@@ -7,6 +7,7 @@ import { snippet as load } from './snippets.js';
 
 interface Props {
 	snippet?: string;
+	captureKind?: 'dazzle' | 'placements' | 'missingSend' | 'fixedSend';
 	command?: string;
 	output?: string;
 	exit?: number;
@@ -18,9 +19,10 @@ const props = Astro.props;
 let { command, output, exit } = props;
 if (props.snippet) {
 	const { capture } = load(props.snippet);
-	command ??= capture.dazzle.command;
-	output ??= capture.dazzle.output;
-	exit ??= capture.dazzle.exit;
+	const result = capture[props.captureKind ?? 'dazzle'];
+	command ??= result.command;
+	output ??= result.output;
+	exit ??= result.exit;
 }
 const body = ansiToHtml((output ?? '').replace(/\n+$/, ''));
 // A failed `dz check` says so itself; a program that crashed does not, so its status is shown.
@@ -33,7 +35,7 @@ const status =
 		: null;
 ---
 
-<figure class:list={['dz-terminal', { compact: props.compact }]} aria-label={props.title ?? 'Terminal output'}>
+<figure class:list={['dz-terminal', { compact: props.compact, 'wrap-output': props.captureKind === 'placements' }]} aria-label={props.title ?? 'Terminal output'}>
 	<div class="bar" aria-hidden="true">
 		<span class="dot"></span><span class="dot"></span><span class="dot"></span>
 		{props.title && <span class="title">{props.title}</span>}
@@ -104,6 +106,10 @@ const status =
 	}
 	.compact pre {
 		font-size: 0.74rem;
+	}
+	.wrap-output pre {
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 	code {
 		background: transparent;

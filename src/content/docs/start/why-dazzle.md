@@ -1,77 +1,43 @@
 ---
 title: Why Dazzle
-description: Why Dazzle exists, the idea behind it, why it compiles to C++ instead of bringing its own toolchain, what safe code promises, the principles that shape it, and what it deliberately does not try to be.
+description: How Dazzle combines checked reference validity, automatic memory placement, and direct use of C and C++ libraries.
 ---
 
-C++ is chosen for control: predictable performance, deterministic destruction, no garbage collector, and every C and C++ library ever written. What it costs is forty years of accumulated syntax, undefined behaviour, the rule of five, headers, exceptions most projects turn off, and template errors that point into code nobody wrote.
+Dazzle is a systems language for code where you care when memory is allocated and released. It checks when references can become invalid and places allocations in scope regions when it can prove they will stay valid there. The region’s storage is reclaimed at scope exit, so ordinary code can use it without passing an allocator or waiting for a garbage collector. [See how two calls put strings in different regions](/tour/memory-placement/).
 
-The usual answer is a smaller language. C, and successors such as Odin, give back the clarity, and take away what a large codebase is built from: RAII, encapsulation the compiler enforces, and layers of abstraction that hold up as the code grows. Being small is not the goal, so Dazzle is not small.
-
-**Dazzle is an upgrade of C++: safe, fast, and fluent in C++.** It keeps the machine model and the abstractions, and changes the parts that make C++ hard:
-
-- **No undefined behaviour in safe code**, without a borrow checker or lifetime annotations.
-- **As fast as the C++ you would write**: whole programs written idiomatically in both languages take 0.77 to 1.17 times as long in Dazzle ([benchmarks](/project/benchmarks/)).
-- **No allocator to pass around**: the compiler decides where each value's memory comes from, in a scope's region whenever it can prove that safe.
-- **RAII in three members**, a constructor, `drop` and `copy`, with moves and assignments written by the compiler.
-- **Errors as values**, with one `or` clause to handle them, instead of exceptions.
-- **Generics checked where they are written**, so an error is reported in your code, once.
-- **Encapsulation the compiler enforces**, private by default.
-- **Modules without headers**, declared once in a manifest.
-- **C and C++ libraries used from source**, with no bindings to write.
-
-Like Carbon, it is meant to replace C++ in the projects that use it. Unlike Carbon, it does not bring a toolchain of its own: it compiles to standard C++17.
+The same model works across calls. A helper can push a string into a caller’s list and build its text directly in that list’s region. When a function hands ownership to somewhere longer-lived, its signature tells the compiler what it must account for at the allocation site. Moves preserve the existing allocation. [Follow a receipt after checkout](/tour/memory-placement/#when-the-receipt-leaves-checkout).
 
 ## Why compile to C++?
 
-A successor to C++ has to work where C++ works: on every desktop, console and embedded target, with the vendor's compiler, inside build systems and codebases that already exist. Building a new LLVM-based toolchain means re-earning all of that, target by target. Compiling to C++ gets it on the first day.
-
-- **Any C++17 compiler builds it**: clang++, g++, or a console SDK's or chip vendor's compiler. The output needs no exceptions and no RTTI, because console and embedded targets routinely turn both off.
-- **Nothing underneath changes.** The C++ compiler's optimiser, debugger, profiler, sanitizers and build flags all still apply. `#line` directives map the output back to your `.dz` files, so the debugger steps through Dazzle, not through generated code.
-- **It drops into an existing C++ project.** A Dazzle module is C++ to the code around it, so a codebase can adopt it one module at a time without changing its compiler or its build.
-- **C++ does the jobs it already does well**, once per construct: destructors and their order, copy constructors, temporaries, struct layout, overload resolution in imported headers. Dazzle does the jobs C++ does badly, such as checking generics, itself.
-
-The generated C++ is not meant to be read, any more than an object file is. It is full of `#line` directives, temporaries and helper functions. What you read and debug is the Dazzle source.
+Dazzle emits standard C++17. The C++ compiler does optimization and code generation. Debuggers and profilers can map generated code back to the `.dz` source, and Dazzle code can use existing C and C++ libraries through their headers. Library recipes can build the sources or use the library’s own CMake project. [C and C++ interop](/tour/cpp-interop/)
 
 ## Safe, without refusing aliasing
 
-On one thread, Dazzle makes Rust's promise: **a program with no `unsafe` has no undefined behaviour.** It reads and writes no freed memory, uses no union payload under another variant, and reaches nothing C++ leaves undefined.
-
-It keeps that promise without Rust's rule that memory is either shared or changed, never both. In Dazzle it may be both, which is how single-threaded code is usually written: a `&mut` and a `&` may point at the same value, a pointer into an array you also change is fine, and no struct carries a lifetime parameter. What memory may not be is freed, or given another variant, while something else can still see it. Each function's signature says which memory a call may end, with a `kills` clause, and the compiler checks every call against it.
-
-The promise ends at `unsafe` blocks, at the C and C++ a program calls, and at threads, which Dazzle does not have yet. [Safety](/tour/safety/) has each rule and each edge.
+Dazzle specifies defined behavior for safe code on one thread. A reference to an order number stays valid while you update that order’s total. Adding an order can move the queue’s backing array. Its `push` method tells the compiler which references that operation can invalidate. [Reference safety](/tour/safety/)
 
 ## The principles
 
-In priority order. When two conflict, the earlier one wins.
+- **Make costs visible.** The compiler reports where allocations go and why. Destruction follows scope and ownership.
+- **Make code straightforward.** RAII uses a constructor, `copy`, and `drop`. One `or` clause handles failure or absence. Generic errors point to the generic definition.
+- **Keep native libraries available.** Dazzle can use existing C and C++ APIs, including C++ classes and overloads, directly.
 
-1. **You can always see the machine.** No hidden allocations, no hidden control flow, no garbage collector, no runtime you did not ask for. If a line of Dazzle allocates, it says so.
-2. **Destruction is deterministic and automatic.** RAII, with exactly three special members instead of C++'s five and a half: a constructor, `copy` and `drop`. [More on ownership](/tour/ownership/).
-3. **Encapsulation is enforced, not conventional.** Private is the default. The compiler, not a naming convention, stops one layer reaching into another's internals.
-4. **Errors point at your code.** Generics are checked where they are written and monomorphized by Dazzle, so a mistake in a generic function is reported in *that function*, not in a 400-line template instantiation trace.
-5. **The escape hatch is a door, not a hole.** C++ interop is a first-class feature with a real header importer, not an `extern "C"` afterthought. [More on interop](/tour/cpp-interop/).
-6. **Compile fast.** Someone working in a large native codebase recompiles hundreds of times a day. A design that trades compile time for cleverness loses.
+<span id="what-it-is-not"></span>
 
-## What it is not
+## Current boundaries
 
-- **Not Rust.** Safe code has no undefined behaviour on one thread, but through [ties and `kills` clauses](/tour/ownership/#references-pointers-and-handles) rather than lifetimes and an exclusive `&mut`. Threads come after the first release, and how they share memory is [still open](/decisions/d-0011-concurrency/).
-- **No garbage collector, green threads or implicit runtime.**
-- **Not source-compatible with C++.** Dazzle *calls* C++ and compiles *to* it; it is not a superset of it.
-- **Not a minimal language.** Large codebases need abstraction, so Dazzle has traits, generics, single inheritance, tagged unions, macros and reflection. It keeps each of them visible at the place it acts.
+The safety guarantee applies to single-threaded Dazzle code outside `unsafe`. Foreign code runs under its own language’s rules. Dazzle has its own source syntax and targets Windows, Linux, and macOS today. [Release status and roadmap](/project/status/)
 
 ## Who it is for
 
-Anyone who writes C++ today because nothing else gives them the control:
-
-- **Game and engine programmers.** This is the furthest along: the repository's [Breakout example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) is a game with no C++ of its own, and [`sdl3`](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3) is a real-time 3D scene on SDL3, built by SDL's own CMake.
-- **Embedded and firmware developers.** No runtime, no garbage collector, deterministic destruction, and output that a vendor's toolchain accepts. Freestanding targets (no heap, no operating system) are on the [roadmap](/project/status/).
-- **Tool and application authors**, where startup time and memory use matter.
-- **Teams with an existing C++ codebase**, who can adopt Dazzle one module at a time.
+- **Game and engine developers** can explore [Breakout](https://github.com/dazzle-lang/Dazzle/tree/master/examples/breakout) on raylib or the [SDL3 scene](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3).
+- **Native tool authors** can use deterministic destruction, use existing libraries, and inspect allocation decisions in source.
+- **Teams with existing C++ code** can use the same C++ compiler and libraries while evaluating Dazzle for a module.
+- **Embedded developers** can follow [the roadmap](/project/roadmap/) for freestanding targets.
 
 ## Designed to be learned from the compiler
 
-No model has Dazzle in its training data, and no new programmer has it in their head, so the compiler has to teach. Every diagnostic has a stable code, points at your code, and nearly always ends with a `help:` line that says what to write instead and which section of the [specification](/spec/) explains why. `dz explain DZ0510` prints the rule with a wrong and a right program. See [Tooling](/tour/tooling/).
+A diagnostic has a stable code and can carry a concrete edit. Use `dz explain` for the rule and a corrected example. Use `dz fix` to apply the compiler’s available edits. `dz check --format=json` exposes the same diagnostics and edits to scripts and coding agents. [Try a diagnostic and its fix](/tour/tooling/#fix-a-missing-transfer-clause).
 
 ## Next
 
-- [Install `dz`](/start/install/) and run a program.
-- See how Dazzle compares with [Carbon and cpp2](/compare/carbon-cpp2/), [C++](/compare/cpp/), [Rust](/compare/rust/) and [Zig](/compare/zig/).
+[Start the tour](/tour/overview/) · [Install Dazzle](/start/install/) · [Explore the benchmarks](/project/benchmarks/)

@@ -1,13 +1,27 @@
 ---
-title: Safety without a borrow checker
-description: What Dazzle promises about code without unsafe. No undefined behaviour on one thread, kept by ties and kills clauses, checked moves, defined arithmetic and bounds checks instead of Rust's aliasing rule, and where the promise ends.
+title: Reference safety
+description: Follow a reference into a queue of orders and see how Dazzle catches invalid references at compile time.
 ---
 
 import Terminal from '../../../components/Terminal.astro';
+import ProofExample from '../../../components/ProofExample.astro';
 
-Dazzle makes one promise about a program with no `unsafe` in it: **on one thread, it has no undefined behaviour.** It reads and writes no freed memory, uses no union payload under another variant, and reaches nothing C++ leaves undefined.
+Dazzle’s specification requires **defined behaviour for safe code on one thread**. The rules cover access to memory, union payloads, arithmetic, and other operations. [Open compiler bugs](/project/roadmap/#1-bugs) tracks known gaps in the implementation.
 
-Rust makes the same promise by refusing aliasing: memory is either shared or changed, never both. Dazzle does not refuse it. A `&mut` and a `&` may point at the same value, a pointer into an array you also change is fine, and no struct carries a lifetime parameter, because that is how single-threaded C++ is written and it is not where its bugs come from. What memory may not be is **freed, or given another variant, while something else can still see it.**
+## A reference to an order number
+
+`List<Order>()` starts an empty queue. The first `push` allocates storage for its orders. `&orders[0].number` takes a reference to the first order’s number. Updating the total leaves that number in place, so you can still read it.
+
+<ProofExample name="order-reference" />
+
+A second `push` may move the list’s backing array to make room for the next order. `push` declares that it can invalidate references into the array. Move the call before `println!` and Dazzle reports that `number` is no longer valid.
+
+<details>
+<summary>See the list grow and the diagnostic</summary>
+
+<ProofExample name="stale-reference" />
+
+</details>
 
 ## The rules that keep it
 
@@ -152,11 +166,13 @@ The compiler's own test suite builds every test program under AddressSanitizer a
 
 ## Why it works this way
 
-**Why not a borrow checker?** Rust's rule buys more than one thread needs. On one thread, a `&mut` and a `&` to the same value cause no bug by themselves: the bug is memory freed or moved while something still points into it. Refusing the aliasing rules out that bug and also most of how games and engines are written, with parents, handles and pointers into arrays the same code changes. Dazzle names the event that causes the bug, a call that kills memory, and checks that instead.
+On one thread, several references can point into the same value. The compiler follows what each reference points into and checks the moves, drops, writes, and calls that can invalidate it.
 
 **Why in the signature?** A `kills` clause is where a reader looks first, and it lets the compiler check each function on its own: a call is checked against its callee's signature, never its body, so checking stays fast and errors stay at the line that has them.
 
 **The cost:** a function that may move memory says so, and every caller up the chain names the same kill. `dz fix` and the editor write those clauses. And threads are not covered yet.
+
+[Continue to automatic memory placement](/tour/memory-placement/) to see how the compiler also checks where a value can safely live.
 
 ## In the specification
 

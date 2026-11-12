@@ -23,7 +23,8 @@ for (const [url] of pages) {
 	const html = read(path.join(DIST, url, 'index.html'), true) ?? '';
 	for (const [, href] of html.matchAll(/<a\s[^>]*href="([^"]+)"/g)) {
 		if (!href.startsWith('/') || href.startsWith('//')) continue;
-		const [p, hash] = href.split('#');
+		const [address, hash] = href.split('#');
+		const [p] = address.split('?');
 		const target = p.endsWith('/') ? p : `${p}/`;
 		if (/\.[a-z0-9]+\/$/i.test(target) && fs.existsSync(path.join(DIST, p))) continue; // a file
 		const ids = pages.get(target);

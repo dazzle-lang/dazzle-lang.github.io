@@ -1,0 +1,18 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "55f65d4",
+		"g++": "g++ (Rev7, Built by MSYS2 project) 13.1.0",
+		"clang++": "clang version 21.1.8"
+	},
+	"dazzle": {
+		"command": "dz run --release .",
+		"exit": 0,
+		"output": "Your order is ready for pickup.\r\nYour order is ready for pickup.\r\n"
+	},
+	"placements": {
+		"command": "dz placements .",
+		"exit": 0,
+		"output": "src/main.dz:3:19: String  home: where `messages` lives\nsrc/main.dz:7:23: List<String>  region: `show_preview`\nsrc/main.dz:14:23: List<String>  region: `main`\n3 allocations, 2 in a region, 1 in a lent container's home\n"
+	}
+}

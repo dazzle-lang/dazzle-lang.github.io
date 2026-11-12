@@ -1,4 +1,5 @@
 ---
+pagefind: false
 title: Dazzle vs Carbon and cpp2
 description: Dazzle compared with the C++ successor languages Carbon and cpp2 (cppfront). Three ways to replace C++ while keeping its libraries, and what Dazzle offers that the others do not.
 ---

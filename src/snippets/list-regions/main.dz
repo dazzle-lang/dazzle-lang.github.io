@@ -1,0 +1,19 @@
+fn add_notice(messages: &mut List<String>) kills messages@items {
+    // Allocate the string’s text in the region of the list passed in.
+    messages.push(String("Your order is ready for pickup."))
+}
+
+fn show_preview() {
+    let mut preview = List<String>()
+    // The array and string both use show_preview’s region.
+    add_notice(&mut preview)
+    println!("{}", preview[0])
+} // Reclaim show_preview’s region.
+
+fn main() {
+    let mut notices = List<String>()
+    // The array and string both use main’s region.
+    add_notice(&mut notices)
+    show_preview()
+    println!("{}", notices[0]) // main’s region is still alive.
+} // Reclaim main’s region.

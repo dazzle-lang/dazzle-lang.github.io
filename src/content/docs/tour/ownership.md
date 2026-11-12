@@ -128,7 +128,7 @@ n += 1        // error[DZ0413]: `insert` kills `counts@items`, and `n` points in
 
 The compiler checks each clause against its function's body, both ways, and `dz fix` writes the clause a body needs. Aliasing stays legal: a `&mut` and a `&` to one value are fine, as long as nothing in between can move the memory.
 
-So use after move, double free, and a reference used after a call moved or freed what it points into are all compile-time errors. With the rest of the rules, they add up to a promise: a program with no `unsafe` has no undefined behaviour on one thread. [Safety](/tour/safety/) has every rule and where the promise ends, and [Dazzle compared with Rust](/compare/rust/) how this differs from a borrow checker.
+So use after move, double free, and a reference used after a call moved or freed what it points into are all compile-time errors. With the rest of the rules, they add up to a promise: a program with no `unsafe` has no undefined behaviour on one thread. [Safety](/tour/safety/) explains the rules and the limits of that guarantee.
 
 ## Why it works this way
 
@@ -190,6 +190,8 @@ fn update(&mut self, camera: &Camera) {
 ```
 
 Every build places memory this way; `DZ_REGIONS=0` builds the same program with every value on the heap, to compare against. `dz run --track-memory` records every allocation and reports leaks with the line that allocated them, plus double frees and mismatched frees. It costs nothing when it is off.
+
+See [how a helper builds strings in the region of a list it receives](/tour/memory-placement/) and how a `sends` clause affects placement when ownership moves.
 
 ## In the specification
 

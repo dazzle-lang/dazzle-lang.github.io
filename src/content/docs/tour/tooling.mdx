@@ -3,7 +3,9 @@ title: Tooling and error messages
 description: Dazzle's compiler is built to teach. Stable diagnostic codes with help lines, dz explain, dz fix, JSON output, a language server and VS Code extension, a formatter, and built-in tests and benchmarks.
 ---
 
-Dazzle is designed to be learned from the compiler. No model has Dazzle in its training data, and neither does a new programmer, so the compiler has to teach.
+import Terminal from "../../../components/Terminal.astro";
+
+Dazzle’s diagnostics point to the code, explain the rule, and can include the edit to make. The same information is available in the editor, in the terminal, and as JSON for scripts and coding agents.
 
 ## Diagnostics that say what to do
 
@@ -33,6 +35,18 @@ prints the rule behind a diagnostic, why the rule exists, and a wrong and a corr
 ## Errors you can apply
 
 A diagnostic can carry the exact edit that fixes it. In the editor it is a quick fix: fill a `switch`'s missing arms, or implement a trait method an `impl` left out. On the command line, `dz fix` applies every fix the compiler is certain of (`--dry-run` lists them), and `dz check --format=json` gives every diagnostic, with its fixes, as JSON for scripts and AI agents.
+
+## Fix a missing transfer clause
+
+Start with the [checkout example](/tour/memory-placement/#when-the-receipt-leaves-checkout). Remove `sends receipt to register` from `file_receipt`, then run `dz check .`. The compiler points to the move that gives the register ownership of the receipt.
+
+<Terminal snippet="receipt-transfer" captureKind="missingSend" title="Missing ownership transfer" compact />
+
+Run `dz explain DZ0421` to see the rule and a corrected example. Run `dz fix .` to add the clause back, then `dz check .` to verify the result.
+
+<Terminal snippet="receipt-transfer" captureKind="fixedSend" title="The compiler’s edit" compact />
+
+A script or coding agent can use `dz check --format=json .` to read the same diagnostic code, source spans, and available edits, then recheck the project after applying a fix.
 
 ## The language server and VS Code
 

@@ -1,38 +1,22 @@
 ---
 title: The tour
-description: A short tour of Dazzle, one idea per page. Errors as values, ownership and RAII, modules without headers, C and C++ libraries from source, macros, generics and traits, and the tooling.
+description: Learn Dazzle through working examples of reference safety, automatic memory placement, ownership, errors, C++ interop, and compiler tooling.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+Start with a small checkout example. You’ll keep a reference to an order number, follow two calls that place strings in different regions, and see what happens when its ownership moves.
 
-Each page of the tour covers one idea: what it looks like, why it works that way, and the part of the specification that defines it. You can read them in any order.
+1. [Reference safety](/tour/safety/) shows why a reference to an order number survives a total update and can become invalid when the queue grows.
+2. [Automatic memory placement](/tour/memory-placement/) shows how the same helper builds a string in the region of whichever list it receives.
+3. [Ownership and RAII](/tour/ownership/) explains destruction, copies, moves, and types that own resources.
+4. [Errors as values](/tour/errors/) handles failures, optionals, and nullable pointers with one `or` clause.
+5. [C and C++ interop](/tour/cpp-interop/) brings a native library into a Dazzle project from its own headers and build.
+6. [Compiler tooling](/tour/tooling/) uses a diagnostic to explain and repair a missing ownership transfer.
 
-<CardGrid>
-	<Card title="Errors as values" icon="warning">
-		`!->` on a signature marks a function that can fail, and one `or` clause handles the failure. The same clause handles an optional and a null pointer. An unhandled failure is a compile error. [Errors →](/tour/errors/)
-	</Card>
-	<Card title="RAII in three members" icon="puzzle">
-		A constructor, `drop` and `copy`. The compiler writes moves and assignments, a moved-from value is reset to its defaults, and the compiler chooses where memory comes from. [Ownership →](/tour/ownership/)
-	</Card>
-	<Card title="Safety without a borrow checker" icon="approve-check">
-		A program with no `unsafe` has no undefined behaviour on one thread. `kills` clauses catch a reference a call invalidated, arithmetic is defined, and aliasing stays legal. [Safety →](/tour/safety/)
-	</Card>
-	<Card title="Modules without headers" icon="list-format">
-		One manifest per module says what every file can name. There are no headers, no include order and no per-file import lists, and declaration order never matters. [Modules →](/tour/modules/)
-	</Card>
-	<Card title="C and C++ from source" icon="seti:c">
-		A short recipe builds the library, and libclang turns its header into a Dazzle module, with classes and overloaded methods included. [C++ interop →](/tour/cpp-interop/)
-	</Card>
-	<Card title="Macros the editor understands" icon="seti:config">
-		Macros are declarative and hygienic, and their expansions are written in Dazzle. The editor still completes and hovers inside an invocation. [Macros →](/tour/macros/)
-	</Card>
-	<Card title="Generics checked where they are written" icon="magnifier">
-		Bounds are checked at the definition, then Dazzle monomorphizes. Traits dispatch statically or through a fat pointer, and unions switch exhaustively. [Types and generics →](/tour/types-and-generics/)
-	</Card>
-	<Card title="A standard library in Dazzle" icon="open-book">
-		`List`, a SwissTable `HashMap`, `SlotMap`, a `String` that keeps short text in place, vectors and matrices, files, time and random numbers, none of them taking an allocator. [Standard library →](/tour/standard-library/)
-	</Card>
-	<Card title="Tooling from day one" icon="laptop">
-		There is a language server and a VS Code extension, plus `dz fmt`, `dz fix` and `dz explain`. Tests and benchmarks are written beside the code they cover. [Tooling →](/tour/tooling/)
-	</Card>
-</CardGrid>
+## More language topics
+
+- [Modules and imports](/tour/modules/)
+- [Types, generics, and traits](/tour/types-and-generics/)
+- [Macros](/tour/macros/)
+- [The standard library](/tour/standard-library/)
+
+[Open the first program in the playground](/playground/?example=order-reference) · [Read the language specification](/spec/)

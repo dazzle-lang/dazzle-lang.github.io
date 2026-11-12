@@ -124,4 +124,4 @@ fn clamp_keeps_values_in_range() {
 
 ## Next
 
-Take the tour, starting with [errors](/tour/errors/).
+Start the tour with [reference safety](/tour/safety/), then see [where the compiler places memory](/tour/memory-placement/).

@@ -11,6 +11,9 @@
 //   once as it is and once with `-Wall -Wextra`, then run. The capture keeps each
 //   compiler's warnings, and the program's output and exit status.
 //
+// The memory examples also record `dz placements`. The archive transfer records what
+// happens when its sends clause is removed and then restored with `dz fix`.
+//
 // Each result goes to `capture.json` beside the sources, with the compilers' versions. It is
 // checked in. `scripts/check-captures.mjs` (part of `npm run check`) re-runs the `dz check`
 // captures with the dz.wasm the sync builds, and fails if any no longer match.
@@ -19,13 +22,14 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { MANIFEST_TEXT } from './manifest.mjs';
+import { RECEIPT_SEND, MANIFEST_TEXT, SNIPPET_MODULE_NAME } from './manifest.mjs';
 
 const SITE = path.resolve(import.meta.dirname, '..');
 const SNIPPETS = path.join(SITE, 'src/snippets');
 const REPO = path.resolve(process.env.DAZZLE_REPO ?? path.join(SITE, '../Dazzle'));
 const DZ = path.resolve(process.env.DZ ?? path.join(REPO, 'target/release/dz'));
 const COMPILERS = ['g++', 'clang++'];
+const PLACEMENT_EXAMPLES = new Set(['order-reference', 'list-regions', 'receipt-transfer']);
 
 
 if (!fs.existsSync(DZ)) {
@@ -46,6 +50,10 @@ const versions = {
 	dazzle_commit: run('git', ['-C', REPO, 'rev-parse', '--short', 'HEAD']).stdout.trim(),
 	...Object.fromEntries(COMPILERS.map((c) => [c, firstLine(c)])),
 };
+
+function record(command, result) {
+	return { command, exit: result.code, output: result.stdout + result.stderr };
+}
 
 // Names on the command line record only those snippets; with none, every one is recorded.
 const only = process.argv.slice(2);
@@ -68,7 +76,7 @@ for (const name of fs.readdirSync(SNIPPETS).sort()) {
 	} else {
 		const built = run(DZ, ['build', '--release', '.'], { cwd: work, env });
 		if (built.code !== 0) throw new Error(`${name}: dz build failed\n${built.stderr}`);
-		const exe = path.join(work, 'build/bin', name);
+		const exe = path.join(work, 'build/bin', SNIPPET_MODULE_NAME(name) + (process.platform === 'win32' ? '.exe' : ''));
 		const ran = run(exe, [], { cwd: work });
 		dazzle = { command: 'dz run --release .', exit: ran.code, output: ran.stdout + ran.stderr };
 	}
@@ -91,6 +99,29 @@ for (const name of fs.readdirSync(SNIPPETS).sort()) {
 	}
 
 	const capture = { versions, dazzle, ...(cpp ? { cpp } : {}) };
+	if (PLACEMENT_EXAMPLES.has(name)) {
+		const placement = run(DZ, ['placements', '.'], { cwd: work, env });
+		if (placement.code !== 0) throw new Error(`${name}: dz placements failed\n${placement.stderr}`);
+		capture.placements = record('dz placements .', placement);
+	}
+	if (name === 'receipt-transfer') {
+		const file = path.join(work, 'src/main.dz');
+		const original = fs.readFileSync(file, 'utf8');
+		const broken = original.replace(RECEIPT_SEND, '');
+		if (original === broken) throw new Error('receipt-transfer: sends clause not found');
+		fs.writeFileSync(file, broken);
+		const missing = run(DZ, ['check', '.'], { cwd: work, env });
+		if (missing.code !== 1 || !missing.stderr.includes('DZ0421')) {
+			throw new Error(`receipt-transfer: expected DZ0421\n${missing.stderr}`);
+		}
+		capture.missingSend = record('dz check .', missing);
+		const fixed = run(DZ, ['fix', '.'], { cwd: work, env });
+		const after = run(DZ, ['check', '.'], { cwd: work, env });
+		if (fixed.code !== 0 || after.code !== 0 || !fs.readFileSync(file, 'utf8').includes(RECEIPT_SEND)) {
+			throw new Error(`receipt-transfer: dz fix did not restore the clause\n${fixed.stderr}${after.stderr}`);
+		}
+		capture.fixedSend = record('dz fix .', fixed);
+	}
 	fs.writeFileSync(path.join(dir, 'capture.json'), JSON.stringify(capture, null, '\t') + '\n');
 	fs.rmSync(work, { recursive: true, force: true });
 	console.log(`capture: ${name}: ${dazzle.command} -> exit ${dazzle.exit}`);

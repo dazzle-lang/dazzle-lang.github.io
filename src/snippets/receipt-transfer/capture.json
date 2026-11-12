@@ -1,0 +1,28 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "55f65d4",
+		"g++": "g++ (Rev7, Built by MSYS2 project) 13.1.0",
+		"clang++": "clang version 21.1.8"
+	},
+	"dazzle": {
+		"command": "dz run --release .",
+		"exit": 0,
+		"output": "42\r\n"
+	},
+	"placements": {
+		"command": "dz placements .",
+		"exit": 0,
+		"output": "src/main.dz:13:19: prepare_receipt  heap: passed to `file_receipt`\nsrc/main.dz:24:20: Receipt  region: `prepare_receipt`\nsrc/main.dz:25:12: Receipt  result: where `prepare_receipt`'s caller keeps it\n3 allocations, 1 in a region\n"
+	},
+	"missingSend": {
+		"command": "dz check .",
+		"exit": 1,
+		"output": "error[DZ0421]: `file_receipt` sends what `receipt` owns to `register`, and its `sends` clause does not say so\n  ┌─ src/main.dz:9:5\n  │\n9 │     register.receipt = move(receipt)\n  │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `receipt`'s memory goes to `register` here\n  │\n  = help: a caller places what it lends by this clause, so memory is where it ends up: the body needs `sends receipt to register` (D-0097)\n\n\n1 error emitted\n"
+	},
+	"fixedSend": {
+		"command": "dz fix .",
+		"exit": 0,
+		"output": "src/main.dz:9:5: DZ0421 add `sends receipt to register`\napplied 1 fix; 0 diagnostics not fixed — run `dz check` again, since a fix can uncover the next mistake\n"
+	}
+}

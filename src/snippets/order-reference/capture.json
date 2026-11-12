@@ -1,0 +1,18 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "55f65d4",
+		"g++": "g++ (Rev7, Built by MSYS2 project) 13.1.0",
+		"clang++": "clang version 21.1.8"
+	},
+	"dazzle": {
+		"command": "dz run --release .",
+		"exit": 0,
+		"output": "Order 17: 2500 cents\r\n"
+	},
+	"placements": {
+		"command": "dz placements .",
+		"exit": 0,
+		"output": "src/main.dz:7:22: List<Order>  region: `main`; drop skipped\n1 allocation, 1 in a region\n"
+	}
+}

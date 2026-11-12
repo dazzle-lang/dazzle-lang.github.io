@@ -17,6 +17,13 @@ import { COMPILERS, compileAndRun, shortLink } from './godbolt.js';
 
 /** Where the program being written is kept between visits, in this browser only. */
 const STORED = 'dazzle-playground-source';
+const sharedCode = location.hash.match(/^#code=([\w-]+)$/)?.[1];
+const previousExampleNames = new Map([
+	['neighboring-elements', 'order-reference'],
+	['frame-regions', 'list-regions'],
+	['receipt-regions', 'list-regions'],
+	['archive-transfer', 'receipt-transfer'],
+]);
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -34,8 +41,7 @@ const ui = {
 };
 
 // ---------------------------------------------------------------------------------------
-// The examples, every one a program the site holds to compiling (or, for the mistake, to
-// failing as shown).
+// The examples, including the programs displayed and captured on the homepage and tour.
 
 const examples = Object.entries(
 	import.meta.glob('./examples/*.dz', { query: '?raw', import: 'default', eager: true }),
@@ -48,6 +54,15 @@ const examples = Object.entries(
 		const label = slug.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
 		return { slug, label, text: text.replace(/\r\n?/g, '\n') };
 	});
+const proofSources = import.meta.glob(
+	'../snippets/{order-reference,stale-reference,list-regions,receipt-transfer}/main.dz',
+	{ query: '?raw', import: 'default', eager: true },
+);
+for (const [path, text] of Object.entries(proofSources)) {
+	const slug = path.split('/').at(-2);
+	const label = slug.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+	examples.push({ slug, label, text: text.replace(/\r\n?/g, '\n') });
+}
 for (const e of examples) ui.example.append(new Option(e.label, e.slug));
 for (const c of COMPILERS) ui.compiler.append(new Option(c.name, c.id));
 
@@ -344,6 +359,14 @@ function remember() {
 	} catch {}
 }
 function initialSource() {
+	// A shared-code fragment takes priority. A named preset starts in the editor without
+	// dispatching an edit, so merely visiting the link leaves the saved draft intact.
+	if (!sharedCode) {
+		const requested = new URLSearchParams(location.search).get('example');
+		const selected = previousExampleNames.get(requested) ?? requested;
+		const example = examples.find(({ slug }) => slug === selected);
+		if (example) return example.text;
+	}
 	try {
 		return localStorage.getItem(STORED) ?? examples[0].text;
 	} catch {
@@ -371,9 +394,8 @@ ui.run.onclick = run;
 ui.explorer.onclick = openExplorer;
 
 {
-	const shared = location.hash.match(/^#code=([\w-]+)$/);
-	if (shared) {
-		unpack(shared[1]).then(load, () => status('That link does not hold a program'));
+	if (sharedCode) {
+		unpack(sharedCode).then(load, () => status('That link does not hold a program'));
 	} else {
 		ui.example.value = examples.find((e) => e.text === source.state.doc.toString())?.slug ?? '';
 	}

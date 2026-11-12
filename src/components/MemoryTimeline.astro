@@ -1,0 +1,173 @@
+---
+type Cell = { name: string; action: string; state: 'starts' | 'live' | 'ends' };
+
+const caller = 'Heap';
+const helper = 'prepare_receipt region';
+
+const rows: { scope: string; event: string; code?: string; caller?: Cell; helper?: Cell }[] = [
+	{ scope: 'main → checkout', event: 'Checkout borrows the register.' },
+	{ scope: 'checkout → prepare_receipt', event: 'Make a receipt to file.', code: 'let receipt = prepare_receipt(40)' },
+	{ scope: 'prepare_receipt', event: 'Make the temporary estimate.', code: 'let estimate = Receipt(subtotal)', helper: { name: 'estimate', action: 'Allocated', state: 'starts' } },
+	{ scope: 'prepare_receipt', event: 'Build the returned receipt on the heap.', code: 'return Receipt(estimate.total() + 2)', caller: { name: 'receipt', action: 'Allocated', state: 'starts' }, helper: { name: 'estimate', action: 'Reclaimed on return', state: 'ends' } },
+	{ scope: 'checkout → file_receipt', event: 'Move ownership to the register.', code: 'file_receipt(register, move(receipt))', caller: { name: 'register.receipt', action: 'Same allocation', state: 'live' } },
+	{ scope: 'main', event: 'Read the filed receipt after checkout returns.', code: 'receipt.total()', caller: { name: 'register.receipt', action: 'Still available', state: 'live' } },
+	{ scope: 'main returns', event: 'The register and its receipt are dropped.', caller: { name: 'register.receipt', action: 'Freed', state: 'ends' } },
+];
+---
+
+<figure class="allocation-flow not-content">
+	<figcaption>Where the receipt lives during checkout</figcaption>
+	<div class="flow-head" aria-hidden="true">
+		<span>Execution order ↓</span>
+		<span>{helper}</span>
+		<span>{caller}</span>
+	</div>
+	<ol class="flow-steps" role="list">
+		{rows.map(({ scope, event, code, helper: helperCell, caller: callerCell }) => (
+			<li class="flow-step">
+				<div class="event">
+					<strong>{scope}</strong>
+					<span>{event}</span>
+					{code && <code>{code}</code>}
+				</div>
+				{[
+					{ home: helper, allocation: helperCell, lane: 'helper' },
+					{ home: caller, allocation: callerCell, lane: 'caller' },
+				].map(({ home, allocation, lane }) => (
+						<div class:list={['lane', lane, { empty: !allocation }]}>
+							{allocation && (
+								<div class:list={['allocation', allocation.state]}>
+									<span class="home">{home}</span>
+									<code>{allocation.name}</code>
+									<span class="action">{allocation.action}</span>
+								</div>
+							)}
+						</div>
+				))}
+			</li>
+		))}
+	</ol>
+</figure>
+
+<style>
+	.allocation-flow {
+		--flow-border: var(--sl-color-gray-5);
+		--helper-line: var(--sl-color-blue);
+		--caller-line: var(--sl-color-accent);
+		container-type: inline-size;
+		margin-block: 1.25rem;
+		padding: 1rem;
+		border: 1px solid var(--flow-border);
+		border-radius: 0.8rem;
+		background: var(--sl-color-bg);
+	}
+	figcaption {
+		margin-block-end: 1rem;
+		font-size: 1.05rem;
+		font-weight: 650;
+		color: var(--sl-color-white);
+	}
+	.flow-head {
+		display: none;
+	}
+	.flow-steps {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.flow-step {
+		position: relative;
+		display: grid;
+		min-width: 0;
+		gap: 0.35rem;
+		padding: 0 0 1rem 1rem;
+		border-inline-start: 1px solid var(--flow-border);
+	}
+	.flow-step::before {
+		position: absolute;
+		inset-block-start: 0.5rem;
+		inset-inline-start: -0.26rem;
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 50%;
+		background: var(--caller-line);
+		content: '';
+	}
+	.flow-step:last-child {
+		padding-block-end: 0;
+		border-inline-start-color: transparent;
+	}
+	.event {
+		display: grid;
+		gap: 0.25rem;
+		min-width: 0;
+		font-size: 0.85rem;
+		line-height: 1.45;
+	}
+	.event strong, .event code, .allocation code {
+		font-family: var(--sl-font-system-mono);
+		overflow-wrap: anywhere;
+	}
+	.event span, .action {
+		color: var(--sl-color-gray-2);
+	}
+	.event code {
+		color: var(--sl-color-accent-high);
+		font-size: 0.78rem;
+	}
+	.lane.empty {
+		display: none;
+	}
+	.allocation {
+		--lane-color: var(--helper-line);
+		--lane-fill: var(--sl-color-blue-low);
+		display: grid;
+		gap: 0.13rem;
+		min-width: 0;
+		padding: 0.38rem 0.55rem;
+		border-inline-start: 3px solid var(--lane-color);
+		border-radius: 0.2rem;
+		background: var(--lane-fill);
+		font-size: 0.78rem;
+		line-height: 1.35;
+	}
+	.caller .allocation {
+		--lane-color: var(--caller-line);
+		--lane-fill: var(--sl-color-accent-low);
+	}
+	.allocation.ends {
+		border-inline-start-style: dashed;
+		background: transparent;
+		outline: 1px dashed var(--flow-border);
+		outline-offset: -1px;
+	}
+	.home {
+		color: var(--sl-color-gray-2);
+		font-size: 0.68rem;
+	}
+	@container (min-width: 35rem) {
+		.flow-head, .flow-step {
+			display: grid;
+			grid-template-columns: minmax(0, 1.65fr) repeat(2, minmax(0, 1fr));
+			gap: 0.75rem;
+		}
+		.flow-head {
+			padding: 0 0 0.45rem 1rem;
+			color: var(--sl-color-gray-2);
+			font-size: 0.72rem;
+			font-weight: 600;
+		}
+		.lane.empty {
+			display: block;
+		}
+		.home {
+			/* The column headings already identify the regions visually. */
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			clip-path: inset(50%);
+			overflow: hidden;
+			white-space: nowrap;
+		}
+	}
+</style>

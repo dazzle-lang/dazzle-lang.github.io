@@ -1,0 +1,60 @@
+---
+title: Automatic memory placement
+description: Follow two calls to the same helper and see why each string is allocated in the region of the list it joins.
+---
+
+import MemoryTimeline from '../../../components/MemoryTimeline.astro';
+import ProofExample from '../../../components/ProofExample.astro';
+import Terminal from '../../../components/Terminal.astro';
+
+`main` owns a list of notices. `show_preview` makes its own short-lived list. Both call `add_notice` to push the same text into their list.
+
+<span id="two-strings-in-two-regions"></span>
+
+## Follow the call
+
+<ProofExample name="list-regions" showOutput={false} />
+
+Each list is owned by a local variable. Dazzle puts its backing storage in a **region**, a pool of memory it can reclaim together when the owning function returns. When `add_notice` constructs a string, it uses the region of the list passed to that call. The message is long enough to need its own text allocation.
+
+`show_preview` returns first and its region’s storage is reclaimed. `main` can still print `notices[0]` because its region is still alive. Dazzle runs the destructors the values need before reclaiming each region.
+
+<details>
+<summary>Read the compiler’s placement report</summary>
+
+<Terminal snippet="list-regions" captureKind="placements" title="Allocation sites and their regions" compact />
+
+The `String` site is inside `add_notice`. Its report says to use the home of `messages`, the list passed to the call. The two `List<String>` sites show the regions used by `preview` and `notices`.
+
+</details>
+
+<span id="when-a-label-outlives-the-frame"></span>
+
+## When the receipt leaves checkout
+
+In a separate example, a checkout function files a receipt in a register it was lent. The register can outlive that call. In this example, the compiler chooses the heap for the receipt from the start. `move(receipt)` gives the register ownership of the existing block. `main` can read it after checkout returns.
+
+<details>
+<summary>Read and try the register example</summary>
+
+<MemoryTimeline />
+
+<ProofExample name="receipt-transfer" showOutput={false} />
+
+<Terminal snippet="receipt-transfer" captureKind="placements" title="The receipt is placed on the heap" compact />
+
+</details>
+
+## How signatures describe the transfer
+
+`file_receipt` declares `sends receipt to register`. That clause tells callers that the register may keep what `receipt` owns. The compiler checks the clause against the function body and uses it when it checks allocation placement. [See the compiler explain and fix the missing clause](/tour/tooling/#fix-a-missing-transfer-clause).
+
+A value’s **home** (`@home`) is the region or heap that supplies its backing memory. A move keeps that memory in place. A function that returns an already-allocated input can declare `in receipt@home` to tell its caller where the result’s memory still lives. These contracts were added in [D-0097, revision r119](/decisions/d-0097-homes-ownership-that-travels-with-its/).
+
+## Inspecting allocations
+
+Run `dz placements` in a project or look at the editor’s inlay hints to see where each allocation goes and why. Use `dz placements --format=json` to read the report in a script. A runtime profiler measures how often those allocations occur and how much memory the program uses. [D-0097’s measured frame workload](/decisions/d-0097-homes-ownership-that-travels-with-its/#tried-2026-11-11)
+
+## In the specification
+
+[§6.7, ties and checked function clauses](/spec/06-value-semantics-ownership-copy/#67-ties-and-kills-clauses) · [§14.6, placement by the compiler](/spec/14-memory-and-allocators/#146-placement-by-the-compiler)

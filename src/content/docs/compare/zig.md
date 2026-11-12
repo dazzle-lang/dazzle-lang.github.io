@@ -1,4 +1,5 @@
 ---
+pagefind: false
 title: Dazzle vs Zig
 description: Dazzle compared with Zig. Both avoid hidden control flow, treat errors as values and build C from source, but Dazzle has RAII, traits, private fields, compiler-placed memory and C++ class interop.
 ---

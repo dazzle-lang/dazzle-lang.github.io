@@ -1,0 +1,78 @@
+---
+import DefaultHero from '@astrojs/starlight/components/Hero.astro';
+import { Code } from '@astrojs/starlight/components';
+import { snippet } from './snippets.js';
+
+const isHome = Astro.url.pathname === '/';
+const example = isHome ? snippet('order-reference') : undefined;
+---
+
+{example ? (
+	<div class="home-hero">
+		<DefaultHero />
+		<section class="home-example" aria-label="A pending-order queue in Dazzle">
+			<Code code={example.dz} lang="dz" title="order.dz" wrap={true} />
+			<p class="home-result"><span>Output</span> <code>{example.capture.dazzle.output.trim()}</code></p>
+		</section>
+	</div>
+) : <DefaultHero />}
+
+<style>
+	.home-hero {
+		display: grid;
+		gap: clamp(1.5rem, 3vw, 3rem);
+		align-items: center;
+		padding-block: clamp(1.5rem, 5vw, 4.5rem) clamp(2.5rem, 5vw, 4.5rem);
+	}
+	.home-hero :global(.hero) {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 0;
+	}
+	.home-hero :global(.hero .stack) {
+		text-align: start;
+	}
+	.home-hero :global(.hero .copy) {
+		align-items: flex-start;
+	}
+	.home-hero :global(.hero .actions) {
+		justify-content: flex-start;
+		gap: 0.75rem;
+	}
+	.home-hero :global(.hero h1) {
+		max-width: 15ch;
+		font-size: clamp(2.4rem, 4.4vw, 4rem);
+		letter-spacing: -0.035em;
+		line-height: 1.06;
+	}
+	.home-hero :global(.hero .tagline) {
+		max-width: 40ch;
+		font-size: clamp(1rem, 1.7vw, 1.2rem);
+	}
+	.home-example {
+		min-width: 0;
+		padding: 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.8rem;
+		background: var(--sl-color-gray-6);
+	}
+	.home-result {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 0.65rem;
+		align-items: baseline;
+		margin: 0;
+		padding: 0.65rem 0.3rem 0.15rem;
+		font-size: 0.8rem;
+	}
+	.home-result span {
+		color: var(--sl-color-gray-2);
+	}
+	.home-result code {
+		color: var(--sl-color-accent-high);
+	}
+	@media (min-width: 56rem) {
+		.home-hero {
+			grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+		}
+	}
+</style>

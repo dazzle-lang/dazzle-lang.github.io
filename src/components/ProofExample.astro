@@ -1,0 +1,42 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import Terminal from './Terminal.astro';
+import { snippet } from './snippets.js';
+
+interface Props {
+	name: string;
+	title?: string;
+	showOutput?: boolean;
+}
+
+const { name, title, showOutput = true } = Astro.props;
+const { dz } = snippet(name);
+const [program, implementation] = dz.replace(/\r\n?/g, '\n').split('\n// Receipt implementation\n');
+---
+
+<div class="dz-proof-example">
+	{title && <h3>{title}</h3>}
+	<Code code={program} lang="dz" wrap={true} />
+	{implementation && (
+		<details>
+			<summary>How Receipt gets its memory</summary>
+			<p>In the constructor, <code>#placement</code> provides the allocator the compiler chose. The type frees the block through that same allocator when it drops.</p>
+			<Code code={implementation} lang="dz" wrap={true} />
+		</details>
+	)}
+	{showOutput && <Terminal snippet={name} compact />}
+	<a href={`/playground/?example=${name}`}>Open full example in the playground →</a>
+</div>
+
+<style>
+	.dz-proof-example {
+		min-width: 0;
+	}
+	.dz-proof-example h3 {
+		margin-block: 0 0.8rem;
+	}
+	.dz-proof-example > a {
+		display: inline-block;
+		margin-top: 0.8rem;
+	}
+</style>

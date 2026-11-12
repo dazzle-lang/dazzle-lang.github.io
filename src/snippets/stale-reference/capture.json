@@ -1,0 +1,13 @@
+{
+	"versions": {
+		"dz": "dz 0.1.0",
+		"dazzle_commit": "55f65d4",
+		"g++": "g++ (Rev7, Built by MSYS2 project) 13.1.0",
+		"clang++": "clang version 21.1.8"
+	},
+	"dazzle": {
+		"command": "dz check .",
+		"exit": 1,
+		"output": "error[DZ0413]: used after the memory it points into was killed: `orders@items`\n   ┌─ src/main.dz:13:36\n   │\n12 │     orders.push(Order{ number: 18, total_cents: 1200 })\n   │     --------------------------------------------------- this call kills `orders@items`\n13 │     println!(\"Order {}: {} cents\", number, orders[0].total_cents)\n   │                                    ^^^^^^ points into `orders@items`\n   │\n   = help: a call, write, move or drop that can move or free memory ends every reference into it: use this before that happens, or get it again after (spec §6.7)\n\n\n1 error emitted\n"
+	}
+}

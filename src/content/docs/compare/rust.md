@@ -1,4 +1,5 @@
 ---
+pagefind: false
 title: Dazzle vs Rust
 description: Dazzle compared with Rust. Both have traits, generics, checked moves and no exceptions, but Dazzle checks references with ties instead of lifetimes, accepts safe programs the borrow checker refuses, compiles to C++, and uses C++ libraries from source.
 ---

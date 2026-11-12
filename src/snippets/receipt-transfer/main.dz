@@ -1,0 +1,53 @@
+struct Register {
+    pub receipt: Receipt
+}
+
+fn file_receipt(
+    register: &mut Register,
+    receipt: Receipt,
+) kills register.receipt sends receipt to register {
+    register.receipt = move(receipt)
+}
+
+fn checkout(register: &mut Register) kills register.receipt {
+    let receipt = prepare_receipt(40)
+    file_receipt(register, move(receipt))
+}
+
+fn main() {
+    let mut register: Register
+    checkout(&mut register)
+    println!("{}", register.receipt.total())
+}
+
+fn prepare_receipt(subtotal: i32) -> Receipt {
+    let estimate = Receipt(subtotal)
+    return Receipt(estimate.total() + 2)
+}
+
+// Receipt implementation
+struct Receipt {
+    m_allocator: ^mut Allocator = null
+    m_total: own ^mut i32 = null
+
+    Receipt(total: i32) {
+        m_allocator = unsafe { #placement }
+        let allocator = unsafe { m_allocator or panic!("missing allocator") }
+        m_total = unsafe { allocator.alloc(sizeof(i32), alignof(i32)) as ^mut i32 }
+        if m_total == null { panic!("could not allocate a receipt") }
+        unsafe { construct(m_total[0], total) }
+    }
+
+    pub fn total(&self) -> i32 {
+        if m_total == null { panic!("receipt is empty") }
+        return unsafe { m_total[0] }
+    }
+}
+
+impl Drop for Receipt {
+    fn drop(&mut self) {
+        if m_total == null { return }
+        let allocator = unsafe { m_allocator or panic!("missing allocator") }
+        allocator.free(unsafe { m_total as ^mut u8 }, sizeof(i32), alignof(i32))
+    }
+}

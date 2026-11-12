@@ -1,0 +1,14 @@
+struct Order {
+    pub number: i32
+    pub total_cents: i32
+}
+
+fn main() {
+    let mut orders = List<Order>()
+    orders.push(Order{ number: 17, total_cents: 2000 })
+
+    let number = &orders[0].number
+    orders[0].total_cents += 500
+    orders.push(Order{ number: 18, total_cents: 1200 })
+    println!("Order {}: {} cents", number, orders[0].total_cents)
+}
