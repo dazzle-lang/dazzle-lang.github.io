@@ -42,7 +42,7 @@ Generated C++ that fails to compile is a compiler bug, never the user's, so thes
 
 Unchanged builds can skip analysis. A body-only edit leaves dependent modules alone, and the build recompiles the C++ it needs. The standard library’s compiled C++ and precompiled declarations are shared across projects.
 
-On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md), the 11 November clang++ run took **7.22 s** from clean, **0.01 s** with no changes, and **about 1 s** after a one-line edit. The two small-program build targets are already met on Linux. Work remains on reusing analysis and cleaning up generated files.
+On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md), the 14 November clang++ run took **8.18 s** from clean (C++: 5.20 s), **0.01 s** with no changes, and **0.88 s** after a one-line edit, ahead of the same program in C++ built by `make` (1.10 s). The two small-program build targets are met on Linux. What remains is type-checking the standard library on every build, about 11 ms, which needs its checked form kept on disk.
 
 | | Status |
 |---|---|
@@ -55,8 +55,10 @@ On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master
 | Compiler phase costs reduced at scale ([T-0187](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0187-dazzle-own-phases-grow-faster-than.md)) | <Badge text="done" variant="success" /> |
 | A build with no changes skips analysis. A small edit rechecks the modules it can affect, and a body-only edit leaves dependents alone ([T-0192](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0192-build-with-nothing-changed-skips-analysis.md), [T-0197](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0197-edit-re-runs-ownership-instantiation-emission.md), [T-0198](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0198-body-only-edit-module-others-depend.md)) | <Badge text="done" variant="success" /> |
 | A clean build can compile a module’s generated files together and skip unused generic methods outside the shared standard library ([T-0199](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0199-clean-build-at-scale-parses-every.md)) | <Badge text="done" variant="success" /> |
-| Remove the generated C++ of a renamed or deleted module ([T-0103](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0103-renamed-or-removed-module-generated-c.md)) | <Badge text="planned" variant="default" /> |
-| The editor checks the standard library once, not on every keystroke ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="planned" variant="default" /> |
+| Remove the generated C++ of a renamed or deleted module ([T-0103](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0103-renamed-or-removed-module-generated-c.md)) | <Badge text="done" variant="success" /> |
+| Keep the standard library's generated C++ between builds, and skip its ownership check. A rebuild whose C++ is unchanged went from 136 ms to 56 ms ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="done" variant="success" /> |
+| Compile only the generic methods a program calls, and let g++ inline them ([T-0190](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0190-each-module-defines-instance-methods-it.md)) | <Badge text="done" variant="success" /> |
+| Type-check the standard library once, not on every build: about 11 ms of a small program's build ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="planned" variant="default" /> |
 
 ## 3. The standard library
 

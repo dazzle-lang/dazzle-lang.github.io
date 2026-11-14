@@ -64,13 +64,17 @@ These three programs are a single file each, which is C++'s best case: one compi
 
 | 100 modules, 51,000 lines | Dazzle, first measured | Dazzle now | C++ |
 |---|---:|---:|---:|
-| From clean | 60 s | 12.2 s | 5.2 s |
-| Nothing changed | 8.8 s | 4.8 s | 0.05 s |
-| One module changed | 15.2 s | 6.0 s | 1.1 s |
+| From clean | 60 s | 8.2 s | 5.2 s |
+| Nothing changed | 8.8 s | 0.01 s | 0.05 s |
+| One module changed | 15.2 s | 0.88 s | 1.1 s |
+
+After a one-line change, Dazzle now builds faster than `make` at every size measured: 0.25 s against 0.39 s at 10 modules, 0.35 s against 0.50 s at 25, 0.52 s against 0.69 s at 50. That holds whether the changed module is a leaf or the root that every other module depends on.
 
 The first measurement found two costs that grew faster than the project. Each module's C++ header carried every method of every generic instance it used, about 1,100 lines for each `List<T>`, and every module above it parsed them again; now each instance's methods are defined once, and a header holds only declarations ([T-0185](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0185-generic-instance-method-bodies-are-in.md)). And deciding which files to compile again read every header each one includes; now it goes by size and time, and the link is skipped when nothing changed ([T-0186](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0186-checking-that-objects-are-up-date.md)).
 
-After a change, the C++ compiler's share of Dazzle's build is now close to the whole C++ build, 1.3 s against 1.1 s. What is left is Dazzle's own work, 4.5 s of every build at 100 modules, which still grows faster than the program: emitting the C++, the ownership and placement checks, and instantiating generics nearly triple each time the project doubles ([T-0187](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0187-dazzle-own-phases-grow-faster-than.md)). Every size and both compilers are in [`SCALE.md`](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md).
+Since then, builds have become incremental. A build with nothing changed checks a stamp and skips analysis ([T-0192](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0192-build-with-nothing-changed-skips-analysis.md)). An edit re-runs ownership, instantiation and code generation only for the modules it can affect, and an edit inside a function body leaves the modules above it alone ([T-0197](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0197-edit-re-runs-ownership-instantiation-emission.md), [T-0198](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0198-body-only-edit-module-others-depend.md)). The standard library's generated C++ is kept between builds too, and the C++ compiler is asked its version once rather than on every build ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)).
+
+From clean, the C++ compiler and the link take 5.9 s of Dazzle's 8.2 s, a module's generated files compiled as one where there are more files than cores ([T-0199](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0199-clean-build-at-scale-parses-every.md)). After an edit, the C++ compiler takes 0.2 s. Most of what is left, 0.63 s, is Dazzle's own front end, which still reads the whole program on every build. Every size is in [`SCALE.md`](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md), which also says what changed between runs.
 
 ## Every run
 
