@@ -64,7 +64,7 @@ Each container's `kills` clauses say which calls may move its elements, so a ref
 - **`String`** owns UTF-8 text. It is 32 bytes, and keeps text of up to 15 bytes inside itself, allocating nothing, as `std::string` does.
 - **`&str`** is a view of text that something else owns: a literal, a `String`, or a piece of one. A `String` passed where a `&str` is wanted is borrowed for the call.
 - **Reading text**, on a `String` or a `&str` alike: `starts_with`, `find`, `contains`, `trim`, `split`, `split_whitespace`, `lines`, `split_once`, `replace`, `parse_i64`, `parse_f32` and more. Pieces are views of the text they came from, never copies.
-- **Characters** are decoded as they are read, with `chars()`. Positions are in bytes, and text is never cut inside a character.
+- **Bytes and characters** are both first-class, and every length and position says which it counts: `byte_len` and `len()`, `byte(i)` and `char(n)`, `cut_bytes(a, b)` and `cut_chars(a, b)`. Positions that `find` and `split` hand back are bytes; text is never cut inside a character. Characters are decoded as they are read, with `chars()`.
 - **Formatting**: `format!`, `println!` and `error(…)` check their format string against their arguments at compile time. A type is formatted by implementing `Format`.
 - **C strings**: a `String` keeps a zero after its bytes, so it is passed where a header wants a `const char*` with no copy.
 

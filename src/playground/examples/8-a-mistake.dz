@@ -1,8 +1,8 @@
 fn parse_count(text: &str) !-> i32 {
-    if text.len == 0 {
+    if text.byte_len == 0 {
         return error(1, "no count given")
     }
-    return text.len as i32
+    return text.byte_len as i32
 }
 
 fn main() {

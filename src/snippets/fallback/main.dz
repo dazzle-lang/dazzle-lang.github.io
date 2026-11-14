@@ -3,7 +3,7 @@ enum ErrorCode : u32 {
 }
 
 fn parse_name(text: &str) !-> &str {
-    if text.len == 0 {
+    if text.byte_len == 0 {
         return error(ErrorCode::Empty as u32, "a name cannot be empty")
     }
     return text

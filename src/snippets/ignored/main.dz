@@ -3,7 +3,7 @@ enum SaveError : u32 {
 }
 
 fn save(name: &str) !-> void {
-    if name.len == 0 {
+    if name.byte_len == 0 {
         return error(SaveError::DiskFull, "no room for {}", name)
     }
 }
