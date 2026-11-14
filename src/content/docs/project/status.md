@@ -21,7 +21,7 @@ The development compiler has ownership transfers with `sends`, incremental build
 
 Packages fetched from git, a game of ten thousand lines to test the safety rules at scale, hot reload, microcontrollers, the web and threads. [After 0.2](/project/roadmap/#after-02) says a line about each, the milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
-**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.77 to 1.17 times as long in Dazzle as in C++: A\* search is faster than C++, mostly through its hash map, the word count is even, and the parser and evaluator is the one still behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
+**How fast it is today:** three whole programs, each written idiomatically in both languages and built by the same compiler, take 0.80 to 1.05 times as long in Dazzle as in C++: A\* search and the word count are faster than C++, A\* search mostly through its hash map, and the parser and evaluator is behind only with clang, by 5%. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 
 ## Compatibility
 
