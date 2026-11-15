@@ -32,7 +32,7 @@ The `String` site is inside `add_notice`. Its report says to use the home of `me
 
 ## When the receipt leaves checkout
 
-In a separate example, a checkout function files a receipt in a register it was lent. The register can outlive that call. In this example, the compiler chooses the heap for the receipt from the start. `move(receipt)` gives the register ownership of the existing block. `main` can read it after checkout returns.
+In a separate example, a checkout function files a receipt in a register it was lent. The register can outlive that call. In this example, the compiler chooses the heap for the receipt from the start. Passing `receipt` to `file_receipt` moves it, which gives the register ownership of the existing block. `main` can read it after checkout returns.
 
 <details>
 <summary>Read and try the register example</summary>

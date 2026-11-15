@@ -28,7 +28,7 @@ Dazzle's syntax will look familiar to a Rust programmer: `fn`, `let`, `struct`, 
 | Errors | `Result<T, E>`, `?`, and an error type per library | `!->` on the signature and one `or` clause; one `Error` type, 32 bytes, never allocates |
 | Absence | `Option<T>` | `T?`, handled by the same `or` clause |
 | Moved-from values | Statically inaccessible | Reset to their defaults, and statically inaccessible |
-| Copy semantics | `Copy` is bitwise; `Clone` is explicit | `copy` is a copy constructor, run on `let b = a` for types that implement it |
+| Copy semantics | `Copy` is bitwise; `Clone` is explicit | Plain data copies with nothing declared; everything else moves, and `a.clone()` copies, through an `impl Clone` copy constructor where a type needs one |
 | Inheritance | None | Single struct inheritance with `virtual`/`override`, opt-in |
 | Function overloading | None | None for now; default arguments cover most of it |
 | Output | Machine code through LLVM | Standard C++17, compiled by clang++, g++ or a vendor's compiler |

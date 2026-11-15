@@ -9,7 +9,7 @@ const rows: { scope: string; event: string; code?: string; caller?: Cell; helper
 	{ scope: 'checkout → prepare_receipt', event: 'Make a receipt to file.', code: 'let receipt = prepare_receipt(40)' },
 	{ scope: 'prepare_receipt', event: 'Make the temporary estimate.', code: 'let estimate = Receipt(subtotal)', helper: { name: 'estimate', action: 'Allocated', state: 'starts' } },
 	{ scope: 'prepare_receipt', event: 'Build the returned receipt on the heap.', code: 'return Receipt(estimate.total() + 2)', caller: { name: 'receipt', action: 'Allocated', state: 'starts' }, helper: { name: 'estimate', action: 'Reclaimed on return', state: 'ends' } },
-	{ scope: 'checkout → file_receipt', event: 'Move ownership to the register.', code: 'file_receipt(register, move(receipt))', caller: { name: 'register.receipt', action: 'Same allocation', state: 'live' } },
+	{ scope: 'checkout → file_receipt', event: 'Move ownership to the register.', code: 'file_receipt(register, receipt)', caller: { name: 'register.receipt', action: 'Same allocation', state: 'live' } },
 	{ scope: 'main', event: 'Read the filed receipt after checkout returns.', code: 'receipt.total()', caller: { name: 'register.receipt', action: 'Still available', state: 'live' } },
 	{ scope: 'main returns', event: 'The register and its receipt are dropped.', caller: { name: 'register.receipt', action: 'Freed', state: 'ends' } },
 ];

@@ -1,13 +1,13 @@
 ---
 title: Ownership and RAII
-description: Dazzle's ownership model. RAII with three special members (constructor, drop, copy), own pointers, moves that reset the source, references checked by ties, and memory placed by the compiler. How it lowers to C++.
+description: Dazzle's ownership model. Plain data copies and everything else moves, RAII with three special members (constructor, drop, clone), own pointers, moves that reset the source, references checked by ties, and memory placed by the compiler. How it lowers to C++.
 ---
 
 A Dazzle struct has at most three special members, and that is the whole list:
 
 - a **constructor**, named after the struct;
 - **`drop`**, the destructor;
-- **`copy`**, the copy constructor.
+- **`clone`**, the copy constructor, run where a copy is written: `a.clone()`.
 
 There is no move constructor, no move assignment, no copy assignment and no default constructor to write: the compiler derives them. Nothing here names an allocator either: the compiler decides where each `String` and `List` keeps its memory ([below](#where-memory-comes-from)).
 
@@ -27,18 +27,18 @@ impl Drop for Level {                  // runs exactly once, when its owner's sc
     }
 }
 
-impl Copy for Level {                  // opt-in: without it, a Level is move-only
-    fn copy(&mut self, other: &Self) {
-        name = other.name              // a String copies its text
-        enemies = other.enemies        // a List copies its elements
+impl Clone for Level {                 // opt-in: without it, a Level is move-only
+    fn clone(&mut self, other: &Self) {
+        name = other.name.clone()       // a String clones its text
+        enemies = other.enemies.clone() // a List clones its elements
     }
 }
 
 fn main() {
     let mut a = Level("forest")
     a.enemies.push(10)
-    let b = a                          // a copy: runs `copy`
-    let c = move(a)                    // a move: `a` is reset to its defaults
+    let b = a.clone()                  // a copy: runs `clone`
+    let c = a                          // a move: `a` is reset to its defaults
     println!("{} and {}", b.name, c.name)
 }                                      // c, b, then a: a's drop runs on an empty Level
 ```
@@ -50,7 +50,7 @@ unload 'forest', 1 enemies
 unload '', 0 enemies
 ```
 
-The `drop` here only prints, to show when it runs: a `String` and a `List` free their own memory, so a struct made of them needs no `drop` and no `copy` at all, and is freed, copied and moved with no code.
+The `drop` here only prints, to show when it runs: a `String` and a `List` free their own memory, so a struct made of them needs no `drop` and no `impl Clone` at all: it is freed and moved with no code, and `a.clone()` clones it field by field.
 
 **`own` is for what Dazzle does not manage itself:** a surface, a file, a window or a GPU buffer that a C library handed over. A field marked `own` is a pointer the struct is responsible for releasing, so its `drop` gives it back to the library:
 
@@ -76,7 +76,7 @@ impl Drop for Image {
 
 ## The rules
 
-**`own` or `drop` makes a struct move-only.** A struct with an `own` field, or a `drop`, can only be moved (`move(x)`) unless it implements `Copy`. A plain struct of copyable fields is copyable with no code at all.
+**Plain data copies; everything else moves.** Numbers, enums, pointers and a struct made only of them, such as a `Vec3`, are plain data, and copy wherever they are used by value. Anything that owns something, a `String`, a `List` or a struct holding one, moves when it is bound, assigned, passed or returned, with nothing written, and is copied only where the copy is written: `a.clone()`. A struct with an `own` field or a `drop` is move-only unless it implements `Clone`, and calling `clone` on it is a compile error (`DZ0403`).
 
 **An `own` field with no `drop` is a compile error**, so a resource cannot be acquired and forgotten:
 
@@ -94,17 +94,17 @@ error[DZ0412]: `Surface` owns a resource but never releases it
 
 ```text
 error[DZ0401]: `a` was moved and cannot be used again
-   ┌─ src/main.dz:30:26
+   ┌─ src/main.dz:28:26
    │
-29 │     let c = move(a)                    // a move: `a` is reset to its defaults
-   │             ------- moved here
-30 │     println!("{} {} {}", a.name, b.name, c.name)
+27 │     let c = a                          // a move: `a` is reset to its defaults
+   │             - moved here
+28 │     println!("{} {} {}", a.name, b.name, c.name)
    │                          ^^^^^^ used here after the move
    │
-   = help: a moved-from value is left at its defaults, and reading it back would almost never be what was meant (spec §6.4)
+   = help: a value that is not plain data moves when it is used by value, and a moved-from value is left at its defaults (spec §6.4); to keep this one, move a copy of it: write `.clone()` where it moved
 ```
 
-**Every value is initialised.** `let level: Level` is an empty level, never garbage memory, and `copy` always runs on a value already at its defaults, so returning early from it leaves something valid.
+**Every value is initialised.** `let level: Level` is an empty level, never garbage memory, and `clone` always runs on a value already at its defaults, so returning early from it leaves something valid.
 
 ## References, pointers and handles
 
@@ -149,10 +149,10 @@ struct Level {
     ::dz::std_::String name{};
     ::dz::std_::List__i32 enemies{};
 
-    Level(::dz::str name);                    // the constructor
+    Level(::dz::rt::str name);                // the constructor
     Level() = default;                        // every field at its default
     ~Level();                                 // drop
-    Level(const Level& other);                // copy
+    Level(const Level& other);                // clone
     Level& operator=(const Level& other);     // synthesised: drop, reset, copy
     Level(Level&& other);                     // synthesised: steal, reset the source
     Level& operator=(Level&& other);          // synthesised: drop, steal, reset the source
@@ -167,9 +167,9 @@ Level::Level(Level&& other) {
 
 | Dazzle | C++ |
 |---|---|
-| `Level(name)` | `Level(::dz::str name)` |
+| `Level(name)` | `Level(::dz::rt::str name)` |
 | `impl Drop`'s `drop` | `~Level()` |
-| `impl Copy`'s `copy` | `Level(const Level&)`, run on a defaults-initialised `*this` |
+| `impl Clone`'s `clone`, run by `a.clone()` | `Level(const Level&)`, run on a defaults-initialised `*this` |
 | move | `Level(Level&&)`: memberwise steal, then reset the source to its defaults |
 | copy and move assignment | destroy, reset, then copy or steal, with a self-assignment guard |
 | a move-only type | its copy constructor and copy assignment `= delete`d |

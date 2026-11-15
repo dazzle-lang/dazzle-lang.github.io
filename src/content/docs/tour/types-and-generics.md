@@ -10,9 +10,9 @@ A generic function's body is checked **once, against its bounds**, not at every 
 ```dz
 fn largest<T: Ord>(a: T, b: T) -> T {
     if a > b {
-        return move(a)
+        return a
     }
-    return move(b)
+    return b
 }
 
 fn main() {

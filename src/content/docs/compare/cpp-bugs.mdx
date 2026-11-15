@@ -33,8 +33,8 @@ A local `int` and a field without an initialiser hold whatever was in memory. Da
 `find` returns `nullptr` when there is no match, and nothing makes the caller check. The g++ build crashes, and the clang build prints nothing and exits with a meaningless status. In Dazzle, a `^Player` cannot be read with `.` outside `unsafe`. The safe way is to turn it into a reference once, with `let p = find(&players, "eve") or return`, which handles the null case where it can happen.
 </BugCase>
 
-<BugCase name="copy" title="Copying a struct that owns memory" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.3, copyability', href: '/spec/06-value-semantics-ownership-copy/#63-copyability' }}>
-C++ generates a copy constructor that copies the pointer, so `a` and `b` share one array, and both destructors free it. This is the rule of three, broken silently. Both builds show the shared memory (`a sees 7`), and the second `delete[]` is a double free. This `-O2` build let it pass unnoticed; built with `-O0`, the same program aborts. In Dazzle, a type with a `drop` is move-only unless it declares how to `copy`, so the copy is error DZ0403.
+<BugCase name="copy" title="Copying a struct that owns memory" cpp="Undefined behaviour" dazzle="Compile error" spec={{ label: 'Spec §6.3, plain data and clone', href: '/spec/06-value-semantics-ownership-copy/#63-plain-data-and-clone' }}>
+C++ generates a copy constructor that copies the pointer, so `a` and `b` share one array, and both destructors free it. This is the rule of three, broken silently. Both builds show the shared memory (`a sees 7`), and the second `delete[]` is a double free. This `-O2` build let it pass unnoticed; built with `-O0`, the same program aborts. In Dazzle, `let b = a` moves the buffer, so one value owns the array. A copy is written `a.clone()`, and a type with a `drop` can be cloned only if it declares how, with an `impl Clone`, so this one is error DZ0403.
 </BugCase>
 
 <BugCase name="overflow" title="Signed overflow" cpp="Undefined behaviour" dazzle="Defined: it wraps" spec={{ label: 'D-0063, integer overflow', href: '/decisions/d-0063-integer-overflow/' }}>
@@ -56,7 +56,7 @@ Reaching the end of a function that returns a value is undefined behaviour in C+
 ## Mistakes C++ does not stop
 
 <BugCase name="moved" title="Using a value after moving it" cpp="Valid but unspecified" dazzle="Compile error" spec={{ label: 'Spec §6.4, move semantics', href: '/spec/06-value-semantics-ownership-copy/#64-move-semantics' }}>
-After `std::move`, a standard container is "valid but unspecified": the C++ program may read `names` and gets whatever the library left there. In Dazzle, a moved-from value is reset to its defaults, and reading it again is error DZ0401, which shows where it was moved.
+After `std::move`, a standard container is "valid but unspecified": the C++ program may read `names` and gets whatever the library left there. In Dazzle, a list moves when it is used by value, with nothing written: `let kept = names` is the move. The moved-from value is reset to its defaults, and reading it again is error DZ0401, which shows where it was moved.
 </BugCase>
 
 <BugCase name="narrowing" title="A conversion that loses the value" cpp="Silently truncated" dazzle="Compile error" spec={{ label: 'Spec §5.1, no implicit conversions', href: '/spec/05-types/#51-primitives' }}>

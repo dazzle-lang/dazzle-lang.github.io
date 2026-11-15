@@ -18,7 +18,7 @@ Dazzle specifies defined behavior for safe code on one thread. A reference to an
 ## The principles
 
 - **Make costs visible.** The compiler reports where allocations go and why. Destruction follows scope and ownership.
-- **Make code straightforward.** RAII uses a constructor, `copy`, and `drop`. One `or` clause handles failure or absence. Generic errors point to the generic definition.
+- **Make code straightforward.** RAII uses a constructor, `clone`, and `drop`. One `or` clause handles failure or absence. Generic errors point to the generic definition.
 - **Keep native libraries available.** Dazzle can use existing C and C++ APIs, including C++ classes and overloads, directly.
 
 <span id="what-it-is-not"></span>

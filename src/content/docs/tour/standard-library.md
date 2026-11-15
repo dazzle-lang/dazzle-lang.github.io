@@ -24,11 +24,11 @@ fn main() {
     }
 
     let mut sorted = List<Count>()
-    for word, &n in counts {
-        sorted.push(Count{ word: word, n: n })
+    for &word, &n in counts {
+        sorted.push(Count{ word: word.clone(), n: n })
     }
     sorted.sort_by(more)
-    for c in sorted {
+    for &c in sorted {
         println!("{} {}", c.word, c.n)
     }
 
@@ -92,7 +92,7 @@ Each container's `kills` clauses say which calls may move its elements, so a ref
 
 ## The traits the language uses
 
-`Drop`, `Copy`, `Eq`, `Ord`, `Hash`, the operator traits (`Add`, `Mul`, `Index`, …), `Iterate` for `for` loops, `Format` for `{}`, and `ImplicitAs` for the one conversion a type allows when it is passed as an argument. A program's own types implement them to join in.
+`Drop`, `Clone`, `Eq`, `Ord`, `Hash`, the operator traits (`Add`, `Mul`, `Index`, …), `Iterate` for `for` loops, `Format` for `{}`, and `ImplicitAs` for the one conversion a type allows when it is passed as an argument. A program's own types implement them to join in.
 
 ## In the specification
 

@@ -14,6 +14,6 @@ impl Drop for Buffer {
 
 fn main() {
     let a = Buffer()
-    let b = a
+    let b = a.clone()
     println!("copied")
 }

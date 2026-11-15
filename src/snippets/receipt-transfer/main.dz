@@ -6,12 +6,12 @@ fn file_receipt(
     register: &mut Register,
     receipt: Receipt,
 ) kills register.receipt sends receipt to register {
-    register.receipt = move(receipt)
+    register.receipt = receipt
 }
 
 fn checkout(register: &mut Register) kills register.receipt {
     let receipt = prepare_receipt(40)
-    file_receipt(register, move(receipt))
+    file_receipt(register, receipt)
 }
 
 fn main() {

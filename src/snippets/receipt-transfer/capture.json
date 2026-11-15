@@ -1,14 +1,14 @@
 {
 	"versions": {
 		"dz": "dz 0.1.0",
-		"dazzle_commit": "55f65d4",
-		"g++": "g++ (Rev7, Built by MSYS2 project) 13.1.0",
-		"clang++": "clang version 21.1.8"
+		"dazzle_commit": "ac6e719",
+		"g++": "g++ (Debian 14.2.0-19) 14.2.0",
+		"clang++": "Debian clang version 19.1.7 (3+b1)"
 	},
 	"dazzle": {
 		"command": "dz run --release .",
 		"exit": 0,
-		"output": "42\r\n"
+		"output": "42\n"
 	},
 	"placements": {
 		"command": "dz placements .",
@@ -18,7 +18,7 @@
 	"missingSend": {
 		"command": "dz check .",
 		"exit": 1,
-		"output": "error[DZ0421]: `file_receipt` sends what `receipt` owns to `register`, and its `sends` clause does not say so\n  ┌─ src/main.dz:9:5\n  │\n9 │     register.receipt = move(receipt)\n  │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `receipt`'s memory goes to `register` here\n  │\n  = help: a caller places what it lends by this clause, so memory is where it ends up: the body needs `sends receipt to register` (D-0097)\n\n\n1 error emitted\n"
+		"output": "\u001b[0m\u001b[1m\u001b[38;5;9merror[DZ0421]\u001b[0m\u001b[1m: `file_receipt` sends what `receipt` owns to `register`, and its `sends` clause does not say so\u001b[0m\n  \u001b[0m\u001b[34m┌─\u001b[0m src/main.dz:9:5\n  \u001b[0m\u001b[34m│\u001b[0m\n\u001b[0m\u001b[34m9\u001b[0m \u001b[0m\u001b[34m│\u001b[0m     \u001b[0m\u001b[31mregister.receipt = receipt\u001b[0m\n  \u001b[0m\u001b[34m│\u001b[0m     \u001b[0m\u001b[31m^^^^^^^^^^^^^^^^^^^^^^^^^^\u001b[0m \u001b[0m\u001b[31m`receipt`'s memory goes to `register` here\u001b[0m\n  \u001b[0m\u001b[34m│\u001b[0m\n  \u001b[0m\u001b[34m=\u001b[0m help: a caller places what it lends by this clause, so memory is where it ends up: the body needs `sends receipt to register` (D-0097)\n\n\n1 error emitted\n"
 	},
 	"fixedSend": {
 		"command": "dz fix .",

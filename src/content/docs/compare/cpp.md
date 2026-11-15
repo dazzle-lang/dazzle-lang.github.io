@@ -17,7 +17,7 @@ Dazzle is meant as a replacement for C++ wherever it is used, and it compiles *t
 
 | C++ | Dazzle |
 |---|---|
-| The rule of five: destructor, copy and move constructors, copy and move assignment | **Three members**: a constructor, `drop` and `copy`. Moves and assignments are generated. |
+| The rule of five: destructor, copy and move constructors, copy and move assignment | **Three members**: a constructor, `drop` and `clone`. Moves and assignments are generated; plain data copies, everything else moves, and a copy is written `a.clone()`. |
 | A moved-from object is "valid but unspecified" | A moved-from value is **reset to its defaults**, and using it again is a compile error |
 | Uninitialised variables are allowed | **Every value is initialised**: fields have defaults |
 | A `push_back` silently dangles every pointer and iterator into the vector | **Checked**: a function's `kills` clause says what a call may move, and a reference used after it is a compile error |
@@ -65,7 +65,7 @@ struct Image {
 }
 
 impl Drop for Image { fn drop(&mut self) { ... } }
-impl Copy for Image { fn copy(&mut self, other: &Self) { ... } }   // or leave it move-only
+impl Clone for Image { fn clone(&mut self, other: &Self) { ... } }   // or leave it move-only
 ```
 
 Forget the `drop` and it is a compile error (`DZ0412`). The [ownership tour](/tour/ownership/) has the whole example, and the C++ it generates.
