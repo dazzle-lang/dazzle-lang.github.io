@@ -8,7 +8,7 @@ description: Dazzle's type system. Generics checked at the definition and monomo
 A generic function's body is checked **once, against its bounds**, not at every instantiation. Then Dazzle monomorphizes it itself, rather than handing a template to the C++ compiler.
 
 ```dz
-fn largest<T: Ord>(a: T, b: T) -> T {
+fn largest<T: Ord>(a: T, b: T) -> T in (a@home, b@home) {
     if a > b {
         return a
     }
@@ -19,6 +19,8 @@ fn main() {
     println!("{} {}", largest(3, 7), largest(2.5, 1.5))
 }
 ```
+
+`return a` moves `a` into the result, as it would any value that is not plain data, since a `T` may own memory. `in (a@home, b@home)` says where that memory then lives: wherever the caller placed `a` or `b` ([how signatures describe the transfer](/tour/memory-placement/#how-signatures-describe-the-transfer)).
 
 `a > b` is legal only because `Ord` provides it. Ask `T` for something its bounds do not promise, and the error is reported at that line, once, naming the missing bound:
 

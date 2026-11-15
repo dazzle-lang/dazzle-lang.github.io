@@ -15,7 +15,7 @@ The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) inclu
 
 ## Next: 0.2
 
-The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Remaining work includes code generation and tooling fixes, `BinaryHeap`, `Deque` and `BitSet`, more C++ imports, and new benchmarks. [The road to 0.2](/project/roadmap/) tracks the work.
+The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Values now move by default, and the generated C++ and tooling bugs planned for 0.2 are fixed, with `BinaryHeap`, `Deque` and `BitSet` added. Remaining work includes more of the standard library, more C++ imports, and new benchmarks. [The road to 0.2](/project/roadmap/) tracks the work.
 
 ## Later
 

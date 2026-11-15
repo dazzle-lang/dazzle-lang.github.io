@@ -5,7 +5,7 @@ description: What has landed for Dazzle 0.2 and what remains, including automati
 
 import { Badge } from '@astrojs/starlight/components';
 
-Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r119. Since 0.1, automatic memory placement has gained checked ownership transfers across calls, the compiler has gained incremental builds, and the SDL3 example calls Dear ImGui directly. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the remaining work.
+Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r135: values now move by default, and a copy is written `a.clone()` ([changelog](/spec/21-changelog/)). Since 0.1, automatic memory placement has gained checked ownership transfers across calls, the compiler has gained incremental builds, and the SDL3 example calls Dear ImGui directly. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the remaining work.
 
 - [Automatic memory placement across calls](#automatic-memory-placement-across-calls)
 - [Incremental builds and the latest measurements](#2-faster-builds)
@@ -13,9 +13,9 @@ Dazzle **0.1** was released on 4 November 2026 at revision r117. The development
 
 | | Part | Status |
 |---|---|---|
-| 1 | [Bugs in the generated C++ and the tools](#1-bugs) | <Badge text="planned" variant="default" /> |
+| 1 | [Bugs in the generated C++ and the tools](#1-bugs) | <Badge text="done" variant="success" /> |
 | 2 | [Faster builds](#2-faster-builds) | <Badge text="in progress" variant="caution" /> |
-| 3 | [More of the standard library](#3-the-standard-library) | <Badge text="planned" variant="default" /> |
+| 3 | [More of the standard library](#3-the-standard-library) | <Badge text="in progress" variant="caution" /> |
 | 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="panel complete" variant="success" /> |
 | 5 | [New benchmarks](#5-benchmarks) | <Badge text="in progress" variant="caution" /> |
 | 6 | [The release](#6-the-release) | <Badge text="last" variant="default" /> |
@@ -30,13 +30,13 @@ Generated C++ that fails to compile is a compiler bug, never the user's, so thes
 
 | | Status |
 |---|---|
-| A `for` loop over a view of a temporary, `for c in format!(…).chars()`, reads freed memory ([T-0178](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0178-for-loop-over-view-temporary-reads.md)) | <Badge text="open" variant="default" /> |
-| A local named like a free function hides it in the generated C++ ([T-0121](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0121-local-named-like-free-function-hides.md)) | <Badge text="planned" variant="default" /> |
-| A field default that calls a function of its own module does not compile ([T-0167](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0167-field-default-that-calls-free-function.md)) | <Badge text="planned" variant="default" /> |
-| A module named after a runtime identifier does not compile ([T-0034](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0034-module-named-after-runtime-shim-identifier.md)) | <Badge text="planned" variant="default" /> |
-| `error(…)` shares a ring of four buffers ([T-0053](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0053-error-shares-static-ring-four-buffers.md)) | <Badge text="planned" variant="default" /> |
-| `as` binds tighter than a prefix `-`, against the precedence table ([T-0161](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0161-parser-binds-as-tighter-than-prefix.md)) | <Badge text="planned" variant="default" /> |
-| `dz fmt` collapses a multi-line array literal ([T-0092](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0092-dz-fmt-collapses-multi-line-array.md)) | <Badge text="planned" variant="default" /> |
+| A `for` loop over a view of a temporary, `for c in format!(…).chars()`, reads freed memory ([T-0178](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0178-for-loop-over-view-temporary-reads.md)) | <Badge text="done" variant="success" /> |
+| A local named like a free function hides it in the generated C++ ([T-0121](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0121-local-named-like-free-function-hides.md)) | <Badge text="done" variant="success" /> |
+| A field default that calls a function of its own module does not compile ([T-0167](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0167-field-default-that-calls-free-function.md)) | <Badge text="done" variant="success" /> |
+| A module named after a runtime identifier does not compile ([T-0034](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0034-module-named-after-runtime-shim-identifier.md)) | <Badge text="done" variant="success" /> |
+| `error(…)` shares a ring of four buffers ([T-0053](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0053-error-shares-static-ring-four-buffers.md)) | <Badge text="done" variant="success" /> |
+| `as` binds tighter than a prefix `-`, against the precedence table ([T-0161](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0161-parser-binds-as-tighter-than-prefix.md)) | <Badge text="done" variant="success" /> |
+| `dz fmt` collapses a multi-line array literal ([T-0092](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0092-dz-fmt-collapses-multi-line-array.md)) | <Badge text="done" variant="success" /> |
 
 ## 2. Faster builds
 
@@ -66,10 +66,10 @@ New containers, then what the benchmarks and the ImGui panel show is missing.
 
 | | Status |
 |---|---|
-| `BinaryHeap`, a priority queue ([T-0175](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0175-binaryheap-priority-queue-in-std.md)) | <Badge text="planned" variant="default" /> |
-| `Deque`, a double-ended queue ([T-0176](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0176-deque-double-ended-queue-in-std.md)) | <Badge text="planned" variant="default" /> |
-| `BitSet`, a set of small integers ([T-0177](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0177-bitset-set-small-integers-in-std.md)) | <Badge text="planned" variant="default" /> |
-| Slicing a `str`, `s[a..b]` ([T-0098](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0098-str-cannot-be-cut-str-b.md)) | <Badge text="planned" variant="default" /> |
+| `BinaryHeap`, a priority queue ([T-0175](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0175-binaryheap-priority-queue-in-std.md)) | <Badge text="done" variant="success" /> |
+| `Deque`, a double-ended queue ([T-0176](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0176-deque-double-ended-queue-in-std.md)) | <Badge text="done" variant="success" /> |
+| `BitSet`, a set of small integers ([T-0177](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0177-bitset-set-small-integers-in-std.md)) | <Badge text="done" variant="success" /> |
+| Slicing a `str`, `s[a..b]` ([T-0098](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0098-str-cannot-be-cut-str-b.md)) | <Badge text="done" variant="success" /> |
 | `indexed()` outside a `for` head ([T-0037](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0037-indexed-exists-only-in-for-head.md)) | <Badge text="planned" variant="default" /> |
 | Generic methods in a trait ([T-0007](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0007-generic-methods-in-trait.md)) | <Badge text="planned" variant="default" /> |
 
