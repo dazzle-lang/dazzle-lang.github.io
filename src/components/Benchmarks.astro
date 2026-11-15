@@ -21,6 +21,8 @@ const COMMIT = 'https://github.com/dazzle-lang/Dazzle/commit/';
 const PROGRAMS = {
 	astar: 'A* search',
 	expr: 'Tokenizer, parser and evaluator',
+	json: 'JSON reader and writer',
+	raytrace: 'Ray tracer',
 	words: 'Word count',
 };
 const cxxLabel = (run, cxx) => {
@@ -52,14 +54,31 @@ const compilers = [...new Set(latest.results.map((r) => r.cxx))];
 const columns = programs.flatMap((p) => compilers.map((c) => ({ program: p, cxx: c })));
 const find = (run, p, c) => run.results.find((r) => r.program === p && r.cxx === c);
 
-// The history chart: one line per compiler, the geometric mean of its ratios per run.
+// The history chart: one line per compiler, the geometric mean of its ratios per run, over
+// the programs every run measured. A program added later is left out of the line, so the
+// line moves only when the compiler does, not when the suite grows; the tables have it.
+const everyRun = programs.filter((p) => runs.every((run) => run.results.some((r) => r.program === p)));
+// The programs as a sentence names them.
+const IN_PROSE = {
+	astar: 'A* search',
+	expr: 'the parser and evaluator',
+	json: 'the JSON reader and writer',
+	raytrace: 'the ray tracer',
+	words: 'the word count',
+};
+const programList = (ps) => {
+	const names = ps.map((p) => IN_PROSE[p] ?? p);
+	if (names.length < 3) return names.join(' and ');
+	return `${names.slice(0, -1).join(', ')}, and ${names.at(-1)}`;
+};
+const capitalised = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const W = 640;
 const H = 220;
 const PAD = { l: 44, r: 16, t: 16, b: 34 };
 const series = compilers.map((c) => ({
 	cxx: c,
 	points: runs.map((run, i) => {
-		const rs = run.results.filter((r) => r.cxx === c).map(ratio);
+		const rs = run.results.filter((r) => r.cxx === c && everyRun.includes(r.program)).map(ratio);
 		return { i, value: rs.length ? geomean(rs) : null };
 	}),
 }));
@@ -278,7 +297,8 @@ const buildFlags = debug ? '-O0 -g' : flags;
 				{series.map((s, k) => (
 					<span><span class={`key s${k}`} /> {cxxName(s.cxx)} </span>
 				))}
-				— the geometric mean of the three programs' ratios, for each run. Lower is better; 1.0× is C++'s speed.
+				— the geometric mean of the ratios of the programs every run measured ({programList(everyRun)}), for each run. Lower is better; 1.0× is C++'s speed.
+				{everyRun.length < programs.length && ` ${capitalised(programList(programs.filter((p) => !everyRun.includes(p))))} came later, and are in the tables below.`}
 			</p>
 			<div class="table-wrap">
 				<table>

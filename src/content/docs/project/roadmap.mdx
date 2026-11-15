@@ -17,7 +17,7 @@ Dazzle **0.1** was released on 4 November 2026 at revision r117. The development
 | 2 | [Faster builds](#2-faster-builds) | <Badge text="in progress" variant="caution" /> |
 | 3 | [More of the standard library](#3-the-standard-library) | <Badge text="planned" variant="default" /> |
 | 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="panel complete" variant="success" /> |
-| 5 | [New benchmarks](#5-benchmarks) | <Badge text="planned" variant="default" /> |
+| 5 | [New benchmarks](#5-benchmarks) | <Badge text="in progress" variant="caution" /> |
 | 6 | [The release](#6-the-release) | <Badge text="last" variant="default" /> |
 
 ## Automatic memory placement across calls
@@ -48,8 +48,8 @@ On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master
 |---|---|
 | Compile each generated C++ file to its own object, reused while it is unchanged ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)), and precompile the runtime and the standard library's declarations ([T-0181](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0181-precompiled-header-for-runtime-standard-library.md)) | <Badge text="done" variant="success" /> |
 | One compiled standard library shared by every project ([T-0182](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0182-one-compiled-standard-library-shared-by.md)), imported C headers kept between builds ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)), and no second compile where link-time optimisation cannot link ([T-0183](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0183-release-build-compiles-everything-twice-where.md)) | <Badge text="done" variant="success" /> |
-| **Target:** a debug rebuild after a small change in under 0.5 s. The three [benchmark](/project/benchmarks/#build-time) programs rebuild in 0.19–0.25 s on Linux, with clang or g++ ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
-| **Target:** a clean release build within twice the time of the same program in C++. It is 1.25–1.9 times, from 3.3–4.7 at 0.1 ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
+| **Target:** a debug rebuild after a small change in under 0.5 s. The five [benchmark](/project/benchmarks/#build-time) programs rebuild in 0.16–0.30 s on Linux, with clang or g++ ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
+| **Target:** a clean release build within twice the time of the same program in C++. It is 0.9–1.8 times, from 3.3–4.7 at 0.1 ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
 | Measure build time on a large program ([T-0012](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0012-measure-compile-time-at-scale.md)): a generated project of 100 modules, against the same in C++ | <Badge text="done" variant="success" /> |
 | What it found: a generic instance's methods defined once rather than in every header ([T-0185](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0185-generic-instance-method-bodies-are-in.md)), and deciding what to compile again by size and time ([T-0186](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0186-checking-that-objects-are-up-date.md)). 100 modules from clean went from 60 s to 12 s (C++: 5 s) | <Badge text="done" variant="success" /> |
 | Compiler phase costs reduced at scale ([T-0187](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0187-dazzle-own-phases-grow-faster-than.md)) | <Badge text="done" variant="success" /> |
@@ -92,13 +92,13 @@ raylib, SDL3, Box2D and sokol are all C. This part shows Dazzle calling a C++ li
 
 ## 5. Benchmarks
 
-Three new programs will extend the [existing benchmark suite](/project/benchmarks/).
+Three new programs extend the [benchmark suite](/project/benchmarks/). Two are in it, run against their C++ halves: the JSON reader and writer at 0.99× C++ with clang and 1.06× with g++, and the ray tracer at 1.06× and 0.97×.
 
 | | Status |
 |---|---|
 | **An ECS**, a small entity-component system of a few hundred lines, in Dazzle, C++ and Rust. It exercises a query inside a query ([T-0172](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0172-ecs-benchmark-against-rust-c-query.md)) | <Badge text="planned" variant="default" /> |
-| **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)) | <Badge text="planned" variant="default" /> |
-| **raytrace**: floating-point and vector math, against C++ ([T-0174](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0174-raytrace-benchmark-floating-point-vector-math.md)) | <Badge text="planned" variant="default" /> |
+| **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)) | <Badge text="done" variant="success" /> |
+| **raytrace**: floating-point and vector math, against C++ ([T-0174](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0174-raytrace-benchmark-floating-point-vector-math.md)) | <Badge text="done" variant="success" /> |
 | What generic instantiation costs in build time, tracked from release to release ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="planned" variant="default" /> |
 
 ## 6. The release
