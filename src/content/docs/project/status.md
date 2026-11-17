@@ -1,31 +1,29 @@
 ---
 title: Where Dazzle stands
-description: The status of the Dazzle programming language. What is done, what is in progress, the plan for 0.2, supported platforms and compilers, and how Dazzle is made.
+description: The status of the Dazzle programming language. What 0.2 brought, what comes next, supported platforms and compilers, and how Dazzle is made.
 ---
 
-:::note[0.1 is out]
-**Dazzle 0.1** was released on 4 November 2026. The language is young and **still changes**. Every change to it is a revision row in the [changelog](/spec/21-changelog/). Next is **0.2**: [the road to 0.2](/project/roadmap/) has the plan and how far along it is.
+:::note[0.2 is out]
+**Dazzle 0.2** was released on 17 November 2026, two weeks after 0.1. The language is young and **still changes**. Every change to it is a revision row in the [changelog](/spec/21-changelog/). [The release](https://github.com/dazzle-lang/Dazzle/releases/tag/v0.2.0) has its notes and the downloads.
 :::
 
-Dazzle specifies defined behaviour for safe code on one thread. The compiler places allocations, uses C and C++ libraries built from source, and has a language server. The examples include a complete game and a real-time 3D scene. It is young: the standard library is still growing, and the editor still lacks some code actions and incremental analysis. The specification is revised rather than versioned, and each compiler release (`v0.1.0`, `v0.1.1`, …) says which revision it carries.
+Dazzle specifies defined behaviour for safe code on one thread. The compiler places allocations, uses C and C++ libraries built from source or fetched with git, and has a language server. The examples include a complete game and a real-time 3D scene. It is young: the standard library is still growing, and the editor still lacks some code actions and incremental analysis. The specification is revised rather than versioned, and each compiler release (`v0.1.0`, `v0.2.0`, …) says which revision it carries.
 
 ## What you can build today
 
 The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) include a complete game on raylib, a real-time 3D scene on SDL3 with a Dear ImGui panel, rigid-body physics on Box2D and a synthesizer on miniaudio. Each is a project you can copy, and each builds its library from source.
 
-## Next: 0.2
+## What 0.2 brought
 
-The development compiler has ownership transfers with `sends` and incremental builds. Values move by default. The generated C++ and tooling bugs planned for 0.2 are fixed, and `BinaryHeap`, `Deque`, `BitSet` and generic trait methods are added.
+Ownership transfers with `sends`, so the compiler places memory across calls. Values move by default, and a copy is written `a.clone()`. Builds keep what they compiled: a debug build of a small program from clean is as fast as its C++, and an edit to a 100-module program rebuilds faster than `make` does the same program in C++. The standard library has `BinaryHeap`, `Deque` and `BitSet`, and traits may have generic methods.
 
-The SDL3 example's Dear ImGui panel is written as C++ writes it, `ImGui::Begin` and `ImGui::Text`. Its ImGui is fetched with git, pinned by a lockfile, like any dependency now. The new benchmarks are in: an ECS battle, also measured against Rust, and the cost of generic instantiation, with every run kept to catch a regression.
-
-Every part of the plan is done but the release notes. [The road to 0.2](/project/roadmap/) has the detail.
+The SDL3 example's Dear ImGui panel is written as C++ writes it, `ImGui::Begin` and `ImGui::Text`, and its ImGui is fetched with git and pinned by a lockfile, as any dependency may now be. [The road to 0.2](/project/roadmap/) has every part, with its tasks and measurements.
 
 ## Later
 
 A game of ten thousand lines to test the safety rules at scale, hot reload, microcontrollers, the web and threads. [After 0.2](/project/roadmap/#after-02) says a line about each, the milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
-**How fast it is today:** five whole programs, each written idiomatically in both languages and built by the same compiler, take 0.80 to 1.06 times as long in Dazzle as in C++. A\* search and the word count are faster than C++ with either compiler, A\* search mostly through its hash map. The parser and evaluator is behind only with clang, by 4%, the ray tracer only with clang and the JSON reader and writer only with g++, by 6% each. The [benchmarks](/project/benchmarks/) have every run, and what is left.
+**How fast it is today:** seven whole programs, each written idiomatically in both languages and built by the same compiler, take 0.70 to 1.06 times as long in Dazzle as in C++. Only the ray tracer with clang, by 6%, and the JSON reader and writer with g++, by 1%, are behind. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 
 ## Compatibility
 

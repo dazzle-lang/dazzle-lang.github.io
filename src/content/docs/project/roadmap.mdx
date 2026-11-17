@@ -5,14 +5,14 @@ description: What has landed for Dazzle 0.2 and what remains, including automati
 
 import { Badge } from '@astrojs/starlight/components';
 
-Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r143 ([changelog](/spec/21-changelog/)). Since r137:
+**Dazzle 0.2 was released on 17 November 2026**, at revision r143 ([release notes and downloads](https://github.com/dazzle-lang/Dazzle/releases/tag/v0.2.0)). 0.1 was released on 4 November at r117, and this page is the record of how 0.2 was reached. The last revisions before the release ([changelog](/spec/21-changelog/)):
 - `indexed()` is a value outside a loop's head (r138).
 - A trait's method may be generic (r139).
 - A C++ namespace may be named bare, `ImGui::Begin` (r141).
 - Dependencies and C++ libraries may be fetched with git, pinned by a lockfile (r142).
 - ImGui's `printf`-style functions, such as `ImGui::Text`, are callable (r143).
 
-Every part of the plan except the release itself is done. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the rest.
+Every part of the plan is done. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks what comes after.
 
 - [Automatic memory placement across calls](#automatic-memory-placement-across-calls)
 - [Incremental builds and the latest measurements](#2-faster-builds)
@@ -26,7 +26,7 @@ Every part of the plan except the release itself is done. The [backlog](https://
 | 3 | [More of the standard library](#3-the-standard-library) | <Badge text="done" variant="success" /> |
 | 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="done" variant="success" /> |
 | 5 | [New benchmarks](#5-benchmarks) | <Badge text="done" variant="success" /> |
-| 6 | [The release](#6-the-release) | <Badge text="next" variant="caution" /> |
+| 6 | [The release](#6-the-release) | <Badge text="released" variant="success" /> |
 
 ## Automatic memory placement across calls
 
@@ -125,7 +125,8 @@ Every recorded run is now kept, so a change that makes Dazzle's side slower show
 | | Status |
 |---|---|
 | **Dependencies fetched from git**, Dazzle modules and C or C++ libraries alike. Each names a release, `version = "1.93.0"`, or a commit, `rev = "…"`. A checked-in `dazzle.lock` pins the commit, so every machine builds the same code. `dz build` fetches; the editor never touches the network (r142, [T-0077](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0077-git-dependencies-pinned-by-lockfile.md), [D-0110](/decisions/d-0110-git-sources-version-or-rev-pinned/)) | <Badge text="done" variant="success" /> |
-| Release notes from the [changelog](/spec/21-changelog/) since revision 117, which 0.1 carries, and the build times since 0.1 | <Badge text="next" variant="caution" /> |
+| [Release notes](https://github.com/dazzle-lang/Dazzle/releases/tag/v0.2.0), from the [changelog](/spec/21-changelog/) since revision 117, which 0.1 carries, and the build times since 0.1 | <Badge text="done" variant="success" /> |
+| `v0.2.0`, built for Linux, macOS and Windows with the VS Code extension | <Badge text="released" variant="success" /> |
 
 ## After 0.2
 

@@ -1,6 +1,6 @@
 ---
 title: Benchmarks
-description: Six whole programs written in both Dazzle and C++, one of them in Rust too, built with the same compiler and flags, checked to compute the same result, and timed end to end. Every run is kept, so the numbers show how the compiler and the standard library improve.
+description: Seven whole programs written in both Dazzle and C++, one of them in Rust too, built with the same compiler and flags, checked to compute the same result, and timed end to end. Every run is kept, so the numbers show how the compiler and the standard library improve.
 ---
 
 import Benchmarks from '../../../components/Benchmarks.astro';
@@ -10,6 +10,7 @@ How fast is Dazzle compared with C++? Single constructs say little, because an i
 
 - **A\* search**: 200 searches across a 400×400 grid. It uses a generic binary heap, hash maps keyed by a struct, and allocation in every search.
 - **A battle on an ECS library**: 600 units in two teams for 100 steps, on a small entity-component-system library of its own, which a game uses by making a `World` and registering systems. Each step moves every unit, pushes apart those that overlap with a query inside a query over the same storages, lets each unit strike the nearest enemy, writing another unit's health, and replaces the dead. It is written in Rust too, [three ways](#three-languages).
+- **Generic code, six instances**: an ordered map, a quicksort and a binary search of the program's own, each run for six key types from `i64` to `Pair<String, u16>`. The C++ half is the same code as templates rather than `std::map` and `std::sort`, since the question is what instantiating a program's generic code costs: Dazzle makes each instance itself and hands C++ plain code, where C++ instantiates its templates.
 - **Tokenizer, parser and evaluator**: 100,000 generated statements, about 8 MB of text. Each statement is parsed into a tree of tagged unions and evaluated, and about one in eight fails on purpose, through `!->`.
 - **JSON reader and writer**: 100,000 generated records, a 17 MB document. It parses the text into a tree of tagged unions holding strings and lists, reporting errors through `!->`, turns the tree into a list of records, and writes them back out. Dazzle's writer is written once against reflection's type table; the C++ half writes its `to_json` by hand, since C++17 has no reflection.
 - **Ray tracer**: a 960×540 image at 16 rays a pixel, with spheres, a checkered floor, soft shadows and mirrors. It is `f32` arithmetic through a vector type's operators, small structs passed and returned by value, a tagged union switched on in the inner loop, and an optional returned from every intersection test.
@@ -36,13 +37,18 @@ The two runs after it changed the build ([below](#build-time)). Then, in the run
 - **The JSON reader and writer** was 1.70× C++ with clang and 1.91× with g++ when it was added, the day before the latest run. Floats are written through `std::to_chars` and parsed through `std::from_chars`, a moved-from value nothing can see is not reset, a `List` moves its elements as bytes, and values move by default, so a parsed string is no longer copied out of the tree ([T-0225](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0225-what-keeps-json-behind-its-c.md), [T-0234](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0234-what-kept-json-raytrace-behind-c.md), [T-0235](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0235-values-move-by-default-clone.md)). It is now 0.99× and 1.06×.
 - **The ray tracer** was 1.25× with clang and 1.11× with g++. A module's private functions are now `static` in the generated C++, so a C++ compiler inlines them as it does a C++ program's ([T-0221](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0221-module-private-functions-have-external-linkage.md)). The generated code builds a struct the way a C++ programmer writes it, and assigning an optional no longer builds a temporary one to copy in, which was most of g++'s gap ([T-0222](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0222-empty-optional-builds-its-whole-payload.md)). It is now 1.06× and 0.97×.
 
-And in the run at [1b4eee3](https://github.com/dazzle-lang/Dazzle/commit/1b4eee3), the latest:
+And in the run at [1b4eee3](https://github.com/dazzle-lang/Dazzle/commit/1b4eee3):
 
 - **The battle on an ECS library** was added, and was 1.35× C++ with clang and 1.41× with g++ the same day. Two things were most of it, neither the bounds checks ([T-0240](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0240-ecs-dazzle-1-35-1-41x.md)). With g++, the function a failing bounds check calls was not declared `[[noreturn]]`, so after every check g++ assumed it had returned having changed memory. With clang, its query's `get` branched on which storage it walks, and clang judged it too costly to inline; it now keeps both rows, in all three languages alike. Then, the user's decision, `#[inline]` inlines every call in an optimised build, as Rust's `#[inline(always)]` does ([D-0107](/decisions/d-0107-inline-inlines-every-call-in-optimised/)), and the library marks its query methods with it. It is now 0.70× and 1.01×.
 - **The JSON reader and writer:** a moved-from value is no longer destroyed where nothing could see it ([T-0231](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0231-moved-from-value-drop-called-though.md)), and the standard library's `#[inline]` functions are inlined at every call. From 0.99× and 1.06× to 0.92× and 1.01×.
 - **A\* search with g++** went from 0.83× to 0.89× with `[[noreturn]]`, though it runs fewer instructions: g++ laid its code out differently.
 
-In the latest run, A\* search runs at 0.78× C++ with clang and 0.89× with g++, the battle at 0.70× and 1.01×, the word count at 0.86× and 0.87×, the parser and evaluator at 0.97× and 0.87×, the JSON reader and writer at 0.92× and 1.01×, and the ray tracer at 1.05× and 0.95×.
+And in the run at [c4ea9e0](https://github.com/dazzle-lang/Dazzle/commit/c4ea9e0), the latest, which 0.2 was released with:
+
+- **The generic code** was added, to ask what Dazzle's own monomorphization costs against C++ templates ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)). At run time, nothing: 0.85× C++ with clang and 0.93× with g++. To build from clean it takes 1.3–1.4 times as long, since the C++ compiler is handed every instance written out. After a one-line change, Dazzle builds faster than C++.
+- Every other program is within 1% of the run before. From this run on, each run is compared with the last one recorded on the same machine and compilers, and a ratio that grows past a threshold is reported.
+
+In the latest run, A\* search runs at 0.79× C++ with clang and 0.88× with g++, the battle at 0.70× and 1.00×, the generic code at 0.85× and 0.93×, the word count at 0.87× and 0.87×, the parser and evaluator at 0.96× and 0.87×, the JSON reader and writer at 0.92× and 1.01×, and the ray tracer at 1.06× and 0.95×.
 
 What is left:
 

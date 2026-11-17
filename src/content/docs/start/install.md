@@ -27,7 +27,7 @@ dz run
 
 A release holds `dz` and, on Linux and Windows, the libclang it reads C and C++ headers with, so nothing else from LLVM needs to be installed. Releases are built for Linux on x86-64 and ARM64 (glibc 2.34 or newer: Ubuntu 22.04, Debian 12, Fedora 35 and later), macOS on Apple silicon, and Windows on x86-64. On anything else, [build from source](#build-from-source).
 
-The installer reads three settings from the environment: `DAZZLE_HOME`, where to install; `DAZZLE_VERSION`, a release tag such as `v0.1.0` rather than the latest; and `DAZZLE_NO_MODIFY_PATH=1`, to leave your shell's startup files or your Windows `PATH` alone.
+The installer reads three settings from the environment: `DAZZLE_HOME`, where to install; `DAZZLE_VERSION`, a release tag such as `v0.2.0` rather than the latest; and `DAZZLE_NO_MODIFY_PATH=1`, to leave your shell's startup files or your Windows `PATH` alone.
 
 ## A C++ compiler
 
