@@ -15,11 +15,15 @@ The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) inclu
 
 ## Next: 0.2
 
-The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Values now move by default, and the generated C++ and tooling bugs planned for 0.2 are fixed, with `BinaryHeap`, `Deque` and `BitSet` added. The new benchmarks are in, an ECS library and a battle on it among them, measured against C++ and Rust. Remaining work includes more of the standard library, more C++ imports, and a benchmark of what generic instantiation costs to build. [The road to 0.2](/project/roadmap/) tracks the work.
+The development compiler has ownership transfers with `sends` and incremental builds. Values move by default. The generated C++ and tooling bugs planned for 0.2 are fixed, and `BinaryHeap`, `Deque`, `BitSet` and generic trait methods are added.
+
+The SDL3 example's Dear ImGui panel is written as C++ writes it, `ImGui::Begin` and `ImGui::Text`. Its ImGui is fetched with git, pinned by a lockfile, like any dependency now. The new benchmarks are in: an ECS battle, also measured against Rust, and the cost of generic instantiation, with every run kept to catch a regression.
+
+Every part of the plan is done but the release notes. [The road to 0.2](/project/roadmap/) has the detail.
 
 ## Later
 
-Packages fetched from git, a game of ten thousand lines to test the safety rules at scale, hot reload, microcontrollers, the web and threads. [After 0.2](/project/roadmap/#after-02) says a line about each, the milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
+A game of ten thousand lines to test the safety rules at scale, hot reload, microcontrollers, the web and threads. [After 0.2](/project/roadmap/#after-02) says a line about each, the milestones are in [spec §19](/spec/19-roadmap/), and the open work, task by task, is the [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md).
 
 **How fast it is today:** five whole programs, each written idiomatically in both languages and built by the same compiler, take 0.80 to 1.06 times as long in Dazzle as in C++. A\* search and the word count are faster than C++ with either compiler, A\* search mostly through its hash map. The parser and evaluator is behind only with clang, by 4%, the ray tracer only with clang and the JSON reader and writer only with g++, by 6% each. The [benchmarks](/project/benchmarks/) have every run, and what is left.
 

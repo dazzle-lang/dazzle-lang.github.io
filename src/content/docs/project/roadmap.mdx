@@ -1,24 +1,32 @@
 ---
 title: The road to 0.2
-description: What has landed for Dazzle 0.2 and what remains, including automatic memory placement, incremental builds, and C++ interop.
+description: What has landed for Dazzle 0.2 and what remains, including automatic memory placement, incremental builds, C++ interop with Dear ImGui, and dependencies fetched from git.
 ---
 
 import { Badge } from '@astrojs/starlight/components';
 
-Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r137: values move by default, and a copy is written `a.clone()` (r135); a union's payload field may have a default (r136); and `#[inline]` inlines every call in an optimised build (r137) ([changelog](/spec/21-changelog/)). Since 0.1, automatic memory placement has gained checked ownership transfers across calls, the compiler has gained incremental builds, and the SDL3 example calls Dear ImGui directly. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the remaining work.
+Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r143 ([changelog](/spec/21-changelog/)). Since r137:
+- `indexed()` is a value outside a loop's head (r138).
+- A trait's method may be generic (r139).
+- A C++ namespace may be named bare, `ImGui::Begin` (r141).
+- Dependencies and C++ libraries may be fetched with git, pinned by a lockfile (r142).
+- ImGui's `printf`-style functions, such as `ImGui::Text`, are callable (r143).
+
+Every part of the plan except the release itself is done. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the rest.
 
 - [Automatic memory placement across calls](#automatic-memory-placement-across-calls)
 - [Incremental builds and the latest measurements](#2-faster-builds)
 - [Dear ImGui and the rest of C++ interop](#4-c-interop-dear-imgui)
+- [Dependencies fetched from git](#6-the-release)
 
 | | Part | Status |
 |---|---|---|
 | 1 | [Bugs in the generated C++ and the tools](#1-bugs) | <Badge text="done" variant="success" /> |
-| 2 | [Faster builds](#2-faster-builds) | <Badge text="in progress" variant="caution" /> |
-| 3 | [More of the standard library](#3-the-standard-library) | <Badge text="in progress" variant="caution" /> |
-| 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="panel complete" variant="success" /> |
-| 5 | [New benchmarks](#5-benchmarks) | <Badge text="in progress" variant="caution" /> |
-| 6 | [The release](#6-the-release) | <Badge text="last" variant="default" /> |
+| 2 | [Faster builds](#2-faster-builds) | <Badge text="done" variant="success" /> |
+| 3 | [More of the standard library](#3-the-standard-library) | <Badge text="done" variant="success" /> |
+| 4 | [C++ interop: Dear ImGui](#4-c-interop-dear-imgui) | <Badge text="done" variant="success" /> |
+| 5 | [New benchmarks](#5-benchmarks) | <Badge text="done" variant="success" /> |
+| 6 | [The release](#6-the-release) | <Badge text="next" variant="caution" /> |
 
 ## Automatic memory placement across calls
 
@@ -42,13 +50,13 @@ Generated C++ that fails to compile is a compiler bug, never the user's, so thes
 
 Unchanged builds can skip analysis. A body-only edit leaves dependent modules alone, and the build recompiles the C++ it needs. The standard library’s compiled C++ and precompiled declarations are shared across projects.
 
-On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md), the 14 November clang++ run took **8.18 s** from clean (C++: 5.20 s), **0.01 s** with no changes, and **0.88 s** after a one-line edit, ahead of the same program in C++ built by `make` (1.10 s). The two small-program build targets are met on Linux. What remains is type-checking the standard library on every build, about 11 ms, which needs its checked form kept on disk.
+On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/SCALE.md), the 14 November clang++ run took **8.18 s** from clean (C++: 5.20 s), **0.01 s** with no changes, and **0.88 s** after a one-line edit, ahead of the same program in C++ built by `make` (1.10 s). Both small-program build targets are met on Linux. Type-checking the standard library once rather than on every build, about 11 ms, needs its checked form kept on disk, and comes after 0.2.
 
 | | Status |
 |---|---|
 | Compile each generated C++ file to its own object, reused while it is unchanged ([T-0102](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0102-standard-library-c-compiled-again-in.md)), and precompile the runtime and the standard library's declarations ([T-0181](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0181-precompiled-header-for-runtime-standard-library.md)) | <Badge text="done" variant="success" /> |
 | One compiled standard library shared by every project ([T-0182](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0182-one-compiled-standard-library-shared-by.md)), imported C headers kept between builds ([T-0101](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0101-every-build-imports-stdlib-h-with.md)), and no second compile where link-time optimisation cannot link ([T-0183](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0183-release-build-compiles-everything-twice-where.md)) | <Badge text="done" variant="success" /> |
-| **Target:** a debug rebuild after a small change in under 0.5 s. The five [benchmark](/project/benchmarks/#build-time) programs rebuild in 0.16–0.30 s on Linux, with clang or g++ ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
+| **Target:** a debug rebuild after a small change in under 0.5 s. The [benchmark](/project/benchmarks/#build-time) programs rebuild in 0.16–0.30 s on Linux, with clang or g++ ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
 | **Target:** a clean release build within twice the time of the same program in C++. It is 0.9–1.8 times, from 3.3–4.7 at 0.1 ([T-0180](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0180-0-2-build-time-targets-measured.md)) | <Badge text="met" variant="success" /> |
 | Measure build time on a large program ([T-0012](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0012-measure-compile-time-at-scale.md)): a generated project of 100 modules, against the same in C++ | <Badge text="done" variant="success" /> |
 | What it found: a generic instance's methods defined once rather than in every header ([T-0185](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0185-generic-instance-method-bodies-are-in.md)), and deciding what to compile again by size and time ([T-0186](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0186-checking-that-objects-are-up-date.md)). 100 modules from clean went from 60 s to 12 s (C++: 5 s) | <Badge text="done" variant="success" /> |
@@ -58,7 +66,7 @@ On the [100-module scale test](https://github.com/dazzle-lang/Dazzle/blob/master
 | Remove the generated C++ of a renamed or deleted module ([T-0103](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0103-renamed-or-removed-module-generated-c.md)) | <Badge text="done" variant="success" /> |
 | Keep the standard library's generated C++ between builds, and skip its ownership check. A rebuild whose C++ is unchanged went from 136 ms to 56 ms ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="done" variant="success" /> |
 | Compile only the generic methods a program calls, and let g++ inline them ([T-0190](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0190-each-module-defines-instance-methods-it.md)) | <Badge text="done" variant="success" /> |
-| Type-check the standard library once, not on every build: about 11 ms of a small program's build ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="planned" variant="default" /> |
+| Type-check the standard library once, not on every build: about 11 ms of a small program's build ([T-0025](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0025-std-type-checked-in-every-analysis.md)) | <Badge text="after 0.2" variant="default" /> |
 
 ## 3. The standard library
 
@@ -70,8 +78,8 @@ New containers, then what the benchmarks and the ImGui panel show is missing.
 | `Deque`, a double-ended queue ([T-0176](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0176-deque-double-ended-queue-in-std.md)) | <Badge text="done" variant="success" /> |
 | `BitSet`, a set of small integers ([T-0177](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0177-bitset-set-small-integers-in-std.md)) | <Badge text="done" variant="success" /> |
 | Slicing a `str`, `s[a..b]` ([T-0098](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0098-str-cannot-be-cut-str-b.md)) | <Badge text="done" variant="success" /> |
-| `indexed()` outside a `for` head ([T-0037](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0037-indexed-exists-only-in-for-head.md)) | <Badge text="planned" variant="default" /> |
-| Generic methods in a trait ([T-0007](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0007-generic-methods-in-trait.md)) | <Badge text="planned" variant="default" /> |
+| `indexed()` outside a `for` head: `let pairs = names.indexed()` can be kept and passed on (r138, [T-0037](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0037-indexed-exists-only-in-for-head.md)) | <Badge text="done" variant="success" /> |
+| Generic methods in a trait, `fn write<T: Format>(&mut self, value: T)`, called on a value or through a bound but not through a trait object (r139, [T-0007](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0007-generic-methods-in-trait.md), [D-0108](/decisions/d-0108-trait-generic-methods-not-through-object/)) | <Badge text="done" variant="success" /> |
 
 ## 4. C++ interop: Dear ImGui
 
@@ -84,30 +92,45 @@ raylib, SDL3, Box2D and sokol are all C. This part shows Dazzle calling a C++ li
 | A Dear ImGui panel in the [SDL3 example](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3) that changes the scene live: presets, time, the sun, the sky, the lamps ([T-0171](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0171-dear-imgui-controls-in-sdl3-scene.md)) | <Badge text="done" variant="success" /> |
 | Overloaded C++ functions, chosen by their arguments ([T-0016](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0016-overloaded-free-function-imports-only-its.md)) | <Badge text="done" variant="success" /> |
 | Default arguments left out, array parameters taken by reference, and one type for a C++ class whichever header declares it | <Badge text="done" variant="success" /> |
-| A C++ namespace as a module of its own, named by the key the manifest gives it: `ImGui::Begin` or `imgui::Begin`, not `imgui::ImGui::Begin` ([T-0179](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0179-c-namespace-reached-as-module-its.md)) | <Badge text="planned" variant="default" /> |
-| Variadic C functions such as `printf` and ImGui's `Text` ([T-0008](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0008-variadic-c-functions.md)) | <Badge text="planned" variant="default" /> |
-| An imported C or C++ enum's own list of variants, where today only its type and the header's constants arrive ([T-0048](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0048-imported-c-or-c-enum-variants.md)) | <Badge text="planned" variant="default" /> |
+| A C++ namespace named bare: `imgui = { cpp = "imgui", namespaces = ["ImGui"] }` lets every file write `ImGui::Begin` rather than `imgui::ImGui::Begin`, and a name the module already uses is an error rather than hidden (r141, [T-0179](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0179-c-namespace-reached-as-module-its.md), [D-0109](/decisions/d-0109-c-namespace-named-bare-by-its/)) | <Badge text="done" variant="success" /> |
+| Variadic functions of `printf`'s kind, such as `ImGui::Text`, `SetTooltip` and `SDL_Log`: they take one text, which the call passes after a `"%s"`, so a `%` in it is printed (r143, [T-0008](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0008-variadic-c-functions.md), [D-0111](/decisions/d-0111-c-variadics-printf-kind-take-one/)) | <Badge text="done" variant="success" /> |
+| An imported C or C++ enum's variants listed by reflection, with the values the header gave them; a `switch` over one stays exhaustive (r143, [T-0048](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0048-imported-c-or-c-enum-variants.md)) | <Badge text="done" variant="success" /> |
+| The SDL3 example without raylib: its own OpenGL 3.3 loader, generated by glad, and Dear ImGui fetched with git rather than kept as a submodule | <Badge text="done" variant="success" /> |
 
 [C++ interop](/tour/cpp-interop/) shows what the panel's code looks like.
 
 ## 5. Benchmarks
 
-Three new programs extend the [benchmark suite](/project/benchmarks/), all in it now, run against their C++ halves: the JSON reader and writer at 0.92× C++ with clang and 1.01× with g++, the ray tracer at 1.05× and 0.95×, and the battle on an ECS library at 0.70× and 1.01×, also run against Rust, written three ways.
+Four new programs extend the [benchmark suite](/project/benchmarks/), each run against its C++ half. Measured on 17 November at r140:
+
+| Program | Dazzle / C++, clang | Dazzle / C++, g++ |
+|---|---:|---:|
+| JSON reader and writer | 0.92× | 1.01× |
+| Ray tracer | 1.06× | 0.95× |
+| Battle on an ECS library, also against Rust written three ways | 0.70× | 1.00× |
+| Generic code instantiated for six types | 0.85× | 0.93× |
+
+Every recorded run is now kept, so a change that makes Dazzle's side slower shows as a ratio that moved.
 
 | | Status |
 |---|---|
 | **An ECS**, a small entity-component-system library and a battle on it, in Dazzle, C++ and Rust. It exercises a query inside a query, and writes one entity's component while walking others ([T-0172](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0172-ecs-benchmark-against-rust-c-query.md)) | <Badge text="done" variant="success" /> |
-| **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)) | <Badge text="done" variant="success" /> |
+| **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)). What kept it behind C++ is gone ([T-0225](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0225-what-keeps-json-behind-its-c.md)) | <Badge text="done" variant="success" /> |
 | **raytrace**: floating-point and vector math, against C++ ([T-0174](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0174-raytrace-benchmark-floating-point-vector-math.md)) | <Badge text="done" variant="success" /> |
-| What generic instantiation costs in build time, tracked from release to release ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="planned" variant="default" /> |
+| **generics**: an ordered map, a sort and a search of the program's own, instantiated for six key types, against the same as C++ templates. Monomorphizing on Dazzle's side costs nothing at run time. Building from clean takes 1.3–1.4 times as long as the C++ half, since the C++ compiler gets every instance written out. After a one-line change Dazzle builds faster ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="done" variant="success" /> |
+| Every run kept, [HISTORY.md](https://github.com/dazzle-lang/Dazzle/blob/master/tests/bench_programs/HISTORY.md) back to the first, and each new run compared with the last one recorded on the same machine and compiler ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="done" variant="success" /> |
 
 ## 6. The release
 
-Release notes from the [changelog](/spec/21-changelog/) since revision 117, which 0.1 carries. If there is time, dependencies fetched from git and pinned by a lockfile ([T-0077](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0077-git-dependencies-pinned-by-lockfile.md)); otherwise they move to 0.3.
+| | Status |
+|---|---|
+| **Dependencies fetched from git**, Dazzle modules and C or C++ libraries alike. Each names a release, `version = "1.93.0"`, or a commit, `rev = "…"`. A checked-in `dazzle.lock` pins the commit, so every machine builds the same code. `dz build` fetches; the editor never touches the network (r142, [T-0077](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0077-git-dependencies-pinned-by-lockfile.md), [D-0110](/decisions/d-0110-git-sources-version-or-rev-pinned/)) | <Badge text="done" variant="success" /> |
+| Release notes from the [changelog](/spec/21-changelog/) since revision 117, which 0.1 carries, and the build times since 0.1 | <Badge text="next" variant="caution" /> |
 
 ## After 0.2
 
-- **Packages:** dependencies fetched from git, Dazzle packages and C libraries alike, pinned by a lockfile, if they miss 0.2.
+- **Packages:** a command that lists newer releases of a dependency pinned by `version` ([T-0244](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0244-dz-lists-newer-releases-git-source.md)). The examples' other C libraries are to move off git submodules, as ImGui did.
+- **Tools for LLMs:** a hint and a `dz fix` that shorten `imgui::ImGui::Text` to `ImGui::Text` where the namespace is named bare. Also an API dump of a module, and test output a program can parse.
 - **Scale:** a game of ten thousand lines, to see how the safety rules hold in a large program, and fewer of the cases where the compiler still puts memory on the heap. Those cost speed, not safety.
 - **Hot reload:** a rebuilt module swapped into a running game, keeping its state.
 - **The editor:** incremental analysis, and the rest of the quick fixes.

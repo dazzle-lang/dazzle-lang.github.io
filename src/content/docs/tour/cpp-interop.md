@@ -60,7 +60,9 @@ fn main() {
 - **C:** functions, structs, unions, enums, array members and bit-fields, callbacks, `#define` constants, and types a header only declares (as opaque handles).
 - **C++:** namespaces and nested namespaces, scoped enums, classes with constructors and `const` and mutating methods, overloaded functions and methods chosen by argument type, default arguments (leave them out, and C++ fills them in), `const T&` and `T&` as `&T` and `&mut T`, array parameters (`float col[3]` takes a `&mut [3]f32`), classes with destructors (move-only in Dazzle, destroyed by C++), and named template instances. A type is one type whichever header declares it, so a handle from one library passes to another that only names it.
 
-Not imported yet: variadic C functions, and inheritance between imported C++ classes. These are open tasks, and variadics are planned for [0.2](/project/roadmap/).
+A variadic function of `printf`'s kind, such as `ImGui::Text(const char* fmt, ...)` or `SDL_Log`, takes one text where its format was, and the call passes it after a `"%s"`, so a `%` in it is printed rather than read as a specifier: `ImGui::Text(format!("{} fps", fps))`. Formatting stays on the Dazzle side, where `format!` checks it as it compiles.
+
+Not imported yet: other variadic functions, and inheritance between imported C++ classes.
 
 ## Which calls are safe
 
@@ -87,11 +89,15 @@ options = { SDL_TEST_LIBRARY = false }
 import  = ["SDL3/SDL.h"]
 ```
 
-- [**Dear ImGui**](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3), a C++ library, draws the same example's control panel. Its recipe compiles its sources and its SDL3 and OpenGL 3 backends, and `uses` builds them against the headers SDL's CMake installed:
+- [**Dear ImGui**](https://github.com/dazzle-lang/Dazzle/tree/master/examples/sdl3), a C++ library, draws the same example's control panel. `dz` fetches its source with git, at the release the recipe names, and pins the commit in `dazzle.lock`. The recipe compiles its sources and its SDL3 and OpenGL 3 backends, and `uses` builds them against the headers SDL's CMake installed. The dependency names ImGui's namespace bare, so code writes `ImGui::Begin`, as C++ does:
 
 ```toml
+[dependencies]
+imgui = { cpp = "imgui", namespaces = ["ImGui"] }
+
 [cpp.libs.imgui]
-root         = "../vendor/imgui"
+git          = "https://github.com/ocornut/imgui"
+version      = "1.93.0"                    # the tag v1.93.0; dazzle.lock pins its commit
 sources      = ["imgui.cpp", "imgui_draw.cpp", "imgui_tables.cpp", "imgui_widgets.cpp",
                 "backends/imgui_impl_sdl3.cpp", "backends/imgui_impl_opengl3.cpp"]
 include_dirs = [".", "backends"]
@@ -103,15 +109,18 @@ keeps        = []
 and its C++ API is called as it is written, with no C wrapper:
 
 ```dz
-imgui::ImGui::Begin("Scene")                       // C++ fills in the two default arguments
+ImGui::Begin("Scene")                              // C++ fills in the two default arguments
+ImGui::Text(format!("{} fps", fps))                // printf's kind: passed after a "%s"
 // One of three `Combo` overloads, chosen by its arguments: the one taking one string.
-if imgui::ImGui::Combo("Preset", &mut s.preset, "Afternoon\0Dusk\0Night\0") {
+if ImGui::Combo("Preset", &mut s.preset, "Afternoon\0Dusk\0Night\0") {
     apply(s, s.preset)
 }
-imgui::ImGui::SliderFloat("Height", &mut s.sun_height, 0.05, 1.5)
-imgui::ImGui::ColorEdit3("Colour##sun", &mut s.sun_color)   // `float col[3]`: a `&mut [3]f32`
-imgui::ImGui::End()
+ImGui::SliderFloat("Height", &mut s.sun_height, 0.05, 1.5)
+ImGui::ColorEdit3("Colour##sun", &mut s.sun_color)   // `float col[3]`: a `&mut [3]f32`
+ImGui::End()
 ```
+
+The header's global declarations keep the dependency's key: `imgui::ImGui_ImplOpenGL3_Init("#version 330 core")`.
 
 ## Why it works this way
 
