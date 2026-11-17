@@ -15,7 +15,7 @@ The [examples](https://github.com/dazzle-lang/Dazzle/tree/master/examples) inclu
 
 ## Next: 0.2
 
-The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Values now move by default, and the generated C++ and tooling bugs planned for 0.2 are fixed, with `BinaryHeap`, `Deque` and `BitSet` added. Remaining work includes more of the standard library, more C++ imports, and new benchmarks. [The road to 0.2](/project/roadmap/) tracks the work.
+The development compiler has ownership transfers with `sends`, incremental builds, and direct Dear ImGui calls in the SDL3 example. Values now move by default, and the generated C++ and tooling bugs planned for 0.2 are fixed, with `BinaryHeap`, `Deque` and `BitSet` added. The new benchmarks are in, an ECS library and a battle on it among them, measured against C++ and Rust. Remaining work includes more of the standard library, more C++ imports, and a benchmark of what generic instantiation costs to build. [The road to 0.2](/project/roadmap/) tracks the work.
 
 ## Later
 

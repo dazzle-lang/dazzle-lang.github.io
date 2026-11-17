@@ -5,7 +5,7 @@ description: What has landed for Dazzle 0.2 and what remains, including automati
 
 import { Badge } from '@astrojs/starlight/components';
 
-Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r135: values now move by default, and a copy is written `a.clone()` ([changelog](/spec/21-changelog/)). Since 0.1, automatic memory placement has gained checked ownership transfers across calls, the compiler has gained incremental builds, and the SDL3 example calls Dear ImGui directly. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the remaining work.
+Dazzle **0.1** was released on 4 November 2026 at revision r117. The development compiler is at r137: values move by default, and a copy is written `a.clone()` (r135); a union's payload field may have a default (r136); and `#[inline]` inlines every call in an optimised build (r137) ([changelog](/spec/21-changelog/)). Since 0.1, automatic memory placement has gained checked ownership transfers across calls, the compiler has gained incremental builds, and the SDL3 example calls Dear ImGui directly. The [backlog](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks.md) tracks the remaining work.
 
 - [Automatic memory placement across calls](#automatic-memory-placement-across-calls)
 - [Incremental builds and the latest measurements](#2-faster-builds)
@@ -92,11 +92,11 @@ raylib, SDL3, Box2D and sokol are all C. This part shows Dazzle calling a C++ li
 
 ## 5. Benchmarks
 
-Three new programs extend the [benchmark suite](/project/benchmarks/). Two are in it, run against their C++ halves: the JSON reader and writer at 0.99× C++ with clang and 1.06× with g++, and the ray tracer at 1.06× and 0.97×.
+Three new programs extend the [benchmark suite](/project/benchmarks/), all in it now, run against their C++ halves: the JSON reader and writer at 0.92× C++ with clang and 1.01× with g++, the ray tracer at 1.05× and 0.95×, and the battle on an ECS library at 0.70× and 1.01×, also run against Rust, written three ways.
 
 | | Status |
 |---|---|
-| **An ECS**, a small entity-component system of a few hundred lines, in Dazzle, C++ and Rust. It exercises a query inside a query ([T-0172](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0172-ecs-benchmark-against-rust-c-query.md)) | <Badge text="planned" variant="default" /> |
+| **An ECS**, a small entity-component-system library and a battle on it, in Dazzle, C++ and Rust. It exercises a query inside a query, and writes one entity's component while walking others ([T-0172](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0172-ecs-benchmark-against-rust-c-query.md)) | <Badge text="done" variant="success" /> |
 | **json**: parsing, and writing structs through reflection, against C++ ([T-0173](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0173-json-benchmark-parsing-writing-structs-through.md)) | <Badge text="done" variant="success" /> |
 | **raytrace**: floating-point and vector math, against C++ ([T-0174](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0174-raytrace-benchmark-floating-point-vector-math.md)) | <Badge text="done" variant="success" /> |
 | What generic instantiation costs in build time, tracked from release to release ([T-0075](https://github.com/dazzle-lang/Dazzle/blob/master/docs/tasks/T-0075-generic-instantiation-benchmark-pair-tracking-numbers.md)) | <Badge text="planned" variant="default" /> |

@@ -80,7 +80,7 @@ The generated C++ carries `#line` directives back to your `.dz` files, so gdb, L
 
 ## Optimised builds
 
-`--release` builds at `-O2` with link-time optimisation, so the C++ compiler inlines across modules, and `#[inline]` on a function makes its body visible to every module that calls it. The standard library marks its small, hot functions this way.
+`--release` builds at `-O2` with link-time optimisation, so the C++ compiler inlines across modules where it judges a call worth it. `#[inline]` on a function makes its body visible to every module that calls it, and in an optimised build every call to it is inlined, as Rust's `#[inline(always)]` is; a function that can reach itself through `#[inline]` calls is left to the C++ compiler. The standard library marks its small, hot functions this way, and so should a library's iterator or accessor called in a tight loop: `ecs`'s queries, marked `#[inline]`, ran in 130 ms where they had taken 212 with clang ([D-0107](/decisions/d-0107-inline-inlines-every-call-in-optimised/)).
 
 ## Planned
 

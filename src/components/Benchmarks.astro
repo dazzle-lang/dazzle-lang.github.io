@@ -20,6 +20,7 @@ const latest = runs.at(-1);
 const COMMIT = 'https://github.com/dazzle-lang/Dazzle/commit/';
 const PROGRAMS = {
 	astar: 'A* search',
+	ecs: 'A battle on an ECS library',
 	expr: 'Tokenizer, parser and evaluator',
 	json: 'JSON reader and writer',
 	raytrace: 'Ray tracer',
@@ -53,6 +54,10 @@ const programs = [...new Set(latest.results.map((r) => r.program))];
 const compilers = [...new Set(latest.results.map((r) => r.cxx))];
 const columns = programs.flatMap((p) => compilers.map((c) => ({ program: p, cxx: c })));
 const find = (run, p, c) => run.results.find((r) => r.program === p && r.cxx === c);
+// A program's Rust half, where it has one (`ecs`, T-0172): each version of the program,
+// written another way, timed in the same run. Runs from before it recorded none.
+const rustOf = (run, p) => (run.rust ?? []).find((rr) => rr.program === p);
+const rustc = latest.machine.rustc?.match(/rustc (\d+\.\d+)/)?.[1];
 
 // The history chart: one line per compiler, the geometric mean of its ratios per run, over
 // the programs every run measured. A program added later is left out of the line, so the
@@ -61,6 +66,7 @@ const everyRun = programs.filter((p) => runs.every((run) => run.results.some((r)
 // The programs as a sentence names them.
 const IN_PROSE = {
 	astar: 'A* search',
+	ecs: 'the ECS battle',
 	expr: 'the parser and evaluator',
 	json: 'the JSON reader and writer',
 	raytrace: 'the ray tracer',
@@ -127,7 +133,10 @@ const buildFlags = debug ? '-O0 -g' : flags;
 		<div class="bench not-content">
 			{programs.map((p) => {
 				const rows = compilers.map((c) => find(latest, p, c)).filter(Boolean);
-				const max = Math.max(...rows.flatMap((r) => [r.dazzle.median, r.cpp.median]));
+				const rust = rustOf(latest, p);
+				const rustRows = rust ? Object.entries(rust.versions) : [];
+				const fastest = Math.min(...rows.map((r) => r.dazzle.median));
+				const max = Math.max(...rows.flatMap((r) => [r.dazzle.median, r.cpp.median]), ...rustRows.map(([, t]) => t.median));
 				const memory = memoryRows(rows);
 				const memMax = Math.max(...memory.flatMap((m) => [m.r.dazzle.peak_kib, m.r.cpp.peak_kib]));
 				return (
@@ -146,6 +155,18 @@ const buildFlags = debug ? '-O0 -g' : flags;
 									</div>
 								</div>
 								<div class="ratio">{ratio(r).toFixed(2)}×</div>
+							</div>
+						))}
+						{rustRows.length > 0 && <div class="metric">Rust{rustc ? ` ${rustc}` : ''}, three ways</div>}
+						{rustRows.map(([v, t]) => (
+							<div class="pair">
+								<div class="who">{v}</div>
+								<div class="bars">
+									<div class="bar rust" style={`width: ${(100 * t.median) / max}%`}>
+										<span>Rust {ms(t.median)}</span>
+									</div>
+								</div>
+								<div class="ratio" title="Dazzle's faster build over this Rust version">{(fastest / t.median).toFixed(2)}×</div>
 							</div>
 						))}
 						{memory.length > 0 && <div class="metric">Peak memory</div>}
@@ -170,6 +191,11 @@ const buildFlags = debug ? '-O0 -g' : flags;
 				<span class="key dz" /> Dazzle <span class="key cpp" /> C++. Shorter is better. The figure on the right is Dazzle's over C++'s: how many times as long, or as much memory; below 1.00× Dazzle is ahead.{' '}
 				Run time is the median of {latest.results[0].dazzle.runs} runs; peak memory is the largest resident set of any of them, the same with either compiler unless a row per compiler says otherwise.
 			</p>
+			{(latest.rust ?? []).length > 0 && (
+				<p class="legend">
+					<span class="key rust" /> Rust, where a program has a Rust half: each version a binary of its crate, built with <code>cargo build --release</code> (<code>opt-level = 2</code>, whole-program LTO, <code>panic = "abort"</code>). Its figure is Dazzle's faster build over that version. The versions are explained <a href="#three-languages">below</a>.
+				</p>
+			)}
 			<p class="legend">
 				{latest.machine.cpu}, {Object.values(latest.machine.compilers).join(' and ')}, <code>{flags}</code>. Dazzle at <a href={COMMIT + latest.commit}>{latest.commit}</a>, {latest.date}. Build times are{' '}
 				<a href="#build-time">below</a>.
@@ -451,6 +477,11 @@ const buildFlags = debug ? '-O0 -g' : flags;
 	.bar.cpp,
 	.key.cpp {
 		background: #5b7fbf;
+		color: #fff;
+	}
+	.bar.rust,
+	.key.rust {
+		background: #b7593a;
 		color: #fff;
 	}
 	.stack {

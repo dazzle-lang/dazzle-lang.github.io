@@ -151,6 +151,42 @@ pub struct Panel : Widget {
 }
 ```
 
+A `virtual fn` with no body makes its struct **abstract**: no value of it can exist, by value, in a field or as a parameter. A reference to one can, and so can a `Box`, an `Rc` or a `Weak` of one, holding any type that overrides it. A list of shapes is a `List<Box<Shape>>`, and dropping a box drops and frees the whole derived value:
+
+```dz
+pub struct Shape {
+    // No body: `Shape` is abstract.
+    pub virtual fn area(&self) -> i32
+}
+
+pub struct Square : Shape {
+    pub side: i32 = 0
+
+    pub override fn area(&self) -> i32 {
+        return side * side
+    }
+}
+
+pub struct Circle : Shape {
+    pub r: i32 = 0
+
+    pub override fn area(&self) -> i32 {
+        return 3 * r * r
+    }
+}
+
+fn main() {
+    let mut shapes = List<Box<Shape>>()
+    shapes.push(Box<Square>(Square{ side: 3 }))
+    shapes.push(Box<Circle>(Circle{ r: 2 }))
+    for &s in shapes {
+        if let &shape = s {
+            println!("{}", shape.area())
+        }
+    }
+}
+```
+
 ## Reflection with no per-object cost
 
 `typeinfo_of<T>()` reads one static table that describes every type: names, fields, offsets, enum values, union variants, and field tags. Structs carry zero extra bytes. The repository's [`reflect` test](https://github.com/dazzle-lang/Dazzle/tree/master/tests/run/reflect) is a JSON serializer of about 50 lines written against it, honouring tags like these:
